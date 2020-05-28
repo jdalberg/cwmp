@@ -1,4 +1,4 @@
-use chrono::prelude::*;
+use chrono::prelude::TimeZone;
 use chrono::{DateTime, Utc};
 use core::fmt::Debug;
 use log::warn;
@@ -311,6 +311,165 @@ impl CancelTransfer {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct ChangeDUStateResponse;
+
+#[derive(Debug, PartialEq)]
+pub struct InstallOp {
+    url: String,
+    uuid: String,
+    username: String,
+    password: String,
+    execution_env_ref: String,
+}
+
+impl InstallOp {
+    pub fn new(
+        url: &str,
+        uuid: &str,
+        username: &str,
+        password: &str,
+        execution_env_ref: &str,
+    ) -> Self {
+        InstallOp {
+            url: url.to_string(),
+            uuid: uuid.to_string(),
+            username: username.to_string(),
+            password: password.to_string(),
+            execution_env_ref: execution_env_ref.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct UninstallOp {
+    url: String,
+    uuid: String,
+    execution_env_ref: String,
+}
+
+impl UninstallOp {
+    pub fn new(url: &str, uuid: &str, execution_env_ref: &str) -> Self {
+        UninstallOp {
+            url: url.to_string(),
+            uuid: uuid.to_string(),
+            execution_env_ref: execution_env_ref.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct UpdateOp {
+    url: String,
+    uuid: String,
+    username: String,
+    password: String,
+    version: String,
+}
+impl UpdateOp {
+    pub fn new(url: &str, uuid: &str, username: &str, password: &str, version: &str) -> Self {
+        UpdateOp {
+            url: url.to_string(),
+            uuid: uuid.to_string(),
+            username: username.to_string(),
+            password: password.to_string(),
+            version: version.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ChangeDUState {
+    command_key: String,
+    install_operations: Vec<InstallOp>,
+    uninstall_operations: Vec<UninstallOp>,
+    update_operations: Vec<UpdateOp>,
+}
+
+impl ChangeDUState {
+    pub fn new(
+        command_key: &str,
+        install_operations: Vec<InstallOp>,
+        uninstall_operations: Vec<UninstallOp>,
+        update_operations: Vec<UpdateOp>,
+    ) -> Self {
+        ChangeDUState {
+            command_key: command_key.to_string(),
+            install_operations: install_operations,
+            uninstall_operations: uninstall_operations,
+            update_operations: update_operations,
+        }
+    }
+
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["ChangeDUState", "Operations", "InstallOpStruct"] => self
+                .install_operations
+                .push(InstallOp::new("", "", "", "", "")),
+            ["ChangeDUState", "Operations", "UninstallOpStruct"] => {
+                self.uninstall_operations.push(UninstallOp::new("", "", ""))
+            }
+            ["ChangeDUState", "Operations", "UpdateOpStruct"] => self
+                .update_operations
+                .push(UpdateOp::new("", "", "", "", "")),
+            _ => {}
+        }
+    }
+
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["ChangeDUState", "CommandKey"] => self.command_key = characters.to_string(),
+            ["ChangeDUState", "Operations", "InstallOpStruct", key] => {
+                let last = self.install_operations.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "Username" => e.username = characters.to_string(),
+                        "Password" => e.password = characters.to_string(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            ["ChangeDUState", "Operations", "UninstallOpStruct", key] => {
+                let last = self.uninstall_operations.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            ["ChangeDUState", "Operations", "UpdateOpStruct", key] => {
+                let last = self.update_operations.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "Username" => e.username = characters.to_string(),
+                        "Password" => e.password = characters.to_string(),
+                        "Version" => e.version = characters.to_string(),
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
 }
@@ -498,14 +657,16 @@ pub enum BodyElement {
     AddObject(AddObject),
     AutonomousDUStateChangeCompleteResponse(AutonomousDUStateChangeCompleteResponse),
     AutonomousDUStateChangeComplete(AutonomousDUStateChangeComplete),
-    GetParameterAttributes(GetParameterAttributes),
-    GetParameterAttributesResponse(GetParameterAttributesResponse),
-    GetParameterValues(GetParameterValues),
-    GetParameterValuesResponse(GetParameterValuesResponse),
     AutonomousTransferCompleteResponse(AutonomousTransferCompleteResponse),
     AutonomousTransferComplete(AutonomousTransferComplete),
     CancelTransferResponse(CancelTransferResponse),
     CancelTransfer(CancelTransfer),
+    ChangeDUStateResponse(ChangeDUStateResponse),
+    ChangeDUState(ChangeDUState),
+    GetParameterAttributes(GetParameterAttributes),
+    GetParameterAttributesResponse(GetParameterAttributesResponse),
+    GetParameterValues(GetParameterValues),
+    GetParameterValuesResponse(GetParameterValuesResponse),
 }
 
 #[derive(Debug, PartialEq)]
@@ -635,6 +796,18 @@ impl Envelope {
                         "CancelTransfer" => self
                             .body
                             .push(BodyElement::CancelTransfer(CancelTransfer::new(""))),
+                        "ChangeDUStateResponse" => self
+                            .body
+                            .push(BodyElement::ChangeDUStateResponse(ChangeDUStateResponse {})),
+                        "ChangeDUState" => {
+                            self.body
+                                .push(BodyElement::ChangeDUState(ChangeDUState::new(
+                                    "",
+                                    vec![],
+                                    vec![],
+                                    vec![],
+                                )))
+                        }
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -665,6 +838,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetParameterValuesResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::ChangeDUState(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -727,6 +903,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::CancelTransfer(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::ChangeDUState(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {

@@ -413,6 +413,202 @@ mod tests {
     }
 
     #[test]
+    fn change_du_state_response_1() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:ChangeDUStateResponse/>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::ChangeDUStateResponse(
+                protocol::ChangeDUStateResponse {},
+            )],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn change_du_state_1() {
+        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+                <cwmp:ChangeDUState>
+                        <CommandKey>cmdkey</CommandKey>
+                        <Operations>
+                                <InstallOpStruct>
+                                        <URL>http://example.com/url</URL>
+                                        <UUID>some-uuid</UUID>
+                                        <Username>user</Username>
+                                        <Password>pass</Password>
+                                        <ExecutionEnvRef>env</ExecutionEnvRef>
+                                </InstallOpStruct>
+                        </Operations>
+                </cwmp:ChangeDUState>
+        </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            body: vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
+                "cmdkey",
+                vec![protocol::InstallOp::new(
+                    "http://example.com/url",
+                    "some-uuid",
+                    "user",
+                    "pass",
+                    "env",
+                )],
+                vec![],
+                vec![],
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn change_du_state_2() {
+        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+                <cwmp:ChangeDUState>
+                        <CommandKey>cmdkey</CommandKey>
+                        <Operations>
+                                <InstallOpStruct>
+                                        <URL>http://example.com/url</URL>
+                                        <UUID>some-uuid</UUID>
+                                        <Username>user</Username>
+                                        <Password>pass</Password>
+                                        <ExecutionEnvRef>env</ExecutionEnvRef>
+                                </InstallOpStruct>
+                                <UninstallOpStruct>
+                                        <URL>http://example.com/url2</URL>
+                                        <UUID>some-uuid2</UUID>
+                                        <ExecutionEnvRef>env2</ExecutionEnvRef>
+                                </UninstallOpStruct>
+                        </Operations>
+                </cwmp:ChangeDUState>
+        </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            body: vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
+                "cmdkey",
+                vec![protocol::InstallOp::new(
+                    "http://example.com/url",
+                    "some-uuid",
+                    "user",
+                    "pass",
+                    "env",
+                )],
+                vec![protocol::UninstallOp::new(
+                    "http://example.com/url2",
+                    "some-uuid2",
+                    "env2",
+                )],
+                vec![],
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn change_du_state_3() {
+        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+                <cwmp:ChangeDUState>
+                        <CommandKey>cmdkey</CommandKey>
+                        <Operations>
+                                <InstallOpStruct>
+                                        <URL>http://example.com/url</URL>
+                                        <UUID>some-uuid</UUID>
+                                        <Username>user</Username>
+                                        <Password>pass</Password>
+                                        <ExecutionEnvRef>env</ExecutionEnvRef>
+                                </InstallOpStruct>
+                                <UpdateOpStruct>
+                                        <URL>http://example.com/url</URL>
+                                        <UUID>some-uuid</UUID>
+                                        <Username>user</Username>
+                                        <Password>pass</Password>
+                                        <Version>v2.0</Version>
+                                </UpdateOpStruct>
+                                <UninstallOpStruct>
+                                        <URL>http://example.com/url2</URL>
+                                        <UUID>some-uuid2</UUID>
+                                        <ExecutionEnvRef>env2</ExecutionEnvRef>
+                                </UninstallOpStruct>
+                        </Operations>
+                </cwmp:ChangeDUState>
+        </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            body: vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
+                "cmdkey",
+                vec![protocol::InstallOp::new(
+                    "http://example.com/url",
+                    "some-uuid",
+                    "user",
+                    "pass",
+                    "env",
+                )],
+                vec![protocol::UninstallOp::new(
+                    "http://example.com/url2",
+                    "some-uuid2",
+                    "env2",
+                )],
+                vec![protocol::UpdateOp::new(
+                    "http://example.com/url",
+                    "some-uuid",
+                    "user",
+                    "pass",
+                    "v2.0",
+                )],
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
     fn get_parameter_attributes_1() -> Result<(), String> {
         let xml: String = String::from(
             "<SOAP-ENV:Envelope
