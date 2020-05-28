@@ -603,6 +603,129 @@ impl Download {
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct OpResult {
+    uuid: String,
+    deployment_unit_ref: String,
+    version: String,
+    current_state: String,
+    resolved: u32,
+    execution_unit_ref_list: String,
+    start_time: DateTime<Utc>,
+    complete_time: DateTime<Utc>,
+    fault: Fault,
+}
+
+impl OpResult {
+    pub fn new(
+        uuid: &str,
+        deployment_unit_ref: &str,
+        version: &str,
+        current_state: &str,
+        resolved: u32,
+        execution_unit_ref_list: &str,
+        start_time: DateTime<Utc>,
+        complete_time: DateTime<Utc>,
+        fault: Fault,
+    ) -> Self {
+        OpResult {
+            uuid: uuid.to_string(),
+            deployment_unit_ref: deployment_unit_ref.to_string(),
+            version: version.to_string(),
+            current_state: current_state.to_string(),
+            resolved: resolved,
+            execution_unit_ref_list: execution_unit_ref_list.to_string(),
+            start_time: start_time,
+            complete_time: complete_time,
+            fault: fault,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct DUStateChangeCompleteResponse;
+
+#[derive(Debug, PartialEq)]
+pub struct DUStateChangeComplete {
+    command_key: String,
+    results: Vec<OpResult>,
+}
+
+impl DUStateChangeComplete {
+    pub fn new(command_key: &str, results: Vec<OpResult>) -> Self {
+        DUStateChangeComplete {
+            command_key: command_key.to_string(),
+            results: results,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["DUStateChangeComplete", "Results"] => self.results.push(OpResult::new(
+                "",
+                "",
+                "",
+                "",
+                0,
+                "",
+                Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                Fault::new(0, ""),
+            )),
+            _ => {}
+        }
+    }
+
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["DUStateChangeComplete", "CommandKey"] => self.command_key = characters.to_string(),
+            ["DUStateChangeComplete", "Results", "OpResultStruct", key] => {
+                let last = self.results.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "UUID" => e.uuid = characters.to_string(),
+                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
+                        "Version" => e.version = characters.to_string(),
+                        "CurrentState" => e.current_state = characters.to_string(),
+                        "Resolved" => e.resolved = parse_to_int(characters, 0),
+                        "ExecutionUnitRefList" => {
+                            e.execution_unit_ref_list = characters.to_string()
+                        }
+                        "StartTime" => match characters.parse::<DateTime<Utc>>() {
+                            Ok(dt) => e.start_time = dt,
+                            _ => {}
+                        },
+                        "CompleteTime" => match characters.parse::<DateTime<Utc>>() {
+                            Ok(dt) => e.complete_time = dt,
+                            _ => {}
+                        },
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            ["DUStateChangeComplete", "Results", "OpResultStruct", "Fault", "FaultStruct", key] => {
+                let last = self.results.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "FaultCode" => e.fault.set_code(parse_to_int(characters, 0)),
+                        "FaultString" => e.fault.set_string(characters),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
 #[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
@@ -801,6 +924,8 @@ pub enum BodyElement {
     DeleteObject(DeleteObject),
     DownloadResponse(DownloadResponse),
     Download(Download),
+    DUStateChangeCompleteResponse(DUStateChangeCompleteResponse),
+    DUStateChangeComplete(DUStateChangeComplete),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
     GetParameterValues(GetParameterValues),
@@ -963,6 +1088,16 @@ impl Envelope {
                         "Download" => self.body.push(BodyElement::Download(Download::new(
                             "", "", "", "", "", 0, "", 0, "", "",
                         ))),
+                        "DUStateChangeCompleteResponse" => {
+                            self.body.push(BodyElement::DUStateChangeCompleteResponse(
+                                DUStateChangeCompleteResponse {},
+                            ))
+                        }
+                        "DUStateChangeComplete" => {
+                            self.body.push(BodyElement::DUStateChangeComplete(
+                                DUStateChangeComplete::new("", vec![]),
+                            ))
+                        }
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -996,6 +1131,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::ChangeDUState(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::DUStateChangeComplete(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1073,6 +1211,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::Download(e)) => e.characters(&path_pattern[2..], characters),
+                    Some(BodyElement::DUStateChangeComplete(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
                     Some(BodyElement::GetParameterAttributes(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
