@@ -515,6 +515,95 @@ impl DeleteObject {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct DownloadResponse {
+    status: String,
+    start_time: DateTime<Utc>,
+    complete_time: DateTime<Utc>,
+}
+
+impl DownloadResponse {
+    pub fn new(status: &str, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
+        DownloadResponse {
+            status: status.to_string(),
+            start_time: start_time,
+            complete_time: complete_time,
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["DownloadResponse", "Status"] => {
+                self.status = characters.to_string();
+            }
+            ["DownloadResponse", "StartTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.start_time = dt,
+                _ => {}
+            },
+            ["DownloadResponse", "CompleteTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.complete_time = dt,
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Download {
+    command_key: String,
+    file_type: String,
+    url: String,
+    username: String,
+    password: String,
+    file_size: u32,
+    target_filename: String,
+    delay_seconds: u32,
+    success_url: String,
+    failure_url: String,
+}
+
+impl Download {
+    pub fn new(
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
+        file_size: u32,
+        target_filename: &str,
+        delay_seconds: u32,
+        success_url: &str,
+        failure_url: &str,
+    ) -> Self {
+        Download {
+            command_key: command_key.to_string(),
+            file_type: file_type.to_string(),
+            url: url.to_string(),
+            username: username.to_string(),
+            password: password.to_string(),
+            file_size: file_size,
+            target_filename: target_filename.to_string(),
+            delay_seconds: delay_seconds,
+            success_url: success_url.to_string(),
+            failure_url: failure_url.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Download", "CommandKey"] => self.command_key = characters.to_string(),
+            ["Download", "FileType"] => self.file_type = characters.to_string(),
+            ["Download", "URL"] => self.url = characters.to_string(),
+            ["Download", "Username"] => self.username = characters.to_string(),
+            ["Download", "Password"] => self.password = characters.to_string(),
+            ["Download", "FileSize"] => self.file_size = parse_to_int(characters, 0),
+            ["Download", "TargetFileName"] => self.target_filename = characters.to_string(),
+            ["Download", "DelaySeconds"] => self.delay_seconds = parse_to_int(characters, 0),
+            ["Download", "SuccessURL"] => self.success_url = characters.to_string(),
+            ["Download", "FailureURL"] => self.failure_url = characters.to_string(),
+            _ => {}
+        }
+    }
+}
+#[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
 }
@@ -710,6 +799,8 @@ pub enum BodyElement {
     ChangeDUState(ChangeDUState),
     DeleteObjectResponse(DeleteObjectResponse),
     DeleteObject(DeleteObject),
+    DownloadResponse(DownloadResponse),
+    Download(Download),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
     GetParameterValues(GetParameterValues),
@@ -861,6 +952,17 @@ impl Envelope {
                         "DeleteObject" => self
                             .body
                             .push(BodyElement::DeleteObject(DeleteObject::new("", ""))),
+                        "DownloadResponse" => {
+                            self.body
+                                .push(BodyElement::DownloadResponse(DownloadResponse::new(
+                                    "",
+                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                                )))
+                        }
+                        "Download" => self.body.push(BodyElement::Download(Download::new(
+                            "", "", "", "", "", 0, "", 0, "", "",
+                        ))),
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -967,6 +1069,10 @@ impl Envelope {
                     Some(BodyElement::DeleteObject(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
+                    Some(BodyElement::DownloadResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::Download(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::GetParameterAttributes(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }

@@ -675,6 +675,144 @@ mod tests {
     }
 
     #[test]
+    fn download_response_1() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:DownloadResponse>
+            <Status>1</Status>
+            <StartTime>2015-01-19T23:08:24Z</StartTime>
+            <CompleteTime>2015-01-19T23:09:24Z</CompleteTime>
+          </cwmp:DownloadResponse>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2015-01-19T23:08:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2015-01-19T23:09:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::DownloadResponse(
+                protocol::DownloadResponse::new("1", start_time, complete_time),
+            )],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn download_1() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:Download>
+            <CommandKey>cmdkey</CommandKey>
+            <FileType>1 Firmware Upgrade Image</FileType>
+            <URL>http://example.com/url</URL>
+            <Username>user</Username>
+            <Password>pass</Password>
+            <FileSize>123456</FileSize>
+            <TargetFileName>image</TargetFileName>
+            <DelaySeconds>5</DelaySeconds>
+            <SuccessURL>http://example.com/success</SuccessURL>
+            <FailureURL>http://example.com/failure</FailureURL>
+          </cwmp:Download>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::Download(protocol::Download::new(
+                "cmdkey",
+                "1 Firmware Upgrade Image",
+                "http://example.com/url",
+                "user",
+                "pass",
+                123456,
+                "image",
+                5,
+                "http://example.com/success",
+                "http://example.com/failure",
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn download_2() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:Download>
+            <CommandKey>cmdkey</CommandKey>
+            <FileType>1 Firmware Upgrade Image</FileType>
+            <URL>http://example.com/url</URL>
+            <FileSize>123456</FileSize>
+          </cwmp:Download>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::Download(protocol::Download::new(
+                "cmdkey",
+                "1 Firmware Upgrade Image",
+                "http://example.com/url",
+                "",
+                "",
+                123456,
+                "",
+                0,
+                "",
+                "",
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
     fn get_parameter_attributes_1() -> Result<(), String> {
         let xml: String = String::from(
             "<SOAP-ENV:Envelope
