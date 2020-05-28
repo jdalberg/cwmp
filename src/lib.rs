@@ -609,6 +609,72 @@ mod tests {
     }
 
     #[test]
+    fn delete_object_response_1() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:DeleteObjectResponse>
+            <Status>0</Status>
+          </cwmp:DeleteObjectResponse>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::DeleteObjectResponse(
+                protocol::DeleteObjectResponse::new("0"),
+            )],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
+    fn delete_object_1() {
+        let src = r#"<SOAP-ENV:Envelope
+        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+          <cwmp:DeleteObject>
+            <ObjectName>Device.Test.</ObjectName>
+            <ParameterKey>ParamKey</ParameterKey>
+          </cwmp:DeleteObject>
+        </SOAP-ENV:Body>
+    </SOAP-ENV:Envelope>"#;
+
+        let should_be = Envelope {
+            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            header: vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            body: vec![BodyElement::DeleteObject(protocol::DeleteObject::new(
+                "Device.Test.",
+                "ParamKey",
+            ))],
+        };
+        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    #[test]
     fn get_parameter_attributes_1() -> Result<(), String> {
         let xml: String = String::from(
             "<SOAP-ENV:Envelope

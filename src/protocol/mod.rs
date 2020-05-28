@@ -470,6 +470,51 @@ impl ChangeDUState {
 }
 
 #[derive(Debug, PartialEq)]
+pub struct DeleteObjectResponse {
+    status: String,
+}
+
+impl DeleteObjectResponse {
+    pub fn new(status: &str) -> Self {
+        DeleteObjectResponse {
+            status: status.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["DeleteObjectResponse", "Status"] => self.status = characters.to_string(),
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct DeleteObject {
+    object_name: String,
+    parameter_key: String,
+}
+
+impl DeleteObject {
+    pub fn new(object_name: &str, parameter_key: &str) -> Self {
+        DeleteObject {
+            object_name: object_name.to_string(),
+            parameter_key: parameter_key.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["DeleteObject", "ObjectName"] => {
+                self.object_name = characters.to_string();
+            }
+            ["DeleteObject", "ParameterKey"] => {
+                self.parameter_key = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
 }
@@ -663,6 +708,8 @@ pub enum BodyElement {
     CancelTransfer(CancelTransfer),
     ChangeDUStateResponse(ChangeDUStateResponse),
     ChangeDUState(ChangeDUState),
+    DeleteObjectResponse(DeleteObjectResponse),
+    DeleteObject(DeleteObject),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
     GetParameterValues(GetParameterValues),
@@ -808,6 +855,12 @@ impl Envelope {
                                     vec![],
                                 )))
                         }
+                        "DeleteObjectResponse" => self.body.push(
+                            BodyElement::DeleteObjectResponse(DeleteObjectResponse::new("")),
+                        ),
+                        "DeleteObject" => self
+                            .body
+                            .push(BodyElement::DeleteObject(DeleteObject::new("", ""))),
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -906,6 +959,12 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::ChangeDUState(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::DeleteObjectResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::DeleteObject(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {
