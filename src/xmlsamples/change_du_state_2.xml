@@ -1,0 +1,24 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+                <cwmp:ChangeDUState>
+                        <CommandKey>cmdkey</CommandKey>
+                        <Operations>
+                                <InstallOpStruct>
+                                        <URL>http://example.com/url</URL>
+                                        <UUID>some-uuid</UUID>
+                                        <Username>user</Username>
+                                        <Password>pass</Password>
+                                        <ExecutionEnvRef>env</ExecutionEnvRef>
+                                </InstallOpStruct>
+                                <UninstallOpStruct>
+                                        <URL>http://example.com/url2</URL>
+                                        <UUID>some-uuid2</UUID>
+                                        <ExecutionEnvRef>env2</ExecutionEnvRef>
+                                </UninstallOpStruct>
+                        </Operations>
+                </cwmp:ChangeDUState>
+        </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

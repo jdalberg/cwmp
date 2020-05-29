@@ -1,0 +1,13 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
+        <SOAP-ENV:Header>
+                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
+        </SOAP-ENV:Header>
+        <SOAP-ENV:Body>
+                <cwmp:GetParameterValues>
+                        <ParameterNames>
+                                <string>Device.IP.Interface.3.IPv4AddressNumberOfEntries</string>
+                                <string>Device.IP.Interface.3.IPv6AddressNumberOfEntries</string>
+                        </ParameterNames>
+                </cwmp:GetParameterValues>
+        </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
