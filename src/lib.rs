@@ -757,24 +757,6 @@ mod tests {
     }
 
     #[test]
-    fn get_parameter_values_1() {
-        test(
-            include_bytes!("xmlsamples/get_parameter_values_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
-            vec![HeaderElement::ID(ID {
-                must_understand: true,
-                id: "50".to_string(),
-            })],
-            vec![BodyElement::GetParameterValues(
-                protocol::GetParameterValues::new(vec![
-                    "Device.IP.Interface.3.IPv4AddressNumberOfEntries".to_string(),
-                    "Device.IP.Interface.3.IPv6AddressNumberOfEntries".to_string(),
-                ]),
-            )],
-        )
-    }
-
-    #[test]
     fn get_parameter_values_response_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_values_response_1.xml"),
@@ -796,6 +778,56 @@ mod tests {
                         "2",
                     ),
                 ]),
+            )],
+        )
+    }
+    #[test]
+    fn get_parameter_values_1() {
+        test(
+            include_bytes!("xmlsamples/get_parameter_values_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            vec![BodyElement::GetParameterValues(
+                protocol::GetParameterValues::new(vec![
+                    "Device.IP.Interface.3.IPv4AddressNumberOfEntries".to_string(),
+                    "Device.IP.Interface.3.IPv6AddressNumberOfEntries".to_string(),
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_queued_transfers_response_1() {
+        test(
+            include_bytes!("xmlsamples/get_queued_transfers_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_28edd28d788a784422413db3914c34b0".to_string(),
+            })],
+            vec![BodyElement::GetQueuedTransfersResponse(
+                protocol::GetQueuedTransfersResponse::new(vec![
+                    protocol::QueuedTransferStruct::new("cmdkey", "2"),
+                    protocol::QueuedTransferStruct::new("cmdkey2", "3"),
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_queued_transfers_1() {
+        test(
+            include_bytes!("xmlsamples/get_queued_transfers_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_28edd28d788a784422413db3914c34b0".to_string(),
+            })],
+            vec![BodyElement::GetQueuedTransfers(
+                protocol::GetQueuedTransfers {},
             )],
         )
     }

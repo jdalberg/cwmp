@@ -1232,6 +1232,67 @@ impl GetParameterValuesResponse {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct QueuedTransferStruct {
+    command_key: Option<String>,
+    state: Option<String>,
+}
+
+impl QueuedTransferStruct {
+    pub fn new(command_key: &str, state: &str) -> Self {
+        QueuedTransferStruct {
+            command_key: Some(command_key.to_string()),
+            state: Some(state.to_string()),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetQueuedTransfersResponse {
+    transfer_list: Vec<QueuedTransferStruct>,
+}
+
+impl GetQueuedTransfersResponse {
+    pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
+        GetQueuedTransfersResponse {
+            transfer_list: transfer_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct"] => {
+                self.transfer_list.push(QueuedTransferStruct::default())
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", key] => {
+                let last = self.transfer_list.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "CommandKey" => e.command_key = Some(characters.to_string()),
+                        "State" => e.state = Some(characters.to_string()),
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetQueuedTransfers {}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1263,6 +1324,8 @@ pub enum BodyElement {
     GetParameterNames(GetParameterNames),
     GetParameterValues(GetParameterValues),
     GetParameterValuesResponse(GetParameterValuesResponse),
+    GetQueuedTransfersResponse(GetQueuedTransfersResponse),
+    GetQueuedTransfers(GetQueuedTransfers),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1481,6 +1544,14 @@ impl Envelope {
                                 GetParameterValuesResponse { parameters: vec![] },
                             ))
                         }
+                        "GetQueuedTransfersResponse" => {
+                            self.body.push(BodyElement::GetQueuedTransfersResponse(
+                                GetQueuedTransfersResponse::new(vec![]),
+                            ))
+                        }
+                        "GetQueuedTransfers" => self
+                            .body
+                            .push(BodyElement::GetQueuedTransfers(GetQueuedTransfers {})),
                         _ => {}
                     }
                 }
@@ -1505,6 +1576,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetParameterNamesResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetQueuedTransfersResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1611,6 +1685,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterValuesResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetQueuedTransfersResponse(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
