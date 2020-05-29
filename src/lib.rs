@@ -71,7 +71,7 @@ mod tests {
     use chrono::prelude::*;
     use chrono::{DateTime, Utc};
     use protocol::{BodyElement, Envelope, HeaderElement, ParameterAttribute, ParameterValue, ID};
-
+    use std::str;
     #[test]
     fn parse_1() -> Result<(), String> {
         match parse(String::from("<xml></xml>")) {
@@ -340,7 +340,7 @@ mod tests {
                     "1 Firmware Upgrade Image",
                     10000,
                     "/bin/image",
-                    protocol::Fault::new(0, ""),
+                    protocol::FaultStruct::new(0, ""),
                     start_time,
                     complete_time,
                 ),
@@ -844,34 +844,6 @@ mod tests {
 
     #[test]
     fn du_state_change_complete_1() {
-        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-        <SOAP-ENV:Header>
-                <cwmp:ID SOAP-ENV:mustUnderstand="1">50</cwmp:ID>
-        </SOAP-ENV:Header>
-        <SOAP-ENV:Body>
-                <cwmp:DUStateChangeComplete>
-                  <CommandKey>cmdkey</CommandKey>
-                  <Results SOAP-ENC:arrayType="cwmp:OpResultStruct[1]">
-                    <OpResultStruct>
-                      <UUID>some-uuid</UUID>
-                      <DeploymentUnitRef>uref</DeploymentUnitRef>
-                      <Version>v2.1</Version>
-                      <CurrentState>curState</CurrentState>
-                      <Resolved>1</Resolved>
-                      <ExecutionUnitRefList>a,b,c</ExecutionUnitRefList>
-                      <StartTime>2015-01-19T23:45:12+00:00</StartTime>
-                      <CompleteTime>2015-01-19T23:55:12+00:00</CompleteTime>
-                      <Fault>
-                        <FaultStruct>
-                          <FaultCode>0</FaultCode>
-                          <FaultString></FaultString>
-                        </FaultStruct>
-                      </Fault>
-                    </OpResultStruct>
-                  </Results>
-                </cwmp:DUStateChangeComplete>
-        </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>"#;
         let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
         let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
         let start_time: DateTime<Utc> = match "2015-01-19T23:45:12+00:00".parse::<DateTime<Utc>>() {
@@ -883,14 +855,14 @@ mod tests {
                 Ok(dt) => dt,
                 _ => bogus_utc_dt,
             };
-        let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
-            header: vec![HeaderElement::ID(ID {
+        test(
+            include_bytes!("tests/samples/du_state_change_complete_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
             })],
-
-            body: vec![BodyElement::DUStateChangeComplete(
+            vec![BodyElement::DUStateChangeComplete(
                 protocol::DUStateChangeComplete::new(
                     "cmdkey",
                     vec![protocol::OpResult::new(
@@ -902,13 +874,104 @@ mod tests {
                         "a,b,c",
                         start_time,
                         complete_time,
-                        protocol::Fault::new(0, ""),
+                        protocol::FaultStruct::new(0, ""),
                     )],
                 ),
             )],
-        };
-        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
-        assert_eq!(envelope, should_be);
+        );
+    }
+
+    #[test]
+    fn factory_reset_response_1() {
+        test(
+            include_bytes!("tests/samples/factory_reset_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::FactoryResetResponse(
+                protocol::FactoryResetResponse {},
+            )],
+        )
+    }
+
+    #[test]
+    fn factory_reset_1() {
+        test(
+            include_bytes!("tests/samples/factory_reset_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::FactoryReset(protocol::FactoryReset {})],
+        )
+    }
+
+    #[test]
+    fn fault_1() {
+        test(
+            include_bytes!("tests/samples/fault_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            vec![BodyElement::Fault(protocol::Fault::new(
+                "SOAP-ENV:Client",
+                "CWMP fault",
+                9005,
+                "Invalid parameter name",
+            ))],
+        )
+    }
+
+    #[test]
+    fn get_all_queued_transfer_response_1() {
+        test(
+            include_bytes!("tests/samples/get_all_queued_transfer_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
+            })],
+            vec![BodyElement::GetAllQueuedTransfersResponse(
+                protocol::GetAllQueuedTransfersResponse::new(vec![
+                    protocol::AllQueuedTransfers::new(
+                        "cmdkey",
+                        "2",
+                        1,
+                        "1 Firmware Upgrade Image",
+                        123456,
+                        "image",
+                    ),
+                    protocol::AllQueuedTransfers::new(
+                        "cmdkey2",
+                        "3",
+                        0,
+                        "3 Vendor Configuration File",
+                        1234,
+                        "",
+                    ),
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_all_queued_transfers_1() {
+        test(
+            include_bytes!("tests/samples/get_all_queued_transfers_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::GetAllQueuedTransfers(
+                protocol::GetAllQueuedTransfers {},
+            )],
+        )
     }
 
     #[test]
@@ -1104,6 +1167,17 @@ mod tests {
             )],
         };
         let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
+        let should_be = Envelope {
+            cwmp: cwmp.to_string(),
+            header: header,
+            body: body,
+        };
+        let envelope: protocol::Envelope =
+            parse(str::from_utf8(input).unwrap().to_string()).unwrap();
         assert_eq!(envelope, should_be);
     }
 }

@@ -29,14 +29,14 @@ pub enum HeaderElement {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Fault {
+pub struct FaultStruct {
     code: u32,
     string: String,
 }
 
-impl Fault {
+impl FaultStruct {
     pub fn new(code: u32, string: &str) -> Self {
-        Fault {
+        FaultStruct {
             code: code,
             string: String::from(string),
         }
@@ -114,7 +114,7 @@ pub struct AutoOpResult {
     execution_unit_ref_list: String,
     start_time: DateTime<Utc>,
     complete_time: DateTime<Utc>,
-    fault: Fault,
+    fault: FaultStruct,
     operation_performed: String,
 }
 
@@ -141,7 +141,7 @@ impl AutoOpResult {
             execution_unit_ref_list: execution_unit_ref_list.to_string(),
             start_time: start_time,
             complete_time: complete_time,
-            fault: Fault::new(fault_code, fault_string),
+            fault: FaultStruct::new(fault_code, fault_string),
             operation_performed: operation_performed.to_string(),
         }
     }
@@ -215,7 +215,7 @@ pub struct AutonomousTransferComplete {
     file_type: String,
     file_size: u32,
     target_filename: String,
-    fault: Fault,
+    fault: FaultStruct,
     start_time: DateTime<Utc>,
     complete_time: DateTime<Utc>,
 }
@@ -228,7 +228,7 @@ impl AutonomousTransferComplete {
         file_type: &str,
         file_size: u32,
         target_filename: &str,
-        fault: Fault,
+        fault: FaultStruct,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
     ) -> Self {
@@ -614,7 +614,7 @@ pub struct OpResult {
     execution_unit_ref_list: String,
     start_time: DateTime<Utc>,
     complete_time: DateTime<Utc>,
-    fault: Fault,
+    fault: FaultStruct,
 }
 
 impl OpResult {
@@ -627,7 +627,7 @@ impl OpResult {
         execution_unit_ref_list: &str,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
-        fault: Fault,
+        fault: FaultStruct,
     ) -> Self {
         OpResult {
             uuid: uuid.to_string(),
@@ -676,7 +676,7 @@ impl DUStateChangeComplete {
                 "",
                 Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                 Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                Fault::new(0, ""),
+                FaultStruct::new(0, ""),
             )),
             _ => {}
         }
@@ -726,6 +726,136 @@ impl DUStateChangeComplete {
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct FactoryResetResponse;
+
+#[derive(Debug, PartialEq)]
+pub struct FactoryReset;
+
+#[derive(Debug, PartialEq)]
+struct FaultDetail {
+    code: u32,
+    string: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Fault {
+    faultcode: String,
+    faultstring: String,
+    detail: FaultDetail,
+}
+
+impl Fault {
+    pub fn new(faultcode: &str, faultstring: &str, code: u32, string: &str) -> Self {
+        Fault {
+            faultcode: faultcode.to_string(),
+            faultstring: faultstring.to_string(),
+            detail: FaultDetail {
+                code: code,
+                string: string.to_string(),
+            },
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Fault", "faultcode"] => {
+                self.faultcode = characters.to_string();
+            }
+            ["Fault", "faultstring"] => {
+                self.faultstring = characters.to_string();
+            }
+            ["Fault", "detail", "Fault", "FaultCode"] => {
+                self.detail.code = parse_to_int(characters, 0);
+            }
+            ["Fault", "detail", "Fault", "FaultString"] => {
+                self.detail.string = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AllQueuedTransfers {
+    command_key: String,
+    state: String,
+    is_download: u8,
+    file_type: String,
+    file_size: u32,
+    target_filename: String,
+}
+
+impl AllQueuedTransfers {
+    pub fn new(
+        command_key: &str,
+        state: &str,
+        is_download: u8,
+        file_type: &str,
+        file_size: u32,
+        target_filename: &str,
+    ) -> Self {
+        AllQueuedTransfers {
+            command_key: command_key.to_string(),
+            state: state.to_string(),
+            is_download: is_download,
+            file_type: file_type.to_string(),
+            file_size: file_size,
+            target_filename: target_filename.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct GetAllQueuedTransfersResponse {
+    transfer_list: Vec<AllQueuedTransfers>,
+}
+
+impl GetAllQueuedTransfersResponse {
+    pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
+        GetAllQueuedTransfersResponse {
+            transfer_list: transfer_list,
+        }
+    }
+
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] => self
+                .transfer_list
+                .push(AllQueuedTransfers::new("", "", 0, "", 0, "")),
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] => {
+                match self.transfer_list.last_mut() {
+                    Some(last) => match key {
+                        "CommandKey" => last.command_key = characters.to_string(),
+                        "State" => last.state = characters.to_string(),
+                        "IsDownload" => last.is_download = parse_to_int(characters, 0),
+                        "FileType" => last.file_type = characters.to_string(),
+                        "FileSize" => last.file_size = parse_to_int(characters, 0),
+                        "TargetFileName" => last.target_filename = characters.to_string(),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct GetAllQueuedTransfers;
+
 #[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
@@ -926,6 +1056,11 @@ pub enum BodyElement {
     Download(Download),
     DUStateChangeCompleteResponse(DUStateChangeCompleteResponse),
     DUStateChangeComplete(DUStateChangeComplete),
+    FactoryResetResponse(FactoryResetResponse),
+    FactoryReset(FactoryReset),
+    Fault(Fault),
+    GetAllQueuedTransfersResponse(GetAllQueuedTransfersResponse),
+    GetAllQueuedTransfers(GetAllQueuedTransfers),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
     GetParameterValues(GetParameterValues),
@@ -1047,7 +1182,7 @@ impl Envelope {
                                     "",
                                     0,
                                     "",
-                                    Fault::new(0, ""),
+                                    FaultStruct::new(0, ""),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                 ),
@@ -1098,6 +1233,23 @@ impl Envelope {
                                 DUStateChangeComplete::new("", vec![]),
                             ))
                         }
+                        "FactoryResetResponse" => self
+                            .body
+                            .push(BodyElement::FactoryResetResponse(FactoryResetResponse {})),
+                        "FactoryReset" => {
+                            self.body.push(BodyElement::FactoryReset(FactoryReset {}))
+                        }
+                        "Fault" => self
+                            .body
+                            .push(BodyElement::Fault(Fault::new("", "", 0, ""))),
+                        "GetAllQueuedTransfersResponse" => {
+                            self.body.push(BodyElement::GetAllQueuedTransfersResponse(
+                                GetAllQueuedTransfersResponse::new(vec![]),
+                            ))
+                        }
+                        "GetAllQueuedTransfers" => self
+                            .body
+                            .push(BodyElement::GetAllQueuedTransfers(GetAllQueuedTransfers {})),
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -1134,6 +1286,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::DUStateChangeComplete(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1212,6 +1367,10 @@ impl Envelope {
                     }
                     Some(BodyElement::Download(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::DUStateChangeComplete(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::Fault(e)) => e.characters(&path_pattern[2..], characters),
+                    Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {
