@@ -675,26 +675,6 @@ mod tests {
     }
 
     #[test]
-    fn get_parameter_attributes_1() {
-        test(
-            include_bytes!("xmlsamples/get_parameter_attributes_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
-            vec![HeaderElement::ID(ID {
-                must_understand: true,
-                id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
-            })],
-            vec![BodyElement::GetParameterAttributes(
-                protocol::GetParameterAttributes {
-                    parameternames: vec![
-                        "InternetGatewayDevice.DeviceInfo.HardwareVersion".to_string(),
-                        "InternetGatewayDevice.DeviceInfo.SoftwareVersion".to_string(),
-                    ],
-                },
-            )],
-        )
-    }
-
-    #[test]
     fn get_parameter_attributes_response_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_attributes_response_1.xml"),
@@ -716,6 +696,62 @@ mod tests {
                         vec!["Subscriber"],
                     ),
                 ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_parameter_attributes_1() {
+        test(
+            include_bytes!("xmlsamples/get_parameter_attributes_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
+            })],
+            vec![BodyElement::GetParameterAttributes(
+                protocol::GetParameterAttributes {
+                    parameternames: vec![
+                        "InternetGatewayDevice.DeviceInfo.HardwareVersion".to_string(),
+                        "InternetGatewayDevice.DeviceInfo.SoftwareVersion".to_string(),
+                    ],
+                },
+            )],
+        )
+    }
+
+    #[test]
+    fn get_parameter_names_response_1() {
+        test(
+            include_bytes!("xmlsamples/get_parameter_names_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_28edd28d788a784422413db3914c34b0".to_string(),
+            })],
+            vec![BodyElement::GetParameterNamesResponse(
+                protocol::GetParameterNamesResponse::new(vec![
+                    protocol::ParameterInfoStruct::new("InternetGatewayDevice.DeviceInfo.", 0),
+                    protocol::ParameterInfoStruct::new(
+                        "InternetGatewayDevice.DeviceInfo.Manufacturer",
+                        1,
+                    ),
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_parameter_names_1() {
+        test(
+            include_bytes!("xmlsamples/get_parameter_names_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_28edd28d788a784422413db3914c34b0".to_string(),
+            })],
+            vec![BodyElement::GetParameterNames(
+                protocol::GetParameterNames::new("InternetGatewayDevice.DeviceInfo.", 0),
             )],
         )
     }

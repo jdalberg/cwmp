@@ -1058,6 +1058,87 @@ impl GetParameterAttributesResponse {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ParameterInfoStruct {
+    name: String,
+    writable: u8,
+}
+
+impl ParameterInfoStruct {
+    pub fn new(name: &str, writable: u8) -> Self {
+        ParameterInfoStruct {
+            name: name.to_string(),
+            writable: writable,
+        }
+    }
+}
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetParameterNamesResponse {
+    parameter_list: Vec<ParameterInfoStruct>,
+}
+
+impl GetParameterNamesResponse {
+    pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
+        GetParameterNamesResponse {
+            parameter_list: parameter_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct"] => {
+                self.parameter_list.push(ParameterInfoStruct::default())
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Name"] => {
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => e.name = characters.to_string(),
+                    None => {}
+                }
+            }
+            ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Writable"] => {
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => e.writable = parse_to_int(characters, 0),
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetParameterNames {
+    parameter_path: String,
+    next_level: u32,
+}
+impl GetParameterNames {
+    pub fn new(parameter_path: &str, next_level: u32) -> Self {
+        GetParameterNames {
+            parameter_path: parameter_path.to_string(),
+            next_level: next_level,
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetParameterNames", "ParameterPath"] => self.parameter_path = characters.to_string(),
+            ["GetParameterNames", "NextLevel"] => self.next_level = parse_to_int(characters, 0),
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct ParameterValue {
     name: String,
@@ -1178,6 +1259,8 @@ pub enum BodyElement {
     GetOptions(GetOptions),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
+    GetParameterNamesResponse(GetParameterNamesResponse),
+    GetParameterNames(GetParameterNames),
     GetParameterValues(GetParameterValues),
     GetParameterValuesResponse(GetParameterValuesResponse),
 }
@@ -1379,6 +1462,14 @@ impl Envelope {
                                 GetParameterAttributesResponse { parameters: vec![] },
                             ))
                         }
+                        "GetParameterNamesResponse" => {
+                            self.body.push(BodyElement::GetParameterNamesResponse(
+                                GetParameterNamesResponse::default(),
+                            ))
+                        }
+                        "GetParameterNames" => self
+                            .body
+                            .push(BodyElement::GetParameterNames(GetParameterNames::default())),
                         "GetParameterValues" => {
                             self.body
                                 .push(BodyElement::GetParameterValues(GetParameterValues {
@@ -1411,6 +1502,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetOptionsResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetParameterNamesResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1505,6 +1599,12 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterAttributesResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetParameterNamesResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetParameterNames(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterValues(e)) => {
