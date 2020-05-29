@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn add_object_response_1() {
         test(
-            include_bytes!("tests/samples/add_object_response_1.xml"),
+            include_bytes!("xmlsamples/add_object_response_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -839,7 +839,7 @@ mod tests {
                 _ => bogus_utc_dt,
             };
         test(
-            include_bytes!("tests/samples/du_state_change_complete_1.xml"),
+            include_bytes!("xmlsamples/du_state_change_complete_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -867,7 +867,7 @@ mod tests {
     #[test]
     fn factory_reset_response_1() {
         test(
-            include_bytes!("tests/samples/factory_reset_response_1.xml"),
+            include_bytes!("xmlsamples/factory_reset_response_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -882,7 +882,7 @@ mod tests {
     #[test]
     fn factory_reset_1() {
         test(
-            include_bytes!("tests/samples/factory_reset_1.xml"),
+            include_bytes!("xmlsamples/factory_reset_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -895,7 +895,7 @@ mod tests {
     #[test]
     fn fault_1() {
         test(
-            include_bytes!("tests/samples/fault_1.xml"),
+            include_bytes!("xmlsamples/fault_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -913,7 +913,7 @@ mod tests {
     #[test]
     fn get_all_queued_transfer_response_1() {
         test(
-            include_bytes!("tests/samples/get_all_queued_transfer_response_1.xml"),
+            include_bytes!("xmlsamples/get_all_queued_transfer_response_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -945,7 +945,7 @@ mod tests {
     #[test]
     fn get_all_queued_transfers_1() {
         test(
-            include_bytes!("tests/samples/get_all_queued_transfers_1.xml"),
+            include_bytes!("xmlsamples/get_all_queued_transfers_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -971,7 +971,7 @@ mod tests {
                 _ => bogus_utc_dt,
             };
         test(
-            include_bytes!("tests/samples/get_options_response_1.xml"),
+            include_bytes!("xmlsamples/get_options_response_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
@@ -1005,7 +1005,7 @@ mod tests {
     #[test]
     fn get_options_1() {
         test(
-            include_bytes!("tests/samples/get_options_1.xml"),
+            include_bytes!("xmlsamples/get_options_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
             vec![HeaderElement::ID(ID {
                 must_understand: true,
