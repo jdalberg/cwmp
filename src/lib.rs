@@ -975,6 +975,66 @@ mod tests {
     }
 
     #[test]
+    fn get_options_response_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2015-01-10T23:45:12+00:00".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let expiration_time: DateTime<Utc> =
+            match "2015-01-10T23:45:12+00:00".parse::<DateTime<Utc>>() {
+                Ok(dt) => dt,
+                _ => bogus_utc_dt,
+            };
+        test(
+            include_bytes!("tests/samples/get_options_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_69412286f02e475b44783c61972f0a91".to_string(),
+            })],
+            vec![BodyElement::GetOptionsResponse(
+                protocol::GetOptionsResponse::new(vec![
+                    protocol::OptionStruct::new(
+                        "First Option",
+                        "12345678",
+                        1,
+                        "1",
+                        start_time,
+                        expiration_time,
+                        1,
+                    ),
+                    protocol::OptionStruct::new(
+                        "Second Option",
+                        "12345678",
+                        1,
+                        "1",
+                        start_time,
+                        expiration_time,
+                        1,
+                    ),
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_options_1() {
+        test(
+            include_bytes!("tests/samples/get_options_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_69412286f02e475b44783c61972f0a91".to_string(),
+            })],
+            vec![BodyElement::GetOptions(protocol::GetOptions::new(
+                "Some Option",
+            ))],
+        )
+    }
+
+    #[test]
     fn get_parameter_attributes_1() -> Result<(), String> {
         let xml: String = String::from(
             "<SOAP-ENV:Envelope

@@ -857,6 +857,119 @@ impl GetAllQueuedTransfersResponse {
 pub struct GetAllQueuedTransfers;
 
 #[derive(Debug, PartialEq)]
+pub struct OptionStruct {
+    option_name: String,
+    voucher_sn: String,
+    state: u8,
+    mode: String,
+    start_date: DateTime<Utc>,
+    expiration_date: DateTime<Utc>,
+    is_transferable: u8,
+}
+
+impl OptionStruct {
+    pub fn new(
+        option_name: &str,
+        voucher_sn: &str,
+        state: u8,
+        mode: &str,
+        start_date: DateTime<Utc>,
+        expiration_date: DateTime<Utc>,
+        is_transferable: u8,
+    ) -> Self {
+        OptionStruct {
+            option_name: option_name.to_string(),
+            voucher_sn: voucher_sn.to_string(),
+            state: state,
+            mode: mode.to_string(),
+            start_date: start_date,
+            expiration_date: expiration_date,
+            is_transferable: is_transferable,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct GetOptionsResponse {
+    option_list: Vec<OptionStruct>,
+}
+
+impl GetOptionsResponse {
+    pub fn new(option_list: Vec<OptionStruct>) -> Self {
+        GetOptionsResponse {
+            option_list: option_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetOptionsResponse", "OptionList", "OptionStruct"] => {
+                self.option_list.push(OptionStruct::new(
+                    "",
+                    "",
+                    0,
+                    "",
+                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
+                    0,
+                ))
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetOptionsResponse", "OptionList", "OptionStruct", key] => {
+                match self.option_list.last_mut() {
+                    Some(last) => match key {
+                        "OptionName" => last.option_name = characters.to_string(),
+                        "VoucherSN" => last.voucher_sn = characters.to_string(),
+                        "State" => last.state = parse_to_int(characters, 0),
+                        "Mode" => last.mode = characters.to_string(),
+                        "StartDate" => match characters.parse::<DateTime<Utc>>() {
+                            Ok(dt) => last.start_date = dt,
+                            _ => {}
+                        },
+                        "ExpirationDate" => match characters.parse::<DateTime<Utc>>() {
+                            Ok(dt) => last.expiration_date = dt,
+                            _ => {}
+                        },
+                        "IsTransferable" => last.is_transferable = parse_to_int(characters, 0),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetOptions {
+    option_name: Option<String>,
+}
+
+impl GetOptions {
+    pub fn new(option_name: &str) -> Self {
+        GetOptions {
+            option_name: Some(option_name.to_string()),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetOptions", "OptionName"] => self.option_name = Some(characters.to_string()),
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
 }
@@ -1061,6 +1174,8 @@ pub enum BodyElement {
     Fault(Fault),
     GetAllQueuedTransfersResponse(GetAllQueuedTransfersResponse),
     GetAllQueuedTransfers(GetAllQueuedTransfers),
+    GetOptionsResponse(GetOptionsResponse),
+    GetOptions(GetOptions),
     GetParameterAttributes(GetParameterAttributes),
     GetParameterAttributesResponse(GetParameterAttributesResponse),
     GetParameterValues(GetParameterValues),
@@ -1250,6 +1365,10 @@ impl Envelope {
                         "GetAllQueuedTransfers" => self
                             .body
                             .push(BodyElement::GetAllQueuedTransfers(GetAllQueuedTransfers {})),
+                        "GetOptionsResponse" => self.body.push(BodyElement::GetOptionsResponse(
+                            GetOptionsResponse::new(vec![]),
+                        )),
+                        "GetOptions" => self.body.push(BodyElement::GetOptions(Default::default())),
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes {
                                 parameternames: vec![],
@@ -1289,6 +1408,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetOptionsResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1371,6 +1493,12 @@ impl Envelope {
                     }
                     Some(BodyElement::Fault(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetOptionsResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetOptions(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {
