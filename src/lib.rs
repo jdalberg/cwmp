@@ -81,34 +81,17 @@ mod tests {
     }
     #[test]
     fn add_object_response_1() {
-        let src = r#"<SOAP-ENV:Envelope
-        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-        <SOAP-ENV:Header>
-          <cwmp:ID SOAP-ENV:mustUnderstand="1">aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
-        </SOAP-ENV:Header>
-        <SOAP-ENV:Body>
-          <cwmp:AddObjectResponse>
-            <InstanceNumber>1</InstanceNumber>
-            <Status>0</Status>
-          </cwmp:AddObjectResponse>
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"#;
-        let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
-            header: vec![HeaderElement::ID(ID {
+        test(
+            include_bytes!("tests/samples/add_object_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "aa0642e34b23820801e7642ad7cb536c".to_string(),
             })],
-            body: vec![BodyElement::AddObjectResponse(
+            vec![BodyElement::AddObjectResponse(
                 protocol::AddObjectResponse::new(1, "0"),
             )],
-        };
-        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
-        assert_eq!(envelope, should_be);
+        )
     }
     #[test]
     fn add_object_1() {
