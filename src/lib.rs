@@ -95,89 +95,49 @@ mod tests {
     }
     #[test]
     fn add_object_1() {
-        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-        <SOAP-ENV:Header>
-          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
-        </SOAP-ENV:Header>
-        <SOAP-ENV:Body>
-          <cwmp:AddObject>
-            <ObjectName>Device.Test.</ObjectName>
-            <ParameterKey>ParamKey</ParameterKey>
-          </cwmp:AddObject>
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"#;
-        let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
-            header: vec![HeaderElement::ID(ID {
+        test(
+            include_bytes!("xmlsamples/add_object_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
             })],
-            body: vec![BodyElement::AddObject(protocol::AddObject::new(
+            vec![BodyElement::AddObject(protocol::AddObject::new(
                 "Device.Test.",
                 "ParamKey",
             ))],
-        };
-        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
-        assert_eq!(envelope, should_be);
+        )
     }
     #[test]
     // parsing invalid object names we must do, cause the handling of that particular
     // kind of error is up to the user of the module.
     fn add_object_2() {
-        let src = r#"<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-        <SOAP-ENV:Header>
-          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
-        </SOAP-ENV:Header>
-        <SOAP-ENV:Body>
-          <cwmp:AddObject>
-            <ObjectName>Device.Test</ObjectName>
-            <ParameterKey>ParamKey</ParameterKey>
-          </cwmp:AddObject>
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"#;
-
-        let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
-            header: vec![HeaderElement::ID(ID {
+        test(
+            include_bytes!("xmlsamples/add_object_2.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
             })],
-            body: vec![BodyElement::AddObject(protocol::AddObject::new(
+            vec![BodyElement::AddObject(protocol::AddObject::new(
                 "Device.Test",
                 "ParamKey",
             ))],
-        };
-        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
-        assert_eq!(envelope, should_be);
+        )
     }
     #[test]
     fn autonomous_dustate_change_complete_response_1() {
-        let src = r#"<SOAP-ENV:Envelope
-        xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-        xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:cwmp="urn:dslforum-org:cwmp-1-0">
-        <SOAP-ENV:Header>
-          <cwmp:ID SOAP-ENV:mustUnderstand="1">API_aa0642e34b23820801e7642ad7cb536c</cwmp:ID>
-        </SOAP-ENV:Header>
-        <SOAP-ENV:Body>
-          <cwmp:AutonomousDUStateChangeCompleteResponse/>
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"#;
-
-        let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
-            header: vec![HeaderElement::ID(ID {
+        test(
+            include_bytes!("xmlsamples/autonomous_dustate_change_complete_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
             })],
-            body: vec![BodyElement::AutonomousDUStateChangeCompleteResponse(
+            vec![BodyElement::AutonomousDUStateChangeCompleteResponse(
                 protocol::AutonomousDUStateChangeCompleteResponse {},
             )],
-        };
-        let envelope: protocol::Envelope = parse(String::from(src)).unwrap();
-        assert_eq!(envelope, should_be);
+        )
     }
     #[test]
     fn autonomous_dustate_change_complete_1() {
@@ -223,7 +183,7 @@ mod tests {
                 _ => bogus_utc_dt,
             };
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -261,7 +221,7 @@ mod tests {
 </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "1".to_string(),
@@ -310,7 +270,7 @@ mod tests {
         };
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "1".to_string(),
@@ -350,7 +310,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -382,7 +342,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -412,7 +372,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -448,7 +408,7 @@ mod tests {
 </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -498,7 +458,7 @@ mod tests {
 </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -559,7 +519,7 @@ mod tests {
 </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -610,7 +570,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -643,7 +603,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -688,7 +648,7 @@ mod tests {
             _ => bogus_utc_dt,
         };
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -729,7 +689,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -773,7 +733,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -812,7 +772,7 @@ mod tests {
     </SOAP-ENV:Envelope>"#;
 
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
@@ -1060,7 +1020,7 @@ mod tests {
                 </Body>
             </Envelope>"#;
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
@@ -1111,7 +1071,7 @@ mod tests {
         </SOAP-ENV:Body>
     </SOAP-ENV:Envelope>"#;
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
@@ -1151,7 +1111,7 @@ mod tests {
         </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"#;
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -1189,7 +1149,7 @@ mod tests {
         </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"#;
         let should_be = Envelope {
-            cwmp: "urn:dslforum-org:cwmp-1-0".to_string(),
+            cwmp: Some("urn:dslforum-org:cwmp-1-0".to_string()),
             header: vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "50".to_string(),
@@ -1215,7 +1175,7 @@ mod tests {
 
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
-            cwmp: cwmp.to_string(),
+            cwmp: Some(cwmp.to_string()),
             header: header,
             body: body,
         };

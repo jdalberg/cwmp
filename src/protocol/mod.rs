@@ -1182,9 +1182,9 @@ pub enum BodyElement {
     GetParameterValuesResponse(GetParameterValuesResponse),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct Envelope {
-    pub cwmp: String,
+    pub cwmp: Option<String>,
     pub header: Vec<HeaderElement>,
     pub body: Vec<BodyElement>,
 }
@@ -1192,7 +1192,7 @@ pub struct Envelope {
 impl Envelope {
     pub fn new() -> Self {
         Envelope {
-            cwmp: String::from("NA"),
+            cwmp: None,
             header: vec![],
             body: vec![],
         }
@@ -1215,12 +1215,12 @@ impl Envelope {
                     .filter(|&x| x.name.local_name == "cwmp")
                     .next();
                 if cwmp_filter.is_some() {
-                    self.cwmp = cwmp_filter.unwrap().value.to_string();
+                    self.cwmp = Some(cwmp_filter.unwrap().value.to_string());
                 } else {
                     // search through the namespaces to find a cwmp value
                     match namespace.get("cwmp") {
-                        Some(ns) => self.cwmp = ns.to_string(),
-                        None => {}
+                        Some(ns) => self.cwmp = Some(ns.to_string()),
+                        None => self.cwmp = None,
                     }
                 }
             }
