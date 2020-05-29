@@ -832,6 +832,49 @@ mod tests {
         )
     }
 
+    #[test]
+    fn get_rpc_methods_response_1() {
+        test(
+            include_bytes!("xmlsamples/get_rpc_methods_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::GetRPCMethodsResponse(
+                protocol::GetRPCMethodsResponse::new(vec![
+                    "GetRPCMethods",
+                    "SetParameterValues",
+                    "GetParameterValues",
+                    "GetParameterNames",
+                    "GetParameterAttributes",
+                    "SetParameterAttributes",
+                    "AddObject",
+                    "DeleteObject",
+                    "Reboot",
+                    "Download",
+                    "Upload",
+                    "GetQueuedTransfers",
+                    "ScheduleInform",
+                    "FactoryReset",
+                ]),
+            )],
+        )
+    }
+
+    #[test]
+    fn get_rpc_methods_1() {
+        test(
+            include_bytes!("xmlsamples/get_rpc_methods_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::GetRPCMethods(protocol::GetRPCMethods {})],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),

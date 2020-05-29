@@ -1293,6 +1293,30 @@ impl GetQueuedTransfersResponse {
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct GetQueuedTransfers {}
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetRPCMethodsResponse {
+    method_list: Vec<String>,
+}
+
+impl GetRPCMethodsResponse {
+    pub fn new(method_list: Vec<&str>) -> Self {
+        GetRPCMethodsResponse {
+            method_list: method_list.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["GetRPCMethodsResponse", "MethodList", "string"] => {
+                self.method_list.push(characters.to_string());
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct GetRPCMethods {}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1326,6 +1350,8 @@ pub enum BodyElement {
     GetParameterValuesResponse(GetParameterValuesResponse),
     GetQueuedTransfersResponse(GetQueuedTransfersResponse),
     GetQueuedTransfers(GetQueuedTransfers),
+    GetRPCMethodsResponse(GetRPCMethodsResponse),
+    GetRPCMethods(GetRPCMethods),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1552,6 +1578,12 @@ impl Envelope {
                         "GetQueuedTransfers" => self
                             .body
                             .push(BodyElement::GetQueuedTransfers(GetQueuedTransfers {})),
+                        "GetRPCMethodsResponse" => self.body.push(
+                            BodyElement::GetRPCMethodsResponse(GetRPCMethodsResponse::new(vec![])),
+                        ),
+                        "GetRPCMethods" => {
+                            self.body.push(BodyElement::GetRPCMethods(GetRPCMethods {}))
+                        }
                         _ => {}
                     }
                 }
@@ -1688,6 +1720,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::GetQueuedTransfersResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::GetRPCMethodsResponse(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
