@@ -1139,7 +1139,7 @@ impl GetParameterNames {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub struct ParameterValue {
     name: String,
     r#type: String,
@@ -1317,6 +1317,142 @@ impl GetRPCMethodsResponse {
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct GetRPCMethods {}
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct InformResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct DeviceId {
+    manufacturer: String,
+    oui: String,
+    product_class: String,
+    serial_number: String,
+}
+impl DeviceId {
+    pub fn new(manufacturer: &str, oui: &str, product_class: &str, serial_number: &str) -> Self {
+        DeviceId {
+            manufacturer: manufacturer.to_string(),
+            oui: oui.to_string(),
+            product_class: product_class.to_string(),
+            serial_number: serial_number.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct EventStruct {
+    event_code: String,
+    command_key: String,
+}
+
+impl EventStruct {
+    pub fn new(event_code: &str, command_key: &str) -> Self {
+        EventStruct {
+            event_code: event_code.to_string(),
+            command_key: command_key.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Inform {
+    device_id: DeviceId,
+    event: Vec<EventStruct>,
+    max_envelopes: u32,
+    current_time: Option<DateTime<Utc>>,
+    retry_count: u32,
+    parameter_list: Vec<ParameterValue>,
+}
+
+impl Inform {
+    pub fn new(
+        device_id: DeviceId,
+        event: Vec<EventStruct>,
+        max_envelopes: u32,
+        current_time: DateTime<Utc>,
+        retry_count: u32,
+        parameter_list: Vec<ParameterValue>,
+    ) -> Self {
+        Inform {
+            device_id: device_id,
+            event: event,
+            max_envelopes: max_envelopes,
+            current_time: Some(current_time),
+            retry_count: retry_count,
+            parameter_list: parameter_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["Inform", "Event", "EventStruct"] => self.event.push(EventStruct::default()),
+            ["Inform", "ParameterList", "ParameterValueStruct"] => {
+                self.parameter_list.push(ParameterValue::default())
+            }
+            ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
+                // use the type attribute
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => e.r#type = extract_attribute(attributes, "type"),
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Inform", "DeviceId", "Manufacturer"] => {
+                self.device_id.manufacturer = characters.to_string()
+            }
+            ["Inform", "DeviceId", "OUI"] => self.device_id.oui = characters.to_string(),
+            ["Inform", "DeviceId", "ProductClass"] => {
+                self.device_id.product_class = characters.to_string()
+            }
+            ["Inform", "DeviceId", "SerialNumber"] => {
+                self.device_id.serial_number = characters.to_string()
+            }
+            ["Inform", "Event", "EventStruct", key] => {
+                let event = self.event.last_mut();
+                match event {
+                    Some(e) => match key {
+                        "EventCode" => e.event_code = characters.to_string(),
+                        "CommandKey" => e.command_key = characters.to_string(),
+                        _ => {}
+                    },
+                    None => {}
+                }
+            }
+            ["Inform", "MaxEnvelopes"] => self.max_envelopes = parse_to_int(characters, 0),
+            ["Inform", "RetryCount"] => self.retry_count = parse_to_int(characters, 0),
+            ["Inform", "CurrentTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.current_time = Some(dt),
+                _ => {}
+            },
+            ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
+                let param = self.parameter_list.last_mut();
+                match param {
+                    Some(p) => p.name = characters.to_string(),
+                    None => {}
+                }
+            }
+            ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
+                let param = self.parameter_list.last_mut();
+                match param {
+                    Some(p) => p.value = characters.to_string(),
+                    None => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1352,6 +1488,8 @@ pub enum BodyElement {
     GetQueuedTransfers(GetQueuedTransfers),
     GetRPCMethodsResponse(GetRPCMethodsResponse),
     GetRPCMethods(GetRPCMethods),
+    InformResponse(InformResponse),
+    Inform(Inform),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1584,6 +1722,10 @@ impl Envelope {
                         "GetRPCMethods" => {
                             self.body.push(BodyElement::GetRPCMethods(GetRPCMethods {}))
                         }
+                        "InformResponse" => self
+                            .body
+                            .push(BodyElement::InformResponse(InformResponse {})),
+                        "Inform" => self.body.push(BodyElement::Inform(Inform::default())),
                         _ => {}
                     }
                 }
@@ -1611,6 +1753,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetQueuedTransfersResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::Inform(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1725,6 +1870,7 @@ impl Envelope {
                     Some(BodyElement::GetRPCMethodsResponse(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
+                    Some(BodyElement::Inform(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }

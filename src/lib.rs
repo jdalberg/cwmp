@@ -875,6 +875,56 @@ mod tests {
         )
     }
 
+    #[test]
+    fn inform_response_1() {
+        test(
+            include_bytes!("xmlsamples/inform_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "100".to_string(),
+            })],
+            vec![BodyElement::InformResponse(protocol::InformResponse {})],
+        )
+    }
+
+    #[test]
+    fn inform_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+
+        let current_time: DateTime<Utc> = match "2015-01-19T23:08:24+00:00".parse::<DateTime<Utc>>()
+        {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        test(
+            include_bytes!("xmlsamples/inform_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "100".to_string(),
+            })],
+            vec![BodyElement::Inform(protocol::Inform::new(
+                protocol::DeviceId::new("The Company", "AA1234", "IAD_001", "S99998888"),
+                vec![protocol::EventStruct::new("2 PERIODIC", "")],
+                1,
+                current_time,
+                0,
+                vec![
+                protocol::ParameterValue::new("InternetGatewayDevice.DeviceSummary","xsd:string","InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)"),
+                protocol::ParameterValue::new("InternetGatewayDevice.DeviceInfo.SpecVersion","xsd:string","1.0"),
+                protocol::ParameterValue::new("InternetGatewayDevice.DeviceInfo.HardwareVersion","xsd:string","HW1.0"),
+                protocol::ParameterValue::new("InternetGatewayDevice.DeviceInfo.SoftwareVersion","xsd:string","V1.00(beta)"),
+                protocol::ParameterValue::new("InternetGatewayDevice.DeviceInfo.ProvisioningCode","xsd:string",""),
+                protocol::ParameterValue::new("InternetGatewayDevice.ManagementServer.ConnectionRequestURL","xsd:string","http://2.2.2.2:7676/CWMP/ConnectionRequest"),
+                protocol::ParameterValue::new("InternetGatewayDevice.ManagementServer.ParameterKey","xsd:string",""),
+                protocol::ParameterValue::new("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress","xsd:string","2.2.2.2"),
+                ],
+            ))],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),
