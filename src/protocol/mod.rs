@@ -1453,6 +1453,63 @@ impl Inform {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct KickedResponse {
+    next_url: String,
+}
+
+impl KickedResponse {
+    pub fn new(next_url: &str) -> Self {
+        KickedResponse {
+            next_url: next_url.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["KickedResponse", "NextURL"] => {
+                self.next_url = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Kicked {
+    command: String,
+    referer: String,
+    arg: String,
+    next: String,
+}
+
+impl Kicked {
+    pub fn new(command: &str, referer: &str, arg: &str, next: &str) -> Self {
+        Kicked {
+            command: command.to_string(),
+            referer: referer.to_string(),
+            arg: arg.to_string(),
+            next: next.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Kicked", "Command"] => {
+                self.command = characters.to_string();
+            }
+            ["Kicked", "Referer"] => {
+                self.referer = characters.to_string();
+            }
+            ["Kicked", "Arg"] => {
+                self.arg = characters.to_string();
+            }
+            ["Kicked", "Next"] => {
+                self.next = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1490,6 +1547,8 @@ pub enum BodyElement {
     GetRPCMethods(GetRPCMethods),
     InformResponse(InformResponse),
     Inform(Inform),
+    KickedResponse(KickedResponse),
+    Kicked(Kicked),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1726,6 +1785,10 @@ impl Envelope {
                             .body
                             .push(BodyElement::InformResponse(InformResponse {})),
                         "Inform" => self.body.push(BodyElement::Inform(Inform::default())),
+                        "KickedResponse" => self
+                            .body
+                            .push(BodyElement::KickedResponse(KickedResponse::default())),
+                        "Kicked" => self.body.push(BodyElement::Kicked(Kicked::default())),
                         _ => {}
                     }
                 }
@@ -1871,6 +1934,10 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::Inform(e)) => e.characters(&path_pattern[2..], characters),
+                    Some(BodyElement::KickedResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::Kicked(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }

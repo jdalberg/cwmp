@@ -925,6 +925,39 @@ mod tests {
         )
     }
 
+    #[test]
+    fn kicked_response_1() {
+        test(
+            include_bytes!("xmlsamples/kicked_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::KickedResponse(protocol::KickedResponse::new(
+                "http://example.com/next",
+            ))],
+        )
+    }
+
+    #[test]
+    fn kicked_1() {
+        test(
+            include_bytes!("xmlsamples/kicked_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::Kicked(protocol::Kicked::new(
+                "cmd",
+                "some_host",
+                "success",
+                "http://example.com/next",
+            ))],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),
