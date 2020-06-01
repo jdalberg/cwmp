@@ -958,6 +958,32 @@ mod tests {
         )
     }
 
+    #[test]
+    fn reboot_response_1() {
+        test(
+            include_bytes!("xmlsamples/reboot_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
+            })],
+            vec![BodyElement::RebootResponse(protocol::RebootResponse {})],
+        )
+    }
+
+    #[test]
+    fn reboot_1() {
+        test(
+            include_bytes!("xmlsamples/reboot_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_953323a9b674bb42b7cad250b2cf0607".to_string(),
+            })],
+            vec![BodyElement::Reboot(protocol::Reboot::new("cmdkey"))],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),

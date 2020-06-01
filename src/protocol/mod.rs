@@ -1510,6 +1510,30 @@ impl Kicked {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct RebootResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Reboot {
+    command_key: String,
+}
+
+impl Reboot {
+    pub fn new(command_key: &str) -> Self {
+        Reboot {
+            command_key: command_key.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Reboot", "CommandKey"] => {
+                self.command_key = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1549,6 +1573,8 @@ pub enum BodyElement {
     Inform(Inform),
     KickedResponse(KickedResponse),
     Kicked(Kicked),
+    RebootResponse(RebootResponse),
+    Reboot(Reboot),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1789,6 +1815,10 @@ impl Envelope {
                             .body
                             .push(BodyElement::KickedResponse(KickedResponse::default())),
                         "Kicked" => self.body.push(BodyElement::Kicked(Kicked::default())),
+                        "RebootResponse" => self
+                            .body
+                            .push(BodyElement::RebootResponse(RebootResponse::default())),
+                        "Reboot" => self.body.push(BodyElement::Reboot(Reboot::default())),
                         _ => {}
                     }
                 }
@@ -1938,6 +1968,7 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::Kicked(e)) => e.characters(&path_pattern[2..], characters),
+                    Some(BodyElement::Reboot(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }
