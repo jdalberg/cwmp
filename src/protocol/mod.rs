@@ -28,7 +28,7 @@ pub enum HeaderElement {
     SessionTimeout(SessionTimeout),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct FaultStruct {
     code: u32,
     string: String,
@@ -104,7 +104,7 @@ impl AddObject {
 #[derive(Debug, PartialEq)]
 pub struct AutonomousDUStateChangeCompleteResponse;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct AutoOpResult {
     uuid: String,
     deployment_unit_ref: String,
@@ -112,8 +112,8 @@ pub struct AutoOpResult {
     current_state: String,
     resolved: String,
     execution_unit_ref_list: String,
-    start_time: DateTime<Utc>,
-    complete_time: DateTime<Utc>,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
     fault: FaultStruct,
     operation_performed: String,
 }
@@ -139,8 +139,8 @@ impl AutoOpResult {
             current_state: current_state.to_string(),
             resolved: resolved.to_string(),
             execution_unit_ref_list: execution_unit_ref_list.to_string(),
-            start_time: start_time,
-            complete_time: complete_time,
+            start_time: Some(start_time),
+            complete_time: Some(complete_time),
             fault: FaultStruct::new(fault_code, fault_string),
             operation_performed: operation_performed.to_string(),
         }
@@ -171,11 +171,11 @@ impl AutonomousDUStateChangeComplete {
                             e.execution_unit_ref_list = characters.to_string()
                         }
                         "StartTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.start_time = dt,
+                            Ok(dt) => e.start_time = Some(dt),
                             _ => {}
                         },
                         "CompleteTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.complete_time = dt,
+                            Ok(dt) => e.complete_time = Some(dt),
                             _ => {}
                         },
                         "OperationPerformed" => e.operation_performed = characters.to_string(),
@@ -216,8 +216,8 @@ pub struct AutonomousTransferComplete {
     file_size: u32,
     target_filename: String,
     fault: FaultStruct,
-    start_time: DateTime<Utc>,
-    complete_time: DateTime<Utc>,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
 }
 
 impl AutonomousTransferComplete {
@@ -240,8 +240,8 @@ impl AutonomousTransferComplete {
             file_size: file_size,
             target_filename: target_filename.to_string(),
             fault: fault,
-            start_time: start_time,
-            complete_time: complete_time,
+            start_time: Some(start_time),
+            complete_time: Some(complete_time),
         }
     }
 
@@ -265,13 +265,13 @@ impl AutonomousTransferComplete {
             }
             ["AutonomousTransferComplete", "StartTime"] => {
                 match characters.parse::<DateTime<Utc>>() {
-                    Ok(dt) => self.start_time = dt,
+                    Ok(dt) => self.start_time = Some(dt),
                     _ => {}
                 }
             }
             ["AutonomousTransferComplete", "CompleteTime"] => {
                 match characters.parse::<DateTime<Utc>>() {
-                    Ok(dt) => self.complete_time = dt,
+                    Ok(dt) => self.complete_time = Some(dt),
                     _ => {}
                 }
             }
@@ -517,16 +517,16 @@ impl DeleteObject {
 #[derive(Debug, PartialEq)]
 pub struct DownloadResponse {
     status: String,
-    start_time: DateTime<Utc>,
-    complete_time: DateTime<Utc>,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
 }
 
 impl DownloadResponse {
     pub fn new(status: &str, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
         DownloadResponse {
             status: status.to_string(),
-            start_time: start_time,
-            complete_time: complete_time,
+            start_time: Some(start_time),
+            complete_time: Some(complete_time),
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -535,11 +535,11 @@ impl DownloadResponse {
                 self.status = characters.to_string();
             }
             ["DownloadResponse", "StartTime"] => match characters.parse::<DateTime<Utc>>() {
-                Ok(dt) => self.start_time = dt,
+                Ok(dt) => self.start_time = Some(dt),
                 _ => {}
             },
             ["DownloadResponse", "CompleteTime"] => match characters.parse::<DateTime<Utc>>() {
-                Ok(dt) => self.complete_time = dt,
+                Ok(dt) => self.complete_time = Some(dt),
                 _ => {}
             },
             _ => {}
@@ -612,8 +612,8 @@ pub struct OpResult {
     current_state: String,
     resolved: u32,
     execution_unit_ref_list: String,
-    start_time: DateTime<Utc>,
-    complete_time: DateTime<Utc>,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
     fault: FaultStruct,
 }
 
@@ -636,8 +636,8 @@ impl OpResult {
             current_state: current_state.to_string(),
             resolved: resolved,
             execution_unit_ref_list: execution_unit_ref_list.to_string(),
-            start_time: start_time,
-            complete_time: complete_time,
+            start_time: Some(start_time),
+            complete_time: Some(complete_time),
             fault: fault,
         }
     }
@@ -698,11 +698,11 @@ impl DUStateChangeComplete {
                             e.execution_unit_ref_list = characters.to_string()
                         }
                         "StartTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.start_time = dt,
+                            Ok(dt) => e.start_time = Some(dt),
                             _ => {}
                         },
                         "CompleteTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.complete_time = dt,
+                            Ok(dt) => e.complete_time = Some(dt),
                             _ => {}
                         },
                         _ => {}
@@ -862,8 +862,8 @@ pub struct OptionStruct {
     voucher_sn: String,
     state: u8,
     mode: String,
-    start_date: DateTime<Utc>,
-    expiration_date: DateTime<Utc>,
+    start_date: Option<DateTime<Utc>>,
+    expiration_date: Option<DateTime<Utc>>,
     is_transferable: u8,
 }
 
@@ -882,8 +882,8 @@ impl OptionStruct {
             voucher_sn: voucher_sn.to_string(),
             state: state,
             mode: mode.to_string(),
-            start_date: start_date,
-            expiration_date: expiration_date,
+            start_date: Some(start_date),
+            expiration_date: Some(expiration_date),
             is_transferable: is_transferable,
         }
     }
@@ -932,11 +932,11 @@ impl GetOptionsResponse {
                         "State" => last.state = parse_to_int(characters, 0),
                         "Mode" => last.mode = characters.to_string(),
                         "StartDate" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => last.start_date = dt,
+                            Ok(dt) => last.start_date = Some(dt),
                             _ => {}
                         },
                         "ExpirationDate" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => last.expiration_date = dt,
+                            Ok(dt) => last.expiration_date = Some(dt),
                             _ => {}
                         },
                         "IsTransferable" => last.is_transferable = parse_to_int(characters, 0),
