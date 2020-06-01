@@ -1601,6 +1601,125 @@ impl RequestDownload {
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct RequestDownloadResponse {}
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ScheduleDownloadResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct TimeWindow {
+    window_start: u32,
+    window_end: u32,
+    window_mode: String,
+    user_message: String,
+    max_retries: i32,
+}
+impl TimeWindow {
+    pub fn new(
+        window_start: u32,
+        window_end: u32,
+        window_mode: &str,
+        user_message: &str,
+        max_retries: i32,
+    ) -> Self {
+        TimeWindow {
+            window_start: window_start,
+            window_end: window_end,
+            window_mode: window_mode.to_string(),
+            user_message: user_message.to_string(),
+            max_retries: max_retries,
+        }
+    }
+}
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ScheduleDownload {
+    command_key: String,
+    file_type: String,
+    url: String,
+    username: String,
+    password: String,
+    file_size: u32,
+    target_filename: String,
+    timewindow_list: Vec<TimeWindow>,
+}
+
+impl ScheduleDownload {
+    pub fn new(
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
+        file_size: u32,
+        target_filename: &str,
+        timewindow_list: Vec<TimeWindow>,
+    ) -> Self {
+        ScheduleDownload {
+            command_key: command_key.to_string(),
+            file_type: file_type.to_string(),
+            url: url.to_string(),
+            username: username.to_string(),
+            password: password.to_string(),
+            file_size: file_size,
+            target_filename: target_filename.to_string(),
+            timewindow_list: timewindow_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["ScheduleDownload", "TimeWindowList", "TimeWindowStruct"] => {
+                self.timewindow_list.push(TimeWindow::default())
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["ScheduleDownload", "CommandKey"] => {
+                self.command_key = characters.to_string();
+            }
+            ["ScheduleDownload", "FileType"] => {
+                self.file_type = characters.to_string();
+            }
+            ["ScheduleDownload", "URL"] => {
+                self.url = characters.to_string();
+            }
+            ["ScheduleDownload", "Username"] => {
+                self.username = characters.to_string();
+            }
+            ["ScheduleDownload", "Password"] => {
+                self.password = characters.to_string();
+            }
+            ["ScheduleDownload", "FileSize"] => {
+                self.file_size = parse_to_int(characters, 0);
+            }
+            ["ScheduleDownload", "TargetFileName"] => {
+                self.target_filename = characters.to_string();
+            }
+            ["ScheduleDownload", "TimeWindowList", "TimeWindowStruct", key] => {
+                let last = self.timewindow_list.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "WindowStart" => e.window_start = parse_to_int(characters, 0),
+                        "WindowEnd" => e.window_end = parse_to_int(characters, 0),
+                        "WindowMode" => e.window_mode = characters.to_string(),
+                        "UserMessage" => e.user_message = characters.to_string(),
+                        "MaxRetries" => e.max_retries = parse_to_int(characters, 0),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1644,6 +1763,8 @@ pub enum BodyElement {
     Reboot(Reboot),
     RequestDownloadResponse(RequestDownloadResponse),
     RequestDownload(RequestDownload),
+    ScheduleDownloadResponse(ScheduleDownloadResponse),
+    ScheduleDownload(ScheduleDownload),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1894,6 +2015,12 @@ impl Envelope {
                         "RequestDownload" => self
                             .body
                             .push(BodyElement::RequestDownload(RequestDownload::default())),
+                        "ScheduleDownloadResponse" => self.body.push(
+                            BodyElement::ScheduleDownloadResponse(ScheduleDownloadResponse {}),
+                        ),
+                        "ScheduleDownload" => self
+                            .body
+                            .push(BodyElement::ScheduleDownload(ScheduleDownload::default())),
                         _ => {}
                     }
                 }
@@ -1927,6 +2054,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::RequestDownload(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::ScheduleDownload(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -2050,6 +2180,9 @@ impl Envelope {
                     Some(BodyElement::RequestDownload(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
+                    Some(BodyElement::ScheduleDownload(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }
@@ -2085,6 +2218,7 @@ fn extract_attribute(
 
 pub trait Parseable {}
 impl Parseable for u32 {}
+impl Parseable for i32 {}
 impl Parseable for u8 {}
 
 fn parse_to_int<T: Parseable + std::str::FromStr>(chars: &String, default: T) -> T {

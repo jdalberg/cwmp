@@ -1017,6 +1017,51 @@ mod tests {
         )
     }
 
+    #[test]
+    fn schedule_download_response_1() {
+        test(
+            include_bytes!("xmlsamples/schedule_download_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::ScheduleDownloadResponse(
+                protocol::ScheduleDownloadResponse {},
+            )],
+        )
+    }
+
+    #[test]
+    fn schedule_download_1() {
+        test(
+            include_bytes!("xmlsamples/schedule_download_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::ScheduleDownload(
+                protocol::ScheduleDownload::new(
+                    "cmdkey",
+                    "1 Firmware Upgrade Image",
+                    "http://example.com/url",
+                    "user",
+                    "pass",
+                    123456,
+                    "image",
+                    vec![protocol::TimeWindow::new(
+                        5,
+                        45,
+                        "1 At Any Time",
+                        "A message",
+                        -1,
+                    )],
+                ),
+            )],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),
