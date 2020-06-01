@@ -1534,6 +1534,73 @@ impl Reboot {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ArgStruct {
+    name: String,
+    value: String,
+}
+
+impl ArgStruct {
+    pub fn new(name: &str, value: &str) -> Self {
+        ArgStruct {
+            name: name.to_string(),
+            value: value.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct RequestDownload {
+    file_type: String,
+    file_type_arg: Vec<ArgStruct>,
+}
+
+impl RequestDownload {
+    pub fn new(file_type: &str, file_type_arg: Vec<ArgStruct>) -> Self {
+        RequestDownload {
+            file_type: file_type.to_string(),
+            file_type_arg: file_type_arg,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["RequestDownload", "FileTypeArg", "ArgStruct"] => {
+                self.file_type_arg.push(ArgStruct::default())
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["RequestDownload", "FileType"] => {
+                self.file_type = characters.to_string();
+            }
+            ["RequestDownload", "FileTypeArg", "ArgStruct", key] => {
+                let last = self.file_type_arg.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "Name" => e.name = characters.to_string(),
+                        "Value" => e.value = characters.to_string(),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct RequestDownloadResponse {}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1575,6 +1642,8 @@ pub enum BodyElement {
     Kicked(Kicked),
     RebootResponse(RebootResponse),
     Reboot(Reboot),
+    RequestDownloadResponse(RequestDownloadResponse),
+    RequestDownload(RequestDownload),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1819,6 +1888,12 @@ impl Envelope {
                             .body
                             .push(BodyElement::RebootResponse(RebootResponse::default())),
                         "Reboot" => self.body.push(BodyElement::Reboot(Reboot::default())),
+                        "RequestDownloadResponse" => self.body.push(
+                            BodyElement::RequestDownloadResponse(RequestDownloadResponse {}),
+                        ),
+                        "RequestDownload" => self
+                            .body
+                            .push(BodyElement::RequestDownload(RequestDownload::default())),
                         _ => {}
                     }
                 }
@@ -1849,6 +1924,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::Inform(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::RequestDownload(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -1969,6 +2047,9 @@ impl Envelope {
                     }
                     Some(BodyElement::Kicked(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::Reboot(e)) => e.characters(&path_pattern[2..], characters),
+                    Some(BodyElement::RequestDownload(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }
