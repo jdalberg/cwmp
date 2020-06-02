@@ -1720,6 +1720,35 @@ impl ScheduleDownload {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ScheduleInformResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct ScheduleInform {
+    delay_seconds: u32,
+    command_key: String,
+}
+
+impl ScheduleInform {
+    pub fn new(delay_seconds: u32, command_key: &str) -> Self {
+        ScheduleInform {
+            delay_seconds: delay_seconds,
+            command_key: command_key.to_string(),
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["ScheduleInform", "DelaySeconds"] => {
+                self.delay_seconds = parse_to_int(characters, 0);
+            }
+            ["ScheduleInform", "CommandKey"] => {
+                self.command_key = characters.to_string();
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1765,6 +1794,8 @@ pub enum BodyElement {
     RequestDownload(RequestDownload),
     ScheduleDownloadResponse(ScheduleDownloadResponse),
     ScheduleDownload(ScheduleDownload),
+    ScheduleInformResponse(ScheduleInformResponse),
+    ScheduleInform(ScheduleInform),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2021,6 +2052,12 @@ impl Envelope {
                         "ScheduleDownload" => self
                             .body
                             .push(BodyElement::ScheduleDownload(ScheduleDownload::default())),
+                        "ScheduleInformResponse" => self.body.push(
+                            BodyElement::ScheduleInformResponse(ScheduleInformResponse {}),
+                        ),
+                        "ScheduleInform" => self
+                            .body
+                            .push(BodyElement::ScheduleInform(ScheduleInform::default())),
                         _ => {}
                     }
                 }
@@ -2181,6 +2218,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::ScheduleDownload(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::ScheduleInform(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
