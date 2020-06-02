@@ -1851,12 +1851,14 @@ impl SetParameterValuesResponse {
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct SetParameterValues {
     parameter_list: Vec<ParameterValue>,
+    parameter_key: Option<String>,
 }
 
 impl SetParameterValues {
-    pub fn new(parameter_list: Vec<ParameterValue>) -> Self {
+    pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
         SetParameterValues {
             parameter_list: parameter_list,
+            parameter_key: parameter_key,
         }
     }
     fn start_handler(
@@ -1883,6 +1885,9 @@ impl SetParameterValues {
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
+            ["SetParameterValues", "ParameterKey"] => {
+                self.parameter_key = Some(characters.to_string())
+            }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
                 let last = self.parameter_list.last_mut();
                 match last {

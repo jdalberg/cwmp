@@ -1155,10 +1155,34 @@ mod tests {
                 id: "50".to_string(),
             })],
             vec![BodyElement::SetParameterValues(
-                protocol::SetParameterValues::new(vec![
-                    protocol::ParameterValue::new("Device.Test", "xsi:string", "Foo"),
-                    protocol::ParameterValue::new("Device.Test.Whatever", "xsi:int", "1"),
-                ]),
+                protocol::SetParameterValues::new(
+                    None,
+                    vec![
+                        protocol::ParameterValue::new("Device.Test", "xsi:string", "Foo"),
+                        protocol::ParameterValue::new("Device.Test.Whatever", "xsi:int", "1"),
+                    ],
+                ),
+            )],
+        )
+    }
+
+    #[test]
+    fn set_parameter_values_2() {
+        test(
+            include_bytes!("xmlsamples/set_parameter_values_2.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "50".to_string(),
+            })],
+            vec![BodyElement::SetParameterValues(
+                protocol::SetParameterValues::new(
+                    Some("foo".to_string()),
+                    vec![
+                        protocol::ParameterValue::new("Device.Test", "xsi:string", "Foo"),
+                        protocol::ParameterValue::new("Device.Test.Whatever", "xsi:int", "1"),
+                    ],
+                ),
             )],
         )
     }
