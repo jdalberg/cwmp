@@ -1224,6 +1224,52 @@ mod tests {
             ]))],
         )
     }
+
+    #[test]
+    fn transfer_complete_response_1() {
+        test(
+            include_bytes!("xmlsamples/transfer_complete_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "1".to_string(),
+            })],
+            vec![BodyElement::TransferCompleteResponse(
+                protocol::TransferCompleteResponse {},
+            )],
+        )
+    }
+
+    #[test]
+    fn transfer_complete_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2016-04-07T08:43:49Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2016-04-07T08:45:06Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        test(
+            include_bytes!("xmlsamples/transfer_complete_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "1".to_string(),
+            })],
+            vec![BodyElement::TransferComplete(
+                protocol::TransferComplete::new(
+                    "AutoconfFirmwareUpgrade",
+                    protocol::FaultStruct::new(0, ""),
+                    Some(start_time),
+                    Some(complete_time),
+                ),
+            )],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),

@@ -44,7 +44,7 @@ pub enum HeaderElement {
     NoMoreRequests(NoMoreRequests),
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Eq, Default)]
 pub struct FaultStruct {
     code: u32,
     string: String,
@@ -1960,6 +1960,52 @@ impl SetVouchers {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct TransferCompleteResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct TransferComplete {
+    command_key: String,
+    fault: FaultStruct,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
+}
+
+impl TransferComplete {
+    pub fn new(
+        command_key: &str,
+        fault: FaultStruct,
+        start_time: Option<DateTime<Utc>>,
+        complete_time: Option<DateTime<Utc>>,
+    ) -> Self {
+        TransferComplete {
+            command_key: command_key.to_string(),
+            fault: fault,
+            start_time: start_time,
+            complete_time: complete_time,
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["TransferComplete", "CommandKey"] => self.command_key = characters.to_string(),
+            ["TransferComplete", "StartTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.start_time = Some(dt),
+                _ => {}
+            },
+            ["TransferComplete", "CompleteTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.complete_time = Some(dt),
+                _ => {}
+            },
+            ["TransferComplete", "FaultStruct", "FaultCode"] => {
+                self.fault.set_code(parse_to_int(characters, 0))
+            }
+            ["TransferComplete", "FaultStruct", "FaultString"] => self.fault.set_string(characters),
+
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -2013,6 +2059,8 @@ pub enum BodyElement {
     SetParameterValues(SetParameterValues),
     SetVouchersResponse(SetVouchersResponse),
     SetVouchers(SetVouchers),
+    TransferCompleteResponse(TransferCompleteResponse),
+    TransferComplete(TransferComplete),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2306,6 +2354,12 @@ impl Envelope {
                         "SetVouchers" => self
                             .body
                             .push(BodyElement::SetVouchers(SetVouchers::default())),
+                        "TransferCompleteResponse" => self.body.push(
+                            BodyElement::TransferCompleteResponse(TransferCompleteResponse {}),
+                        ),
+                        "TransferComplete" => self
+                            .body
+                            .push(BodyElement::TransferComplete(TransferComplete::default())),
                         _ => {}
                     }
                 }
@@ -2493,6 +2547,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::SetVouchers(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::TransferComplete(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
