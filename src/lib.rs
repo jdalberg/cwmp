@@ -880,10 +880,13 @@ mod tests {
         test(
             include_bytes!("xmlsamples/inform_response_1.xml"),
             "urn:dslforum-org:cwmp-1-0",
-            vec![HeaderElement::ID(ID {
-                must_understand: true,
-                id: "100".to_string(),
-            })],
+            vec![
+                HeaderElement::ID(ID {
+                    must_understand: true,
+                    id: "100".to_string(),
+                }),
+                HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
+            ],
             vec![BodyElement::InformResponse(protocol::InformResponse {})],
         )
     }
@@ -904,7 +907,9 @@ mod tests {
             vec![HeaderElement::ID(ID {
                 must_understand: true,
                 id: "100".to_string(),
-            })],
+            }),
+            HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
+            ],
             vec![BodyElement::Inform(protocol::Inform::new(
                 protocol::DeviceId::new("The Company", "AA1234", "IAD_001", "S99998888"),
                 vec![protocol::EventStruct::new("2 PERIODIC", "")],
@@ -1187,6 +1192,23 @@ mod tests {
         )
     }
 
+    #[test]
+    fn set_vouchers_response_1() {
+        test(
+            include_bytes!("xmlsamples/set_vouchers_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![
+                HeaderElement::ID(ID {
+                    must_understand: true,
+                    id: "100".to_string(),
+                }),
+                HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
+            ],
+            vec![BodyElement::SetVouchersResponse(
+                protocol::SetVouchersResponse {},
+            )],
+        )
+    }
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),

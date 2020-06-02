@@ -21,11 +21,27 @@ pub struct SessionTimeout {
     pub timeout: u32,
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct NoMoreRequests {
+    mustunderstand: bool,
+    value: u8,
+}
+
+impl NoMoreRequests {
+    pub fn new(mustunderstand: bool, value: u8) -> Self {
+        NoMoreRequests {
+            mustunderstand: mustunderstand,
+            value: value,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum HeaderElement {
     ID(ID),
     HoldRequests(HoldRequests),
     SessionTimeout(SessionTimeout),
+    NoMoreRequests(NoMoreRequests),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -1904,6 +1920,9 @@ impl SetParameterValues {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetVouchersResponse {}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1955,6 +1974,7 @@ pub enum BodyElement {
     SetParameterAttributes(SetParameterAttributes),
     SetParameterValuesResponse(SetParameterValuesResponse),
     SetParameterValues(SetParameterValues),
+    SetVouchersResponse(SetVouchersResponse),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2002,6 +2022,8 @@ impl Envelope {
             ["Envelope", "Header", header_element] => {
                 // check if there is a mustUnderstand attribute, and if so, check
                 // if we actually understand the header_element given
+
+                // the mustUnderstand attributes is used in more than one header element
                 let must_understand_filter = attributes
                     .iter()
                     .filter(|&x| x.name.local_name == "mustUnderstand")
@@ -2013,6 +2035,13 @@ impl Envelope {
                         must_understand: must_understand,
                         id: String::from(""),
                     })),
+                    "NoMoreRequests" => {
+                        self.header
+                            .push(HeaderElement::NoMoreRequests(NoMoreRequests::new(
+                                must_understand,
+                                0,
+                            )))
+                    }
                     _ => {}
                 }
             }
@@ -2233,6 +2262,9 @@ impl Envelope {
                         "SetParameterValues" => self.body.push(BodyElement::SetParameterValues(
                             SetParameterValues::default(),
                         )),
+                        "SetVouchersResponse" => self
+                            .body
+                            .push(BodyElement::SetVouchersResponse(SetVouchersResponse {})),
                         _ => {}
                     }
                 }
@@ -2307,19 +2339,22 @@ impl Envelope {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["Envelope", "Header", "ID"] => {
-                // find the ID header element created by start_handler of Envelope, and
-                // set the id tag therein
                 for elem in self.header.iter_mut() {
                     match elem {
-                        HeaderElement::ID(ref data) => {
-                            let new_id = HeaderElement::ID(ID {
-                                must_understand: data.must_understand,
-                                id: characters.to_string(),
-                            });
-                            *elem = new_id;
-                            println!("New header ID element set");
+                        HeaderElement::ID(data) => {
+                            data.id = characters.to_string();
                         }
-                        _ => println!("Dont care about elem: {:?}", elem),
+                        _ => {}
+                    }
+                }
+            }
+            ["Envelope", "Header", "NoMoreRequests"] => {
+                for elem in self.header.iter_mut() {
+                    match elem {
+                        HeaderElement::NoMoreRequests(data) => {
+                            data.value = parse_to_int(characters, 0);
+                        }
+                        _ => {}
                     }
                 }
             }
