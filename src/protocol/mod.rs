@@ -1830,6 +1830,75 @@ impl SetParameterAttributes {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetParameterValuesResponse {
+    status: u32,
+}
+
+impl SetParameterValuesResponse {
+    pub fn new(status: u32) -> Self {
+        SetParameterValuesResponse { status: status }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["SetParameterValuesResponse", "Status"] => self.status = parse_to_int(characters, 0),
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetParameterValues {
+    parameter_list: Vec<ParameterValue>,
+}
+
+impl SetParameterValues {
+    pub fn new(parameter_list: Vec<ParameterValue>) -> Self {
+        SetParameterValues {
+            parameter_list: parameter_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["SetParameterValues", "ParameterList", "ParameterValueStruct"] => {
+                self.parameter_list.push(ParameterValue::default())
+            }
+            ["SetParameterValues", "ParameterList", "ParameterValueStruct", "Value"] => {
+                // use the type attribute
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => e.r#type = extract_attribute(attributes, "type"),
+                    None => {}
+                }
+            }
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "Name" => e.name = characters.to_string(),
+                        "Value" => e.value = characters.to_string(),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1879,6 +1948,8 @@ pub enum BodyElement {
     ScheduleInform(ScheduleInform),
     SetParameterAttributesResponse(SetParameterAttributesResponse),
     SetParameterAttributes(SetParameterAttributes),
+    SetParameterValuesResponse(SetParameterValuesResponse),
+    SetParameterValues(SetParameterValues),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2149,6 +2220,14 @@ impl Envelope {
                         "SetParameterAttributes" => self.body.push(
                             BodyElement::SetParameterAttributes(SetParameterAttributes::default()),
                         ),
+                        "SetParameterValuesResponse" => {
+                            self.body.push(BodyElement::SetParameterValuesResponse(
+                                SetParameterValuesResponse::default(),
+                            ))
+                        }
+                        "SetParameterValues" => self.body.push(BodyElement::SetParameterValues(
+                            SetParameterValues::default(),
+                        )),
                         _ => {}
                     }
                 }
@@ -2188,6 +2267,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::SetParameterAttributes(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::SetParameterValues(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -2318,6 +2400,12 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::SetParameterAttributes(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::SetParameterValuesResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::SetParameterValues(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
