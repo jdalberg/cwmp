@@ -1749,6 +1749,87 @@ impl ScheduleInform {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetParameterAttributesResponse {}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetParameterAttributesStruct {
+    name: String,
+    notification_change: u8,
+    notification: u8,
+    access_list_change: u8,
+    access_list: Vec<String>,
+}
+
+impl SetParameterAttributesStruct {
+    pub fn new(
+        name: &str,
+        notification_change: u8,
+        notification: u8,
+        access_list_change: u8,
+        access_list: Vec<&str>,
+    ) -> Self {
+        SetParameterAttributesStruct {
+            name: name.to_string(),
+            notification_change: notification_change,
+            notification: notification,
+            access_list_change: access_list_change,
+            access_list: access_list.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+}
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetParameterAttributes {
+    parameter_list: Vec<SetParameterAttributesStruct>,
+}
+impl SetParameterAttributes {
+    pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
+        SetParameterAttributes {
+            parameter_list: parameter_list,
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct"] => self
+                .parameter_list
+                .push(SetParameterAttributesStruct::default()),
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] =>
+            {
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => e.access_list.push(characters.to_string()),
+                    _ => {}
+                }
+            }
+            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", key] => {
+                let last = self.parameter_list.last_mut();
+                match last {
+                    Some(e) => match key {
+                        "Name" => e.name = characters.to_string(),
+                        "NotificationChange" => e.notification_change = parse_to_int(characters, 0),
+                        "Notification" => e.notification = parse_to_int(characters, 0),
+                        "AccessListChange" => e.access_list_change = parse_to_int(characters, 0),
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1796,6 +1877,8 @@ pub enum BodyElement {
     ScheduleDownload(ScheduleDownload),
     ScheduleInformResponse(ScheduleInformResponse),
     ScheduleInform(ScheduleInform),
+    SetParameterAttributesResponse(SetParameterAttributesResponse),
+    SetParameterAttributes(SetParameterAttributes),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2058,6 +2141,14 @@ impl Envelope {
                         "ScheduleInform" => self
                             .body
                             .push(BodyElement::ScheduleInform(ScheduleInform::default())),
+                        "SetParameterAttributesResponse" => {
+                            self.body.push(BodyElement::SetParameterAttributesResponse(
+                                SetParameterAttributesResponse {},
+                            ))
+                        }
+                        "SetParameterAttributes" => self.body.push(
+                            BodyElement::SetParameterAttributes(SetParameterAttributes::default()),
+                        ),
                         _ => {}
                     }
                 }
@@ -2094,6 +2185,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::ScheduleDownload(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::SetParameterAttributes(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -2221,6 +2315,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::ScheduleInform(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::SetParameterAttributes(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {

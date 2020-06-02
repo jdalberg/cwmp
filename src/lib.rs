@@ -1092,6 +1092,43 @@ mod tests {
         )
     }
 
+    #[test]
+    fn set_parameter_attributes_response_1() {
+        test(
+            include_bytes!("xmlsamples/set_parameter_attributes_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::SetParameterAttributesResponse(
+                protocol::SetParameterAttributesResponse {},
+            )],
+        )
+    }
+
+    #[test]
+    fn set_parameter_attributes_1() {
+        test(
+            include_bytes!("xmlsamples/set_parameter_attributes_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_7bfc27c1f4f0a2c1d775f8aa1840439e".to_string(),
+            })],
+            vec![BodyElement::SetParameterAttributes(
+                protocol::SetParameterAttributes::new(vec![
+                    protocol::SetParameterAttributesStruct::new(
+                        "Device.Test",
+                        0,
+                        2,
+                        1,
+                        vec!["Subscriber"],
+                    ),
+                ]),
+            )],
+        )
+    }
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),
