@@ -1209,6 +1209,21 @@ mod tests {
             )],
         )
     }
+
+    #[test]
+    fn set_vouchers_1() {
+        test(
+            include_bytes!("xmlsamples/set_vouchers_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_69412286f02e475b44783c61972f0a91".to_string(),
+            })],
+            vec![BodyElement::SetVouchers(protocol::SetVouchers::new(vec![
+                "Rm9vTW9vQmFy",
+            ]))],
+        )
+    }
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),

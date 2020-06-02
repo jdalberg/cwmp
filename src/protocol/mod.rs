@@ -1923,6 +1923,43 @@ impl SetParameterValues {
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct SetVouchersResponse {}
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SetVouchers {
+    voucher_list: Vec<String>,
+}
+
+impl SetVouchers {
+    pub fn new(voucher_list: Vec<&str>) -> Self {
+        SetVouchers {
+            voucher_list: voucher_list.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["SetVouchers", "VoucherList", "base64"] => self.voucher_list.push(String::from("")),
+            _ => {}
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["SetVouchers", "VoucherList", "base64"] => {
+                let last = self.voucher_list.last_mut();
+                match last {
+                    Some(e) => *e = characters.to_string(),
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -1975,6 +2012,7 @@ pub enum BodyElement {
     SetParameterValuesResponse(SetParameterValuesResponse),
     SetParameterValues(SetParameterValues),
     SetVouchersResponse(SetVouchersResponse),
+    SetVouchers(SetVouchers),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2265,6 +2303,9 @@ impl Envelope {
                         "SetVouchersResponse" => self
                             .body
                             .push(BodyElement::SetVouchersResponse(SetVouchersResponse {})),
+                        "SetVouchers" => self
+                            .body
+                            .push(BodyElement::SetVouchers(SetVouchers::default())),
                         _ => {}
                     }
                 }
@@ -2307,6 +2348,9 @@ impl Envelope {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::SetParameterValues(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::SetVouchers(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
@@ -2446,6 +2490,9 @@ impl Envelope {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(BodyElement::SetParameterValues(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::SetVouchers(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
                     Some(unhandled) => {
