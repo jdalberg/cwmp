@@ -1,7 +1,6 @@
 cwmp, an implementation of the CWMP protocol in Rust
 ====================================================
 
-[![Build Status][build-status-img]](https://github.com/jdalberg/cwmp/actions?query=workflow%3ACI)
 ![CI](https://github.com/jdalberg/cwmp/workflows/CI/badge.svg)
 
 Building and using
