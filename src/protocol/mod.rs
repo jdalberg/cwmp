@@ -5,8 +5,17 @@ use log::warn;
 
 #[derive(Debug, PartialEq)]
 pub struct ID {
-    pub must_understand: bool,
-    pub id: String,
+    must_understand: bool,
+    id: String,
+}
+
+impl ID {
+    pub fn new(must_understand: bool, id: &str) -> Self {
+        ID {
+            must_understand: must_understand,
+            id: id.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -2143,17 +2152,17 @@ pub enum BodyElement {
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Envelope {
-    pub cwmp: Option<String>,
-    pub header: Vec<HeaderElement>,
-    pub body: Vec<BodyElement>,
+    cwmp: Option<String>,
+    header: Vec<HeaderElement>,
+    body: Vec<BodyElement>,
 }
 
 impl Envelope {
-    pub fn new() -> Self {
+    pub fn new(cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) -> Self {
         Envelope {
-            cwmp: None,
-            header: vec![],
-            body: vec![],
+            cwmp: Some(cwmp.to_string()),
+            header: header,
+            body: body,
         }
     }
     fn start_handler(
@@ -2687,7 +2696,7 @@ impl State {
     pub fn new() -> Self {
         State {
             last_text: String::from(""),
-            envelope: Envelope::new(),
+            envelope: Envelope::default(),
             path: vec![],
         }
     }
