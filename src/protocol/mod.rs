@@ -2006,6 +2006,82 @@ impl TransferComplete {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct UploadResponse {
+    status: u8,
+    start_time: Option<DateTime<Utc>>,
+    complete_time: Option<DateTime<Utc>>,
+}
+
+impl UploadResponse {
+    pub fn new(
+        status: u8,
+        start_time: Option<DateTime<Utc>>,
+        complete_time: Option<DateTime<Utc>>,
+    ) -> Self {
+        UploadResponse {
+            status: status,
+            start_time: start_time,
+            complete_time: complete_time,
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["UploadResponse", "Status"] => self.status = parse_to_int(characters, 0),
+            ["UploadResponse", "StartTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.start_time = Some(dt),
+                _ => {}
+            },
+            ["UploadResponse", "CompleteTime"] => match characters.parse::<DateTime<Utc>>() {
+                Ok(dt) => self.complete_time = Some(dt),
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Upload {
+    command_key: String,
+    file_type: String,
+    url: String,
+    username: String,
+    password: String,
+    delay_seconds: u32,
+}
+
+impl Upload {
+    pub fn new(
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
+        delay_seconds: u32,
+    ) -> Self {
+        Upload {
+            command_key: command_key.to_string(),
+            file_type: file_type.to_string(),
+            url: url.to_string(),
+            username: username.to_string(),
+            password: password.to_string(),
+            delay_seconds: delay_seconds,
+        }
+    }
+    fn characters(&mut self, path: &[&str], characters: &String) {
+        match *path {
+            ["Upload", "CommandKey"] => self.command_key = characters.to_string(),
+            ["Upload", "FileType"] => self.file_type = characters.to_string(),
+            ["Upload", "URL"] => self.url = characters.to_string(),
+            ["Upload", "Username"] => self.username = characters.to_string(),
+            ["Upload", "Password"] => self.password = characters.to_string(),
+            ["Upload", "DelaySeconds"] => self.delay_seconds = parse_to_int(characters, 0),
+            _ => {}
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
@@ -2061,6 +2137,8 @@ pub enum BodyElement {
     SetVouchers(SetVouchers),
     TransferCompleteResponse(TransferCompleteResponse),
     TransferComplete(TransferComplete),
+    UploadResponse(UploadResponse),
+    Upload(Upload),
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -2360,6 +2438,10 @@ impl Envelope {
                         "TransferComplete" => self
                             .body
                             .push(BodyElement::TransferComplete(TransferComplete::default())),
+                        "UploadResponse" => self
+                            .body
+                            .push(BodyElement::UploadResponse(UploadResponse::default())),
+                        "Upload" => self.body.push(BodyElement::Upload(Upload::default())),
                         _ => {}
                     }
                 }
@@ -2552,6 +2634,10 @@ impl Envelope {
                     Some(BodyElement::TransferComplete(e)) => {
                         e.characters(&path_pattern[2..], characters)
                     }
+                    Some(BodyElement::UploadResponse(e)) => {
+                        e.characters(&path_pattern[2..], characters)
+                    }
+                    Some(BodyElement::Upload(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
                         println!("characters for {:?} is so far unhandled", unhandled);
                     }

@@ -1270,6 +1270,73 @@ mod tests {
         )
     }
 
+    #[test]
+    fn upload_response_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2015-01-19T23:08:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2015-01-19T23:09:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        test(
+            include_bytes!("xmlsamples/upload_response_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::UploadResponse(protocol::UploadResponse::new(
+                1,
+                Some(start_time),
+                Some(complete_time),
+            ))],
+        )
+    }
+
+    #[test]
+    fn upload_1() {
+        test(
+            include_bytes!("xmlsamples/upload_1.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::Upload(protocol::Upload::new(
+                "cmdkey",
+                "1 Firmware Upgrade Image",
+                "http://example.com/url",
+                "user",
+                "pass",
+                5,
+            ))],
+        )
+    }
+
+    #[test]
+    fn upload_2() {
+        test(
+            include_bytes!("xmlsamples/upload_2.xml"),
+            "urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID {
+                must_understand: true,
+                id: "API_aa0642e34b23820801e7642ad7cb536c".to_string(),
+            })],
+            vec![BodyElement::Upload(protocol::Upload::new(
+                "cmdkey",
+                "1 Firmware Upgrade Image",
+                "http://example.com/url",
+                "",
+                "",
+                0,
+            ))],
+        )
+    }
+
     fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
         let should_be = Envelope {
             cwmp: Some(cwmp.to_string()),
