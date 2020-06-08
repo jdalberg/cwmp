@@ -252,6 +252,20 @@ impl AddObject {
 #[derive(Debug, PartialEq)]
 pub struct AutonomousDUStateChangeCompleteResponse;
 
+impl AutonomousDUStateChangeCompleteResponse {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element(
+            "cwmp:AutonomousDUStateChangeCompleteResponse",
+        ))?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq, Default)]
 pub struct AutoOpResult {
     uuid: String,
@@ -308,14 +322,17 @@ impl AutonomousDUStateChangeComplete {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:AutonomousDUStateChangeComplete");
-        writer.write(s)?;
+        writer.write(XmlEvent::start_element(
+            "cwmp:AutonomousDUStateChangeComplete",
+        ))?;
 
         let ss = format!("cwmp::AutoOpResultStruct[{}]", self.results.len());
 
         writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
         for r in self.results.iter() {
+            writer.write(XmlEvent::start_element("AutonOpResultStruct"))?;
+
             write_simple(writer, "UUID", &r.uuid)?;
             write_simple(writer, "DeploymentUnitRef", &r.deployment_unit_ref)?;
             write_simple(writer, "Version", &r.version)?;
@@ -332,6 +349,9 @@ impl AutonomousDUStateChangeComplete {
             }
             write_fault(writer, &r.fault)?;
             write_simple(writer, "OperationPerformed", &r.operation_performed)?;
+
+            // AutonOpResultStruct
+            writer.write(XmlEvent::end_element())?;
         }
         // Results
         writer.write(XmlEvent::end_element())?;
@@ -2460,6 +2480,10 @@ impl Envelope {
             match be {
                 BodyElement::AddObject(e) => e.generate(&mut writer)?,
                 BodyElement::AddObjectResponse(e) => e.generate(&mut writer)?,
+                BodyElement::AutonomousDUStateChangeComplete(e) => e.generate(&mut writer)?,
+                BodyElement::AutonomousDUStateChangeCompleteResponse(e) => {
+                    e.generate(&mut writer)?
+                }
                 BodyElement::Upload(e) => e.generate(&mut writer)?,
                 BodyElement::UploadResponse(e) => e.generate(&mut writer)?,
                 _ => {}

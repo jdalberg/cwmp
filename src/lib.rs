@@ -1251,25 +1251,72 @@ mod tests {
         )
     }
 
-    fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
-        let should_be = Envelope::new(cwmp, header, body);
-        let envelope: protocol::Envelope =
-            parse(str::from_utf8(input).unwrap().to_string()).unwrap();
-        assert_eq!(envelope, should_be);
+
+    // Generate and Parse tests...
+    #[test]
+    fn add_object_gap_1() {
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+          vec![BodyElement::AddObject(protocol::AddObject::new(
+                "Device.Test.",
+                "ParamKey",
+            ))]);
+
+        test_gap(&e);
     }
 
-    fn test_gap(envelope: &Envelope) {
-        // Generate xml from the envelope
-        let xml: String = generate(envelope).unwrap();
+    #[test]
+    fn add_object_response_gap_1() {
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+          vec![BodyElement::AddObjectResponse(protocol::AddObjectResponse::new(
+               1,"0",
+            ))]);
 
-        // Parse the generated xml
-        let parsed: protocol::Envelope =     
-                parse(xml).unwrap();
-
-        // compare parser outout to passed envelope
-        assert_eq!(*envelope, parsed)
+        test_gap(&e);
     }
 
+    #[test]
+    fn autonomous_du_state_change_complete_gap_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2020-05-07T23:08:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2020-05-08T23:09:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+      
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+          vec![BodyElement::AutonomousDUStateChangeComplete(  protocol::AutonomousDUStateChangeComplete::new(vec![protocol::AutoOpResult::new(
+            "some-uuid",
+            "uref",
+            "v2.1",
+            "curState",
+            "1",
+            "a,b,c",
+            start_time,
+            complete_time,
+            0,
+            "",
+            "Install",
+        )]),)]);
+
+        test_gap(&e);
+    }
+
+    #[test]
+    fn autonomous_du_state_change_complete_response_gap_1() {
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+          vec![BodyElement::AutonomousDUStateChangeCompleteResponse(protocol::AutonomousDUStateChangeCompleteResponse {}
+             )]);
+
+        test_gap(&e);
+    }
 
     #[test]
     fn upload_gap_1() {
@@ -1310,4 +1357,26 @@ mod tests {
 
         test_gap(&e);
     }
+
+    fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
+        let should_be = Envelope::new(cwmp, header, body);
+        let envelope: protocol::Envelope =
+            parse(str::from_utf8(input).unwrap().to_string()).unwrap();
+        assert_eq!(envelope, should_be);
+    }
+
+    fn test_gap(envelope: &Envelope) {
+        // Generate xml from the envelope
+        let xml: String = generate(envelope).unwrap();
+
+        println!("generated: {:?}", xml);
+        
+        // Parse the generated xml
+        let parsed: protocol::Envelope =     
+                parse(xml).unwrap();
+
+        // compare parser outout to passed envelope
+        assert_eq!(*envelope, parsed)
+    }
+
 }
