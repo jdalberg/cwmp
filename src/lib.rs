@@ -1319,6 +1319,47 @@ mod tests {
     }
 
     #[test]
+    fn autonomous_transfer_complete_gap_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2020-05-07T23:08:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2020-05-08T23:09:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+      
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID::new(true, "12345678"))],
+            vec![BodyElement::AutonomousTransferComplete(  protocol::AutonomousTransferComplete::new(
+                "http://example.com/announce",
+                "http://example.com/transfer",
+                1,
+                "1 Firmware Upgrade Image",
+                10000,
+                "/bin/image",
+                protocol::FaultStruct::new(0, ""),
+                start_time,
+                complete_time,
+            ))]
+        );
+
+        test_gap(&e);
+    }
+
+    #[test]
+    fn autonomous_transfer_complete_response_gap_1() {
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+            vec![HeaderElement::ID(ID::new(true, "12345678"))],
+            vec![BodyElement::AutonomousTransferCompleteResponse(protocol::AutonomousTransferCompleteResponse {})]
+        );
+
+        test_gap(&e);
+    }
+    
+    #[test]
     fn upload_gap_1() {
         let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
         vec![HeaderElement::ID(ID::new(true, "12345678"))],
@@ -1370,7 +1411,7 @@ mod tests {
         let xml: String = generate(envelope).unwrap();
 
         println!("generated: {:?}", xml);
-        
+
         // Parse the generated xml
         let parsed: protocol::Envelope =     
                 parse(xml).unwrap();

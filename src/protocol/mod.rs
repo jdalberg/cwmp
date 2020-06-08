@@ -22,18 +22,36 @@ fn write_simple<W: Write>(
     Ok(())
 }
 
+fn write_empty_tag<W: Write>(
+    writer: &mut xml::EventWriter<W>,
+    name: &str,
+) -> Result<(), GenerateError> {
+    writer.write(XmlEvent::start_element(name))?;
+    writer.write(XmlEvent::end_element())?;
+    Ok(())
+}
+
+fn write_fault_struct<W: Write>(
+    writer: &mut xml::EventWriter<W>,
+    fault: &FaultStruct,
+) -> Result<(), GenerateError> {
+    writer.write(XmlEvent::start_element("FaultStruct"))?;
+    write_simple(writer, "FaultCode", &fault.code.to_string())?;
+    write_simple(writer, "FaultString", &fault.string)?;
+    writer.write(XmlEvent::end_element())?;
+    Ok(())
+}
+
 fn write_fault<W: Write>(
     writer: &mut xml::EventWriter<W>,
     fault: &FaultStruct,
 ) -> Result<(), GenerateError> {
     writer.write(XmlEvent::start_element("Fault"))?;
-    writer.write(XmlEvent::start_element("FaultStruct"))?;
-    write_simple(writer, "FaultCode", &fault.code.to_string())?;
-    write_simple(writer, "FaultString", &fault.string)?;
-    writer.write(XmlEvent::end_element())?;
+    write_fault_struct(writer, fault)?;
     writer.write(XmlEvent::end_element())?;
     Ok(())
 }
+
 #[derive(Debug, PartialEq)]
 pub struct ID {
     must_understand: bool,
@@ -257,11 +275,7 @@ impl AutonomousDUStateChangeCompleteResponse {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            "cwmp:AutonomousDUStateChangeCompleteResponse",
-        ))?;
-        writer.write(XmlEvent::end_element())?;
-
+        write_empty_tag(writer, "cwmp:AutonomousDUStateChangeCompleteResponse")?;
         Ok(())
     }
 }
@@ -412,6 +426,16 @@ impl AutonomousDUStateChangeComplete {
 #[derive(Debug, PartialEq)]
 pub struct AutonomousTransferCompleteResponse;
 
+impl AutonomousTransferCompleteResponse {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:AutonomousTransferCompleteResponse")?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct AutonomousTransferComplete {
     announce_url: String,
@@ -448,6 +472,31 @@ impl AutonomousTransferComplete {
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
+    }
+
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:AutonomousTransferComplete"))?;
+        write_simple(writer, "AnnounceURL", &self.announce_url)?;
+        write_simple(writer, "TransferURL", &self.transfer_url)?;
+        write_simple(writer, "IsDownload", &self.is_download.to_string())?;
+        write_simple(writer, "FileType", &self.file_type)?;
+        write_simple(writer, "FileSize", &self.file_size.to_string())?;
+        write_simple(writer, "TargetFileName", &self.target_filename)?;
+        write_fault_struct(writer, &self.fault)?;
+        match self.start_time {
+            None => {}
+            Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
+        }
+        match self.complete_time {
+            None => {}
+            Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
+        }
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
 
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -2484,6 +2533,8 @@ impl Envelope {
                 BodyElement::AutonomousDUStateChangeCompleteResponse(e) => {
                     e.generate(&mut writer)?
                 }
+                BodyElement::AutonomousTransferComplete(e) => e.generate(&mut writer)?,
+                BodyElement::AutonomousTransferCompleteResponse(e) => e.generate(&mut writer)?,
                 BodyElement::Upload(e) => e.generate(&mut writer)?,
                 BodyElement::UploadResponse(e) => e.generate(&mut writer)?,
                 _ => {}
