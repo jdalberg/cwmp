@@ -69,12 +69,12 @@ impl ID {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:ID")
-            .attr("mustUnderstand", bool2str(self.must_understand));
-        writer.write(s)?;
+        writer.write(
+            XmlEvent::start_element("cwmp:ID")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
         writer.write(&self.id[..])?;
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
+        writer.write(XmlEvent::end_element())?;
         Ok(())
     }
 }
@@ -90,12 +90,14 @@ impl HoldRequests {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:HoldRequests")
-            .attr("mustUnderstand", bool2str(self.must_understand));
-        writer.write(s)?;
+        writer.write(
+            XmlEvent::start_element("cwmp:HoldRequests")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
+
         writer.write(bool2str(self.hold))?;
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
+        writer.write(XmlEvent::end_element())?;
+
         Ok(())
     }
 }
@@ -111,13 +113,12 @@ impl SessionTimeout {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:SessionTimeout")
-            .attr("mustUnderstand", bool2str(self.must_understand));
-        writer.write(s)?;
-        let s = self.timeout.to_string();
-        writer.write(&s[..])?;
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
+        writer.write(
+            XmlEvent::start_element("cwmp:SessionTimeout")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
+        writer.write(&self.timeout.to_string()[..])?;
+        writer.write(XmlEvent::end_element())?;
         Ok(())
     }
 }
@@ -139,13 +140,13 @@ impl NoMoreRequests {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:NoMoreRequests")
-            .attr("mustUnderstand", bool2str(self.must_understand));
-        writer.write(s)?;
-        let s = self.value.to_string();
-        writer.write(&s[..])?;
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
+        writer.write(
+            XmlEvent::start_element("cwmp:NoMoreRequests")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
+        writer.write(&self.value.to_string()[..])?;
+        writer.write(XmlEvent::end_element())?;
+
         Ok(())
     }
 }
@@ -196,8 +197,7 @@ impl AddObjectResponse {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:AddObjectResponse");
-        writer.write(s)?;
+        writer.write(XmlEvent::start_element("cwmp:AddObjectResponse"))?;
 
         writer.write(XmlEvent::start_element("InstanceNumber"))?;
         writer.write(&self.instance_number.to_string()[..])?;
@@ -206,8 +206,8 @@ impl AddObjectResponse {
         writer.write(&self.status[..])?;
         writer.write(XmlEvent::end_element())?;
 
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
+        writer.write(XmlEvent::end_element())?;
+
         Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -240,18 +240,11 @@ impl AddObject {
         &self,
         writer: &mut xml::EventWriter<W>,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:AddObject");
-        writer.write(s)?;
-
-        writer.write(XmlEvent::start_element("ObjectName"))?;
-        writer.write(&self.object_name[..])?;
-        writer.write(XmlEvent::end_element())?;
-        writer.write(XmlEvent::start_element("ParameterKey"))?;
-        writer.write(&self.parameter_key[..])?;
+        writer.write(XmlEvent::start_element("cwmp:AddObject"))?;
+        write_simple(writer, "ObjectName", &self.object_name)?;
+        write_simple(writer, "ParameterKey", &self.parameter_key)?;
         writer.write(XmlEvent::end_element())?;
 
-        let e: XmlEvent = XmlEvent::end_element().into();
-        writer.write(e)?;
         Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -543,6 +536,15 @@ impl AutonomousTransferComplete {
 #[derive(Debug, PartialEq)]
 pub struct CancelTransferResponse;
 
+impl CancelTransferResponse {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:CancelTransferResponse")?;
+        Ok(())
+    }
+}
 #[derive(Debug, PartialEq)]
 pub struct CancelTransfer {
     command_key: String,
@@ -553,6 +555,17 @@ impl CancelTransfer {
         CancelTransfer {
             command_key: command_key.to_string(),
         }
+    }
+
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:CancelTransfer"))?;
+        write_simple(writer, "CommandKey", &self.command_key)?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
 
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -654,6 +667,45 @@ impl ChangeDUState {
         }
     }
 
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:ChangeDUState"))?;
+        write_simple(writer, "CommandKey", &self.command_key)?;
+        writer.write(XmlEvent::start_element("Operations"))?;
+
+        for io in self.install_operations.iter() {
+            writer.write(XmlEvent::start_element("InstallOpStruct"))?;
+            write_simple(writer, "URL", &io.url)?;
+            write_simple(writer, "UUID", &io.uuid)?;
+            write_simple(writer, "Username", &io.username)?;
+            write_simple(writer, "Password", &io.password)?;
+            write_simple(writer, "ExecutionEnvRef", &io.execution_env_ref)?;
+            writer.write(XmlEvent::end_element())?;
+        }
+        for uio in self.uninstall_operations.iter() {
+            writer.write(XmlEvent::start_element("UninstallOpStruct"))?;
+            write_simple(writer, "URL", &uio.url)?;
+            write_simple(writer, "UUID", &uio.uuid)?;
+            write_simple(writer, "ExecutionEnvRef", &uio.execution_env_ref)?;
+            writer.write(XmlEvent::end_element())?;
+        }
+        for uo in self.update_operations.iter() {
+            writer.write(XmlEvent::start_element("UninstallOpStruct"))?;
+            write_simple(writer, "URL", &uo.url)?;
+            write_simple(writer, "UUID", &uo.uuid)?;
+            write_simple(writer, "Username", &uo.username)?;
+            write_simple(writer, "Password", &uo.password)?;
+            write_simple(writer, "Version", &uo.version)?;
+            writer.write(XmlEvent::end_element())?;
+        }
+
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
+    }
     fn start_handler(
         &mut self,
         path: &[&str],
@@ -734,6 +786,16 @@ impl DeleteObjectResponse {
             status: status.to_string(),
         }
     }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:DeleteObjectResponse"))?;
+        write_simple(writer, "Status", &self.status)?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["DeleteObjectResponse", "Status"] => self.status = characters.to_string(),
@@ -754,6 +816,17 @@ impl DeleteObject {
             object_name: object_name.to_string(),
             parameter_key: parameter_key.to_string(),
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:DeleteObject"))?;
+        write_simple(writer, "ObjectName", &self.object_name)?;
+        write_simple(writer, "ParameterKey", &self.parameter_key)?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -782,6 +855,24 @@ impl DownloadResponse {
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:DownloadResponse"))?;
+        write_simple(writer, "Status", &self.status)?;
+        match self.start_time {
+            None => {}
+            Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
+        }
+        match self.complete_time {
+            None => {}
+            Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
+        }
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -840,6 +931,25 @@ impl Download {
             success_url: success_url.to_string(),
             failure_url: failure_url.to_string(),
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:Download"))?;
+        write_simple(writer, "CommandKey", &self.command_key)?;
+        write_simple(writer, "FileType", &self.file_type)?;
+        write_simple(writer, "URL", &self.url)?;
+        write_simple(writer, "Username", &self.username)?;
+        write_simple(writer, "Password", &self.password)?;
+        write_simple(writer, "FileSize", &self.file_size.to_string())?;
+        write_simple(writer, "TargetFileName", &self.target_filename)?;
+        write_simple(writer, "DelaySeconds", &self.delay_seconds.to_string())?;
+        write_simple(writer, "SuccessURL", &self.success_url)?;
+        write_simple(writer, "FailureURL", &self.failure_url)?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -900,6 +1010,16 @@ impl OpResult {
 #[derive(Debug, PartialEq)]
 pub struct DUStateChangeCompleteResponse;
 
+impl DUStateChangeCompleteResponse {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:DUStateChangeCompleteResponse")?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct DUStateChangeComplete {
     command_key: String,
@@ -912,6 +1032,40 @@ impl DUStateChangeComplete {
             command_key: command_key.to_string(),
             results: results,
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:DUStateChangeComplete"))?;
+        write_simple(writer, "CommandKey", &self.command_key)?;
+        let ss = format!("cwmp::OpResultStruct[{}]", self.results.len());
+
+        writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
+
+        for r in self.results.iter() {
+            writer.write(XmlEvent::start_element("OpResultStruct"))?;
+            write_simple(writer, "UUID", &r.uuid)?;
+            write_simple(writer, "DeploymentUnitRef", &r.deployment_unit_ref)?;
+            write_simple(writer, "Version", &r.version)?;
+            write_simple(writer, "CurrentState", &r.current_state)?;
+            write_simple(writer, "Resolved", &r.resolved.to_string())?;
+            write_simple(writer, "ExecutionUnitRefList", &r.execution_unit_ref_list)?;
+            match r.start_time {
+                None => {}
+                Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
+            }
+            match r.complete_time {
+                None => {}
+                Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
+            }
+            write_fault(writer, &r.fault)?;
+            writer.write(XmlEvent::end_element())?;
+        }
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
     }
     fn start_handler(
         &mut self,
