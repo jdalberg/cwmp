@@ -26,6 +26,14 @@ impl TrimInPlace for String {
         self.truncate(len); // no String::set_len() in std ...
     }
 }
+
+#[cfg(doctest)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(doctest)]
+doctest!("../README.md");
+
 // using xml-rs and serde did not seem viable due to the chaotic nature of
 // vendors
 // https://stackoverflow.com/questions/37970355/read-xml-file-into-struct
@@ -54,15 +62,22 @@ pub fn parse(xml: String) -> Result<Envelope, Box<dyn Error>> {
                 state.characters(s);
             }
             Err(e) => {
-                println!("Error: {}", e);
+                state.error = Some(Box::new(e));
                 break;
             }
-            event => {
-                println!("{:?}", event);
-            }
+            _ => {}
+            
         }
     }
-    Ok(state.envelope)
+    match state.error {
+        None =>  Ok(state.envelope),
+        Some(b) => Err(b)
+    }
+   
+}
+
+pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> {
+    envelope.generate()
 }
 
 #[cfg(test)]
@@ -1241,5 +1256,58 @@ mod tests {
         let envelope: protocol::Envelope =
             parse(str::from_utf8(input).unwrap().to_string()).unwrap();
         assert_eq!(envelope, should_be);
+    }
+
+    fn test_gap(envelope: &Envelope) {
+        // Generate xml from the envelope
+        let xml: String = generate(envelope).unwrap();
+
+        // Parse the generated xml
+        let parsed: protocol::Envelope =     
+                parse(xml).unwrap();
+
+        // compare parser outout to passed envelope
+        assert_eq!(*envelope, parsed)
+    }
+
+
+    #[test]
+    fn upload_gap_1() {
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+        vec![BodyElement::Upload(protocol::Upload::new(
+            "cmdkey",
+            "1 Firmware Upgrade Image",
+            "http://example.com/url",
+            "",
+            "",
+            0,
+        ))]);
+
+        test_gap(&e);
+    }
+
+    #[test]
+    fn upload_response_gap_1() {
+        let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
+        let start_time: DateTime<Utc> = match "2020-05-07T23:08:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+        let complete_time: DateTime<Utc> = match "2020-05-08T23:09:24Z".parse::<DateTime<Utc>>() {
+            Ok(dt) => dt,
+            _ => bogus_utc_dt,
+        };
+      
+        let e = protocol::Envelope::new("urn:dslforum-org:cwmp-1-0",
+        vec![HeaderElement::ID(ID::new(true, "12345678"))],
+        vec![BodyElement::UploadResponse(protocol::UploadResponse::new(
+            1,
+            Some(start_time),
+            Some(complete_time),
+        ))]);
+
+        test_gap(&e);
     }
 }
