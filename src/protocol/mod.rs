@@ -1138,8 +1138,28 @@ impl DUStateChangeComplete {
 #[derive(Debug, PartialEq)]
 pub struct FactoryResetResponse;
 
+impl FactoryResetResponse {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:FactoryResetResponse")?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct FactoryReset;
+
+impl FactoryReset {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:FactoryReset")?;
+        Ok(())
+    }
+}
 
 #[derive(Debug, PartialEq)]
 struct FaultDetail {
@@ -1164,6 +1184,22 @@ impl Fault {
                 string: string.to_string(),
             },
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("SOAP-ENV:Fault"))?;
+        write_simple(writer, "faultcode", &self.faultcode)?;
+        write_simple(writer, "faultstring", &self.faultstring)?;
+        writer.write(XmlEvent::start_element("detail"))?;
+        writer.write(XmlEvent::start_element("cwmp:Fault"))?;
+        write_simple(writer, "FaultCode", &self.detail.code.to_string())?;
+        write_simple(writer, "FaultString", &self.detail.string.to_string())?;
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -1225,7 +1261,37 @@ impl GetAllQueuedTransfersResponse {
             transfer_list: transfer_list,
         }
     }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element(
+            "cwmp:GetAllQueuedTransfersResponse",
+        ))?;
 
+        let ss = format!(
+            "cwmp::AllQueuedTransferStruct[{}]",
+            self.transfer_list.len()
+        );
+
+        writer
+            .write(XmlEvent::start_element("TransferList").attr("SOAP-ENC:arrayType", &ss[..]))?;
+
+        for t in self.transfer_list.iter() {
+            writer.write(XmlEvent::start_element("AllQueuedTransferStruct"))?;
+            write_simple(writer, "CommandKey", &t.command_key)?;
+            write_simple(writer, "State", &t.state)?;
+            write_simple(writer, "IsDownload", &t.state)?;
+            write_simple(writer, "FileType", &t.file_type)?;
+            write_simple(writer, "FileSize", &t.file_size.to_string())?;
+            write_simple(writer, "TargetFileName", &t.target_filename)?;
+            writer.write(XmlEvent::end_element())?;
+        }
+
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
+    }
     fn start_handler(
         &mut self,
         path: &[&str],
@@ -1263,6 +1329,16 @@ impl GetAllQueuedTransfersResponse {
 
 #[derive(Debug, PartialEq)]
 pub struct GetAllQueuedTransfers;
+
+impl GetAllQueuedTransfers {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        write_empty_tag(writer, "cwmp:GetAllQueuedTransfers")?;
+        Ok(())
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub struct OptionStruct {
@@ -1307,6 +1383,38 @@ impl GetOptionsResponse {
         GetOptionsResponse {
             option_list: option_list,
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetOptionsResponse"))?;
+        let ss = format!("cwmp::OptionStruct[{}]", self.option_list.len());
+
+        writer.write(XmlEvent::start_element("OptionList").attr("SOAP-ENC:arrayType", &ss[..]))?;
+
+        for o in self.option_list.iter() {
+            writer.write(XmlEvent::start_element("OptionStruct"))?;
+            write_simple(writer, "OptionName", &o.option_name)?;
+            write_simple(writer, "VoucherSN", &o.voucher_sn)?;
+            write_simple(writer, "State", &o.state.to_string())?;
+            write_simple(writer, "Mode", &o.mode)?;
+            match o.start_date {
+                None => {}
+                Some(dt) => write_simple(writer, "StartDate", &dt.to_rfc3339())?,
+            }
+            match o.expiration_date {
+                None => {}
+                Some(dt) => write_simple(writer, "ExpirationDate", &dt.to_rfc3339())?,
+            }
+            write_simple(writer, "IsTransferable", &o.is_transferable.to_string())?;
+
+            writer.write(XmlEvent::end_element())?;
+        }
+
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn start_handler(
         &mut self,
@@ -1360,18 +1468,27 @@ impl GetOptionsResponse {
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct GetOptions {
-    option_name: Option<String>,
+    option_name: String,
 }
 
 impl GetOptions {
     pub fn new(option_name: &str) -> Self {
         GetOptions {
-            option_name: Some(option_name.to_string()),
+            option_name: option_name.to_string(),
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetOptions"))?;
+        write_simple(writer, "OptionName", &self.option_name)?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
-            ["GetOptions", "OptionName"] => self.option_name = Some(characters.to_string()),
+            ["GetOptions", "OptionName"] => self.option_name = characters.to_string(),
             _ => {}
         }
     }
@@ -1383,6 +1500,19 @@ pub struct GetParameterAttributes {
 }
 
 impl GetParameterAttributes {
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetParameterAttributes"))?;
+        writer.write(XmlEvent::start_element("ParameterNames"))?;
+        for p in self.parameternames.iter() {
+            write_simple(writer, "string", &p)?;
+        }
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterAttributes", "ParameterNames", "string"] => {
@@ -1419,6 +1549,39 @@ impl GetParameterAttributesResponse {
         GetParameterAttributesResponse {
             parameters: parameters,
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element(
+            "cwmp:GetParameterAttributesResponse",
+        ))?;
+        let ss = format!("cwmp:ParameterAttributeStruct[{}]", self.parameters.len());
+
+        writer
+            .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
+
+        for p in self.parameters.iter() {
+            writer.write(XmlEvent::start_element("ParameterAttributeStruct"))?;
+            write_simple(writer, "Name", &p.name)?;
+            write_simple(writer, "Notification", &p.notification)?;
+            let als = format!("xsd:string[{}]", p.accesslist.len());
+            writer.write(
+                XmlEvent::start_element("AccessList").attr("SOAP-ENC:arrayType", &als[..]),
+            )?;
+
+            for a in p.accesslist.iter() {
+                write_simple(writer, "string", &a)?;
+            }
+
+            writer.write(XmlEvent::end_element())?;
+            writer.write(XmlEvent::end_element())?;
+        }
+
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn start_handler(
         &mut self,
@@ -1505,6 +1668,27 @@ impl GetParameterNamesResponse {
             _ => {}
         }
     }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetParameterNamesResponse"))?;
+        let ss = format!("cwmp:ParameterInfoStruct[{}]", self.parameter_list.len());
+
+        writer
+            .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
+
+        for p in self.parameter_list.iter() {
+            writer.write(XmlEvent::start_element("ParameterInfoStruct"))?;
+            write_simple(writer, "Name", &p.name)?;
+            write_simple(writer, "Writable", &p.writable.to_string())?;
+            writer.write(XmlEvent::end_element())?;
+        }
+
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Name"] => {
@@ -1537,6 +1721,16 @@ impl GetParameterNames {
             parameter_path: parameter_path.to_string(),
             next_level: next_level,
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetParameterNames"))?;
+        write_simple(writer, "ParameterPath", &self.parameter_path)?;
+        write_simple(writer, "NextLevel", &self.next_level.to_string())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -1575,6 +1769,19 @@ impl GetParameterValues {
             parameternames: parameternames,
         }
     }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetParameterValues"))?;
+        writer.write(XmlEvent::start_element("ParameterNames"))?;
+        for p in self.parameternames.iter() {
+            write_simple(writer, "string", &p)?;
+        }
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterValues", "ParameterNames", "string"] => {
@@ -1595,6 +1802,32 @@ impl GetParameterValuesResponse {
         GetParameterValuesResponse {
             parameters: parameters,
         }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(XmlEvent::start_element("cwmp:GetParameterValuesResponse"))?;
+        let ss = format!("cwmp:ParameterValueStruct[{}]", self.parameters.len());
+
+        writer.write(
+            XmlEvent::start_element("ParameterList")
+                .attr("xsi:type", "SOAP-ENC:Array")
+                .attr("SOAP-ENC:arrayType", &ss[..]),
+        )?;
+
+        for p in self.parameters.iter() {
+            writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
+            write_simple(writer, "Name", &p.name)?;
+            writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
+            writer.write(&p.value[..])?;
+            writer.write(XmlEvent::end_element())?;
+
+            writer.write(XmlEvent::end_element())?;
+        }
+        writer.write(XmlEvent::end_element())?;
+        writer.write(XmlEvent::end_element())?;
+        Ok(())
     }
     fn start_handler(
         &mut self,
