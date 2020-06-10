@@ -869,7 +869,7 @@ mod tests {
                 HeaderElement::ID(ID::new(true, "100")),
                 HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
             ],
-            vec![BodyElement::InformResponse(protocol::InformResponse {})],
+            vec![BodyElement::InformResponse(protocol::InformResponse::new(1))],
         )
     }
 
