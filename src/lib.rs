@@ -7,6 +7,7 @@ use xml::reader::{ParserConfig, XmlEvent};
 use protocol::{Envelope, State};
 pub mod protocol;
 
+
 trait TrimInPlace {
     fn trim_in_place(self: &'_ mut Self);
 }
@@ -80,6 +81,7 @@ pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> 
     envelope.generate()
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,6 +89,7 @@ mod tests {
     use chrono::{DateTime, Utc};
     use protocol::{BodyElement, Envelope, HeaderElement, ParameterAttribute, ParameterValue, ID};
     use std::str;
+
     #[test]
     fn parse_1() -> Result<(), String> {
         match parse(String::from("<xml></xml>")) {
@@ -1410,8 +1413,6 @@ mod tests {
         // Generate xml from the envelope
         let xml: String = generate(envelope).unwrap();
 
-        println!("generated: {:?}", xml);
-
         // Parse the generated xml
         let parsed: protocol::Envelope =     
                 parse(xml).unwrap();
@@ -1419,5 +1420,7 @@ mod tests {
         // compare parser outout to passed envelope
         assert_eq!(*envelope, parsed)
     }
+
+   
 
 }

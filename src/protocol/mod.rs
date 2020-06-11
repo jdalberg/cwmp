@@ -10,6 +10,9 @@ use xml::writer::{EmitterConfig, XmlEvent};
 fn bool2str(b: bool) -> &'static str {
     return if b { "1" } else { "0" };
 }
+fn str2bool(s: &str) -> bool {
+    return if s == "1" { true } else { false };
+}
 
 fn write_simple<W: Write>(
     writer: &mut xml::EventWriter<W>,
@@ -86,6 +89,12 @@ pub struct HoldRequests {
 }
 
 impl HoldRequests {
+    pub fn new(must_understand: bool, hold: bool) -> Self {
+        HoldRequests {
+            must_understand: must_understand,
+            hold: hold,
+        }
+    }
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -109,6 +118,12 @@ pub struct SessionTimeout {
 }
 
 impl SessionTimeout {
+    pub fn new(must_understand: bool, timeout: u32) -> Self {
+        SessionTimeout {
+            must_understand: must_understand,
+            timeout: timeout,
+        }
+    }
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -151,12 +166,70 @@ impl NoMoreRequests {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct SupportedCWMPVersions {
+    must_understand: bool,
+    value: String,
+}
+
+impl SupportedCWMPVersions {
+    pub fn new(must_understand: bool, value: &str) -> Self {
+        SupportedCWMPVersions {
+            must_understand: must_understand,
+            value: value.to_string(),
+        }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(
+            XmlEvent::start_element("cwmp:SupportedCWMPVersions")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
+        writer.write(&self.value.to_string()[..])?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct UseCWMPVersion {
+    must_understand: bool,
+    value: String,
+}
+
+impl UseCWMPVersion {
+    pub fn new(must_understand: bool, value: &str) -> Self {
+        UseCWMPVersion {
+            must_understand: must_understand,
+            value: value.to_string(),
+        }
+    }
+    pub fn generate<W: Write>(
+        &self,
+        writer: &mut xml::EventWriter<W>,
+    ) -> Result<(), GenerateError> {
+        writer.write(
+            XmlEvent::start_element("cwmp:UseCWMPVersion")
+                .attr("mustUnderstand", bool2str(self.must_understand)),
+        )?;
+        writer.write(&self.value.to_string()[..])?;
+        writer.write(XmlEvent::end_element())?;
+
+        Ok(())
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum HeaderElement {
     ID(ID),
     HoldRequests(HoldRequests),
     SessionTimeout(SessionTimeout),
     NoMoreRequests(NoMoreRequests),
+    SupportedCWMPVersions(SupportedCWMPVersions),
+    UseCWMPVersion(UseCWMPVersion),
 }
 
 #[derive(Debug, PartialEq, Eq, Default)]
@@ -3319,6 +3392,8 @@ impl Envelope {
                 HeaderElement::HoldRequests(e) => e.generate(&mut writer)?,
                 HeaderElement::NoMoreRequests(e) => e.generate(&mut writer)?,
                 HeaderElement::SessionTimeout(e) => e.generate(&mut writer)?,
+                HeaderElement::SupportedCWMPVersions(e) => e.generate(&mut writer)?,
+                HeaderElement::UseCWMPVersion(e) => e.generate(&mut writer)?,
             };
         }
 
@@ -3448,6 +3523,32 @@ impl Envelope {
                             .push(HeaderElement::NoMoreRequests(NoMoreRequests::new(
                                 must_understand,
                                 0,
+                            )))
+                    }
+                    "HoldRequests" => {
+                        self.header
+                            .push(HeaderElement::HoldRequests(HoldRequests::new(
+                                must_understand,
+                                false,
+                            )))
+                    }
+                    "SessionTimeout" => {
+                        self.header
+                            .push(HeaderElement::SessionTimeout(SessionTimeout::new(
+                                must_understand,
+                                0,
+                            )))
+                    }
+                    "SupportedCWMPVersions" => {
+                        self.header.push(HeaderElement::SupportedCWMPVersions(
+                            SupportedCWMPVersions::new(must_understand, ""),
+                        ))
+                    }
+                    "UseCWMPVersion" => {
+                        self.header
+                            .push(HeaderElement::UseCWMPVersion(UseCWMPVersion::new(
+                                must_understand,
+                                "",
                             )))
                     }
                     _ => {}
@@ -3777,6 +3878,46 @@ impl Envelope {
                     match elem {
                         HeaderElement::NoMoreRequests(data) => {
                             data.value = parse_to_int(characters, 0);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            ["Envelope", "Header", "HoldRequests"] => {
+                for elem in self.header.iter_mut() {
+                    match elem {
+                        HeaderElement::HoldRequests(data) => {
+                            data.hold = str2bool(characters);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            ["Envelope", "Header", "SessionTimeout"] => {
+                for elem in self.header.iter_mut() {
+                    match elem {
+                        HeaderElement::SessionTimeout(data) => {
+                            data.timeout = parse_to_int(characters, 0);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            ["Envelope", "Header", "SupportedCWMPVersions"] => {
+                for elem in self.header.iter_mut() {
+                    match elem {
+                        HeaderElement::SupportedCWMPVersions(data) => {
+                            data.value = characters.to_string();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            ["Envelope", "Header", "UseCWMPVersion"] => {
+                for elem in self.header.iter_mut() {
+                    match elem {
+                        HeaderElement::UseCWMPVersion(data) => {
+                            data.value = characters.to_string();
                         }
                         _ => {}
                     }
