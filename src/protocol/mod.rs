@@ -6,6 +6,12 @@ use std::error::Error;
 use std::fmt;
 use std::io::Write;
 use xml::writer::{EmitterConfig, XmlEvent};
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+use quickcheck::{Arbitrary, Gen};
+#[cfg(test)]
+use rand::seq::SliceRandom;
 
 fn bool2str(b: bool) -> &'static str {
     return if b { "1" } else { "0" };
@@ -55,17 +61,17 @@ fn write_fault<W: Write>(
     Ok(())
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ID {
     must_understand: bool,
     id: String,
 }
 
 impl ID {
-    pub fn new(must_understand: bool, id: &str) -> Self {
+    pub fn new(must_understand: bool, id: String) -> Self {
         ID {
             must_understand: must_understand,
-            id: id.to_string(),
+            id: id,
         }
     }
     pub fn generate<W: Write>(
@@ -82,7 +88,24 @@ impl ID {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for ID {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ID::new(bool::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.id.clone())
+                .shrink()
+                .map(|(m, i)| ID {
+                    must_understand: m,
+                    id: i,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct HoldRequests {
     must_understand: bool,
     hold: bool,
@@ -111,7 +134,24 @@ impl HoldRequests {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for HoldRequests {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        HoldRequests::new(bool::arbitrary(g), bool::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.hold.clone())
+                .shrink()
+                .map(|(m, h)| HoldRequests {
+                    must_understand: m,
+                    hold: h,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SessionTimeout {
     must_understand: bool,
     timeout: u32,
@@ -138,7 +178,24 @@ impl SessionTimeout {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SessionTimeout {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SessionTimeout::new(bool::arbitrary(g), u32::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.timeout.clone())
+                .shrink()
+                .map(|(m, t)| SessionTimeout {
+                    must_understand: m,
+                    timeout: t,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct NoMoreRequests {
     must_understand: bool,
     value: u8,
@@ -166,17 +223,34 @@ impl NoMoreRequests {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for NoMoreRequests {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        NoMoreRequests::new(bool::arbitrary(g), u8::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.value.clone())
+                .shrink()
+                .map(|(m, v)| NoMoreRequests {
+                    must_understand: m,
+                    value: v,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SupportedCWMPVersions {
     must_understand: bool,
     value: String,
 }
 
 impl SupportedCWMPVersions {
-    pub fn new(must_understand: bool, value: &str) -> Self {
+    pub fn new(must_understand: bool, value: String) -> Self {
         SupportedCWMPVersions {
             must_understand: must_understand,
-            value: value.to_string(),
+            value: value,
         }
     }
     pub fn generate<W: Write>(
@@ -194,17 +268,34 @@ impl SupportedCWMPVersions {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SupportedCWMPVersions {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SupportedCWMPVersions::new(bool::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.value.clone())
+                .shrink()
+                .map(|(m, v)| SupportedCWMPVersions {
+                    must_understand: m,
+                    value: v,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UseCWMPVersion {
     must_understand: bool,
     value: String,
 }
 
 impl UseCWMPVersion {
-    pub fn new(must_understand: bool, value: &str) -> Self {
+    pub fn new(must_understand: bool, value: String) -> Self {
         UseCWMPVersion {
             must_understand: must_understand,
-            value: value.to_string(),
+            value: value,
         }
     }
     pub fn generate<W: Write>(
@@ -222,7 +313,24 @@ impl UseCWMPVersion {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for UseCWMPVersion {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        UseCWMPVersion::new(bool::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.must_understand.clone(), self.value.clone())
+                .shrink()
+                .map(|(m, v)| UseCWMPVersion {
+                    must_understand: m,
+                    value: v,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum HeaderElement {
     ID(ID),
     HoldRequests(HoldRequests),
@@ -232,17 +340,52 @@ pub enum HeaderElement {
     UseCWMPVersion(UseCWMPVersion),
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for HeaderElement {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        let vals = vec![
+            HeaderElement::ID(ID::arbitrary(g)),
+            HeaderElement::HoldRequests(HoldRequests::arbitrary(g)),
+            HeaderElement::SessionTimeout(SessionTimeout::arbitrary(g)),
+            HeaderElement::NoMoreRequests(NoMoreRequests::arbitrary(g)),
+            HeaderElement::SupportedCWMPVersions(SupportedCWMPVersions::arbitrary(g)),
+            HeaderElement::UseCWMPVersion(UseCWMPVersion::arbitrary(g)),
+        ];
+        vals.choose(g).unwrap().clone()
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        match self {
+            &HeaderElement::ID(ref x) => Box::new(x.shrink().map(|s| HeaderElement::ID(s))),
+            &HeaderElement::HoldRequests(ref x) => {
+                Box::new(x.shrink().map(|s| HeaderElement::HoldRequests(s)))
+            }
+            &HeaderElement::SessionTimeout(ref x) => {
+                Box::new(x.shrink().map(|s| HeaderElement::SessionTimeout(s)))
+            }
+            &HeaderElement::NoMoreRequests(ref x) => {
+                Box::new(x.shrink().map(|s| HeaderElement::NoMoreRequests(s)))
+            }
+            &HeaderElement::SupportedCWMPVersions(ref x) => {
+                Box::new(x.shrink().map(|s| HeaderElement::SupportedCWMPVersions(s)))
+            }
+            &HeaderElement::UseCWMPVersion(ref x) => {
+                Box::new(x.shrink().map(|s| HeaderElement::UseCWMPVersion(s)))
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FaultStruct {
     code: u32,
     string: String,
 }
 
 impl FaultStruct {
-    pub fn new(code: u32, string: &str) -> Self {
+    pub fn new(code: u32, string: String) -> Self {
         FaultStruct {
             code: code,
-            string: String::from(string),
+            string: string,
         }
     }
     pub fn set_code(&mut self, code: u32) {
@@ -253,17 +396,31 @@ impl FaultStruct {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for FaultStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        FaultStruct::new(u32::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.code.clone(), self.string.clone())
+                .shrink()
+                .map(|(c, s)| FaultStruct { code: c, string: s }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AddObjectResponse {
     instance_number: u32,
     status: String,
 }
 
 impl AddObjectResponse {
-    pub fn new(instance_number: u32, status: &str) -> Self {
+    pub fn new(instance_number: u32, status: String) -> Self {
         AddObjectResponse {
             instance_number: instance_number,
-            status: status.to_string(),
+            status: status,
         }
     }
     pub fn generate<W: Write>(
@@ -296,17 +453,34 @@ impl AddObjectResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AddObjectResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        AddObjectResponse::new(u32::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.instance_number.clone(), self.status.clone())
+                .shrink()
+                .map(|(i, s)| AddObjectResponse {
+                    instance_number: i,
+                    status: s,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AddObject {
     object_name: String,
     parameter_key: String,
 }
 
 impl AddObject {
-    pub fn new(object_name: &str, parameter_key: &str) -> Self {
+    pub fn new(object_name: String, parameter_key: String) -> Self {
         AddObject {
-            object_name: object_name.to_string(),
-            parameter_key: parameter_key.to_string(),
+            object_name: object_name,
+            parameter_key: parameter_key,
         }
     }
     pub fn generate<W: Write>(
@@ -333,7 +507,24 @@ impl AddObject {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AddObject {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        AddObject::new(String::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.object_name.clone(), self.parameter_key.clone())
+                .shrink()
+                .map(|(o, p)| AddObject {
+                    object_name: o,
+                    parameter_key: p,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutonomousDUStateChangeCompleteResponse;
 
 impl AutonomousDUStateChangeCompleteResponse {
@@ -346,7 +537,7 @@ impl AutonomousDUStateChangeCompleteResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutoOpResult {
     uuid: String,
     deployment_unit_ref: String,
@@ -362,17 +553,17 @@ pub struct AutoOpResult {
 
 impl AutoOpResult {
     pub fn new(
-        uuid: &str,
-        deployment_unit_ref: &str,
-        version: &str,
-        current_state: &str,
-        resolved: &str,
-        execution_unit_ref_list: &str,
+        uuid: String,
+        deployment_unit_ref: String,
+        version: String,
+        current_state: String,
+        resolved: String,
+        execution_unit_ref_list: String,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
         fault_code: u32,
-        fault_string: &str,
-        operation_performed: &str,
+        fault_string: String,
+        operation_performed: String,
     ) -> Self {
         AutoOpResult {
             uuid: uuid.to_string(),
@@ -389,7 +580,62 @@ impl AutoOpResult {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AutoOpResult {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        let bogus_st = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+        let bogus_ct = Utc.ymd(2014, 11, 29).and_hms(12, 0, 9);
+
+        AutoOpResult::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            bogus_st,
+            bogus_ct,
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        // we will remove times from shrinking since qc only supports a
+        // tuple size of max 8, and then make the times constant across
+        // arbitration
+        Box::new(
+            (
+                self.uuid.clone(),
+                self.deployment_unit_ref.clone(),
+                self.version.clone(),
+                self.current_state.clone(),
+                self.resolved.clone(),
+                self.execution_unit_ref_list.clone(),
+                // only 8 elements allowed by quickcheck in a tuple
+                // self.start_time.clone(),
+                // self.complete_time.clone(),
+                self.fault.clone(),
+                self.operation_performed.clone(),
+            )
+                .shrink()
+                .map(|(uuid, dur, ver, cs, res, eurl, f, op)| AutoOpResult {
+                    uuid: uuid,
+                    deployment_unit_ref: dur,
+                    version: ver,
+                    current_state: cs,
+                    resolved: res,
+                    execution_unit_ref_list: eurl,
+                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    fault: f,
+                    operation_performed: op,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutonomousDUStateChangeComplete {
     results: Vec<AutoOpResult>,
 }
@@ -489,7 +735,21 @@ impl AutonomousDUStateChangeComplete {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AutonomousDUStateChangeComplete {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        AutonomousDUStateChangeComplete::new(Vec::<AutoOpResult>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.results.clone())
+                .shrink()
+                .map(|r| AutonomousDUStateChangeComplete { results: r }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutonomousTransferCompleteResponse;
 
 impl AutonomousTransferCompleteResponse {
@@ -502,7 +762,7 @@ impl AutonomousTransferCompleteResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutonomousTransferComplete {
     announce_url: String,
     transfer_url: String,
@@ -517,23 +777,23 @@ pub struct AutonomousTransferComplete {
 
 impl AutonomousTransferComplete {
     pub fn new(
-        announce_url: &str,
-        transfer_url: &str,
+        announce_url: String,
+        transfer_url: String,
         is_download: u8,
-        file_type: &str,
+        file_type: String,
         file_size: u32,
-        target_filename: &str,
+        target_filename: String,
         fault: FaultStruct,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
     ) -> Self {
         AutonomousTransferComplete {
-            announce_url: announce_url.to_string(),
-            transfer_url: transfer_url.to_string(),
+            announce_url: announce_url,
+            transfer_url: transfer_url,
             is_download: is_download,
-            file_type: file_type.to_string(),
+            file_type: file_type,
             file_size: file_size,
-            target_filename: target_filename.to_string(),
+            target_filename: target_filename,
             fault: fault,
             start_time: Some(start_time),
             complete_time: Some(complete_time),
@@ -606,7 +866,51 @@ impl AutonomousTransferComplete {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AutonomousTransferComplete {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        // times are not arbitrary due to qc
+        // tuple (used in shrink) limitations
+        AutonomousTransferComplete::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u8::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            FaultStruct::arbitrary(g),
+            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.announce_url.clone(),
+                self.transfer_url.clone(),
+                self.is_download.clone(),
+                self.file_type.clone(),
+                self.file_size.clone(),
+                self.target_filename.clone(),
+                self.fault.clone(),
+            )
+                .shrink()
+                .map(|(a, t, i, ft, fs, tf, f)| AutonomousTransferComplete {
+                    announce_url: a,
+                    transfer_url: t,
+                    is_download: i,
+                    file_type: ft,
+                    file_size: fs,
+                    target_filename: tf,
+                    fault: f,
+                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct CancelTransferResponse;
 
 impl CancelTransferResponse {
@@ -618,15 +922,15 @@ impl CancelTransferResponse {
         Ok(())
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct CancelTransfer {
     command_key: String,
 }
 
 impl CancelTransfer {
-    pub fn new(command_key: &str) -> Self {
+    pub fn new(command_key: String) -> Self {
         CancelTransfer {
-            command_key: command_key.to_string(),
+            command_key: command_key,
         }
     }
 
@@ -650,7 +954,22 @@ impl CancelTransfer {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for CancelTransfer {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        CancelTransfer::new(String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.command_key
+                .clone()
+                .shrink()
+                .map(|c| CancelTransfer { command_key: c }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ChangeDUStateResponse;
 
 impl ChangeDUStateResponse {
@@ -663,7 +982,7 @@ impl ChangeDUStateResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct InstallOp {
     url: String,
     uuid: String,
@@ -674,23 +993,55 @@ pub struct InstallOp {
 
 impl InstallOp {
     pub fn new(
-        url: &str,
-        uuid: &str,
-        username: &str,
-        password: &str,
-        execution_env_ref: &str,
+        url: String,
+        uuid: String,
+        username: String,
+        password: String,
+        execution_env_ref: String,
     ) -> Self {
         InstallOp {
-            url: url.to_string(),
-            uuid: uuid.to_string(),
-            username: username.to_string(),
-            password: password.to_string(),
-            execution_env_ref: execution_env_ref.to_string(),
+            url: url,
+            uuid: uuid,
+            username: username,
+            password: password,
+            execution_env_ref: execution_env_ref,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for InstallOp {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        InstallOp::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.url.clone(),
+                self.uuid.clone(),
+                self.username.clone(),
+                self.password.clone(),
+                self.execution_env_ref.clone(),
+            )
+                .shrink()
+                .map(|(u, uu, un, pw, eer)| InstallOp {
+                    url: u,
+                    uuid: uu,
+                    username: un,
+                    password: pw,
+                    execution_env_ref: eer,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UninstallOp {
     url: String,
     uuid: String,
@@ -698,16 +1049,42 @@ pub struct UninstallOp {
 }
 
 impl UninstallOp {
-    pub fn new(url: &str, uuid: &str, execution_env_ref: &str) -> Self {
+    pub fn new(url: String, uuid: String, execution_env_ref: String) -> Self {
         UninstallOp {
-            url: url.to_string(),
-            uuid: uuid.to_string(),
-            execution_env_ref: execution_env_ref.to_string(),
+            url: url,
+            uuid: uuid,
+            execution_env_ref: execution_env_ref,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for UninstallOp {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        UninstallOp::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.url.clone(),
+                self.uuid.clone(),
+                self.execution_env_ref.clone(),
+            )
+                .shrink()
+                .map(|(u, uu, eer)| UninstallOp {
+                    url: u,
+                    uuid: uu,
+                    execution_env_ref: eer,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UpdateOp {
     url: String,
     uuid: String,
@@ -715,19 +1092,58 @@ pub struct UpdateOp {
     password: String,
     version: String,
 }
+
 impl UpdateOp {
-    pub fn new(url: &str, uuid: &str, username: &str, password: &str, version: &str) -> Self {
+    pub fn new(
+        url: String,
+        uuid: String,
+        username: String,
+        password: String,
+        version: String,
+    ) -> Self {
         UpdateOp {
-            url: url.to_string(),
-            uuid: uuid.to_string(),
-            username: username.to_string(),
-            password: password.to_string(),
-            version: version.to_string(),
+            url: url,
+            uuid: uuid,
+            username: username,
+            password: password,
+            version: version,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for UpdateOp {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        UpdateOp::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.url.clone(),
+                self.uuid.clone(),
+                self.username.clone(),
+                self.password.clone(),
+                self.version.clone(),
+            )
+                .shrink()
+                .map(|(u, uu, un, pw, v)| UpdateOp {
+                    url: u,
+                    uuid: uu,
+                    username: un,
+                    password: pw,
+                    version: v,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ChangeDUState {
     command_key: String,
     install_operations: Vec<InstallOp>,
@@ -737,13 +1153,13 @@ pub struct ChangeDUState {
 
 impl ChangeDUState {
     pub fn new(
-        command_key: &str,
+        command_key: String,
         install_operations: Vec<InstallOp>,
         uninstall_operations: Vec<UninstallOp>,
         update_operations: Vec<UpdateOp>,
     ) -> Self {
         ChangeDUState {
-            command_key: command_key.to_string(),
+            command_key: command_key,
             install_operations: install_operations,
             uninstall_operations: uninstall_operations,
             update_operations: update_operations,
@@ -797,15 +1213,27 @@ impl ChangeDUState {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
-            ["ChangeDUState", "Operations", "InstallOpStruct"] => self
-                .install_operations
-                .push(InstallOp::new("", "", "", "", "")),
-            ["ChangeDUState", "Operations", "UninstallOpStruct"] => {
-                self.uninstall_operations.push(UninstallOp::new("", "", ""))
+            ["ChangeDUState", "Operations", "InstallOpStruct"] => {
+                self.install_operations.push(InstallOp::new(
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                ))
             }
-            ["ChangeDUState", "Operations", "UpdateOpStruct"] => self
-                .update_operations
-                .push(UpdateOp::new("", "", "", "", "")),
+            ["ChangeDUState", "Operations", "UninstallOpStruct"] => self.uninstall_operations.push(
+                UninstallOp::new(String::from(""), String::from(""), String::from("")),
+            ),
+            ["ChangeDUState", "Operations", "UpdateOpStruct"] => {
+                self.update_operations.push(UpdateOp::new(
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                ))
+            }
             _ => {}
         }
     }
@@ -858,16 +1286,43 @@ impl ChangeDUState {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for ChangeDUState {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ChangeDUState::new(
+            String::arbitrary(g),
+            Vec::<InstallOp>::arbitrary(g),
+            Vec::<UninstallOp>::arbitrary(g),
+            Vec::<UpdateOp>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command_key.clone(),
+                self.install_operations.clone(),
+                self.uninstall_operations.clone(),
+                self.update_operations.clone(),
+            )
+                .shrink()
+                .map(|(c, i, un, up)| ChangeDUState {
+                    command_key: c,
+                    install_operations: i,
+                    uninstall_operations: un,
+                    update_operations: up,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeleteObjectResponse {
     status: String,
 }
 
 impl DeleteObjectResponse {
-    pub fn new(status: &str) -> Self {
-        DeleteObjectResponse {
-            status: status.to_string(),
-        }
+    pub fn new(status: String) -> Self {
+        DeleteObjectResponse { status: status }
     }
     pub fn generate<W: Write>(
         &self,
@@ -887,17 +1342,32 @@ impl DeleteObjectResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for DeleteObjectResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        DeleteObjectResponse::new(String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.status
+                .clone()
+                .shrink()
+                .map(|s| DeleteObjectResponse { status: s }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeleteObject {
     object_name: String,
     parameter_key: String,
 }
 
 impl DeleteObject {
-    pub fn new(object_name: &str, parameter_key: &str) -> Self {
+    pub fn new(object_name: String, parameter_key: String) -> Self {
         DeleteObject {
-            object_name: object_name.to_string(),
-            parameter_key: parameter_key.to_string(),
+            object_name: object_name,
+            parameter_key: parameter_key,
         }
     }
     pub fn generate<W: Write>(
@@ -924,7 +1394,24 @@ impl DeleteObject {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for DeleteObject {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        DeleteObject::new(String::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.object_name.clone(), self.parameter_key.clone())
+                .shrink()
+                .map(|(o, p)| DeleteObject {
+                    object_name: o,
+                    parameter_key: p,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DownloadResponse {
     status: String,
     start_time: Option<DateTime<Utc>>,
@@ -932,9 +1419,9 @@ pub struct DownloadResponse {
 }
 
 impl DownloadResponse {
-    pub fn new(status: &str, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
+    pub fn new(status: String, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
         DownloadResponse {
-            status: status.to_string(),
+            status: status,
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
@@ -975,7 +1462,25 @@ impl DownloadResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for DownloadResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        DownloadResponse::new(
+            String::arbitrary(g),
+            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.status.clone().shrink().map(|s| DownloadResponse {
+            status: s,
+            start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+            complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Download {
     command_key: String,
     file_type: String,
@@ -991,28 +1496,28 @@ pub struct Download {
 
 impl Download {
     pub fn new(
-        command_key: &str,
-        file_type: &str,
-        url: &str,
-        username: &str,
-        password: &str,
+        command_key: String,
+        file_type: String,
+        url: String,
+        username: String,
+        password: String,
         file_size: u32,
-        target_filename: &str,
+        target_filename: String,
         delay_seconds: u32,
-        success_url: &str,
-        failure_url: &str,
+        success_url: String,
+        failure_url: String,
     ) -> Self {
         Download {
-            command_key: command_key.to_string(),
-            file_type: file_type.to_string(),
-            url: url.to_string(),
-            username: username.to_string(),
-            password: password.to_string(),
+            command_key: command_key,
+            file_type: file_type,
+            url: url,
+            username: username,
+            password: password,
             file_size: file_size,
-            target_filename: target_filename.to_string(),
+            target_filename: target_filename,
             delay_seconds: delay_seconds,
-            success_url: success_url.to_string(),
-            failure_url: failure_url.to_string(),
+            success_url: success_url,
+            failure_url: failure_url,
         }
     }
     pub fn generate<W: Write>(
@@ -1051,7 +1556,52 @@ impl Download {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for Download {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Download::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::from(""),
+            String::from(""),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command_key.clone(),
+                self.file_type.clone(),
+                self.url.clone(),
+                self.username.clone(),
+                self.password.clone(),
+                self.file_size.clone(),
+                self.target_filename.clone(),
+                self.delay_seconds.clone(),
+            )
+                .shrink()
+                .map(|(c, ft, u, un, pw, fs, tf, ds)| Download {
+                    command_key: c,
+                    file_type: ft,
+                    url: u,
+                    username: un,
+                    password: pw,
+                    file_size: fs,
+                    target_filename: tf,
+                    delay_seconds: ds,
+                    success_url: String::from(""),
+                    failure_url: String::from(""),
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct OpResult {
     uuid: String,
     deployment_unit_ref: String,
@@ -1066,23 +1616,23 @@ pub struct OpResult {
 
 impl OpResult {
     pub fn new(
-        uuid: &str,
-        deployment_unit_ref: &str,
-        version: &str,
-        current_state: &str,
+        uuid: String,
+        deployment_unit_ref: String,
+        version: String,
+        current_state: String,
         resolved: u32,
-        execution_unit_ref_list: &str,
+        execution_unit_ref_list: String,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
         fault: FaultStruct,
     ) -> Self {
         OpResult {
-            uuid: uuid.to_string(),
-            deployment_unit_ref: deployment_unit_ref.to_string(),
-            version: version.to_string(),
-            current_state: current_state.to_string(),
+            uuid: uuid,
+            deployment_unit_ref: deployment_unit_ref,
+            version: version,
+            current_state: current_state,
             resolved: resolved,
-            execution_unit_ref_list: execution_unit_ref_list.to_string(),
+            execution_unit_ref_list: execution_unit_ref_list,
             start_time: Some(start_time),
             complete_time: Some(complete_time),
             fault: fault,
@@ -1090,7 +1640,49 @@ impl OpResult {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for OpResult {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        OpResult::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+            FaultStruct::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.uuid.clone(),
+                self.deployment_unit_ref.clone(),
+                self.version.clone(),
+                self.current_state.clone(),
+                self.resolved.clone(),
+                self.execution_unit_ref_list.clone(),
+                self.fault.clone(),
+            )
+                .shrink()
+                .map(|(u, dur, v, cs, r, eurl, f)| OpResult {
+                    uuid: u,
+                    deployment_unit_ref: dur,
+                    version: v,
+                    current_state: cs,
+                    resolved: r,
+                    execution_unit_ref_list: eurl,
+                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    fault: f,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DUStateChangeCompleteResponse;
 
 impl DUStateChangeCompleteResponse {
@@ -1103,16 +1695,16 @@ impl DUStateChangeCompleteResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DUStateChangeComplete {
     command_key: String,
     results: Vec<OpResult>,
 }
 
 impl DUStateChangeComplete {
-    pub fn new(command_key: &str, results: Vec<OpResult>) -> Self {
+    pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
         DUStateChangeComplete {
-            command_key: command_key.to_string(),
+            command_key: command_key,
             results: results,
         }
     }
@@ -1159,15 +1751,15 @@ impl DUStateChangeComplete {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["DUStateChangeComplete", "Results"] => self.results.push(OpResult::new(
-                "",
-                "",
-                "",
-                "",
+                String::from(""),
+                String::from(""),
+                String::from(""),
+                String::from(""),
                 0,
-                "",
+                String::from(""),
                 Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                 Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                FaultStruct::new(0, ""),
+                FaultStruct::new(0, String::from("")),
             )),
             _ => {}
         }
@@ -1218,7 +1810,24 @@ impl DUStateChangeComplete {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for DUStateChangeComplete {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        DUStateChangeComplete::new(String::arbitrary(g), Vec::<OpResult>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.command_key.clone(), self.results.clone())
+                .shrink()
+                .map(|(c, r)| DUStateChangeComplete {
+                    command_key: c,
+                    results: r,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FactoryResetResponse;
 
 impl FactoryResetResponse {
@@ -1231,7 +1840,7 @@ impl FactoryResetResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FactoryReset;
 
 impl FactoryReset {
@@ -1244,13 +1853,36 @@ impl FactoryReset {
     }
 }
 
-#[derive(Debug, PartialEq)]
-struct FaultDetail {
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub struct FaultDetail {
     code: u32,
     string: String,
 }
 
-#[derive(Debug, PartialEq)]
+impl FaultDetail {
+    pub fn new(detail_code: u32, detail_string: String) -> Self {
+        FaultDetail {
+            code: detail_code,
+            string: detail_string,
+        }
+    }
+}
+
+#[cfg(test)]
+impl Arbitrary for FaultDetail {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        FaultDetail::new(u32::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.code.clone(), self.string.clone())
+                .shrink()
+                .map(|(c, s)| FaultDetail { code: c, string: s }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Fault {
     faultcode: String,
     faultstring: String,
@@ -1258,14 +1890,11 @@ pub struct Fault {
 }
 
 impl Fault {
-    pub fn new(faultcode: &str, faultstring: &str, code: u32, string: &str) -> Self {
+    pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
         Fault {
-            faultcode: faultcode.to_string(),
-            faultstring: faultstring.to_string(),
-            detail: FaultDetail {
-                code: code,
-                string: string.to_string(),
-            },
+            faultcode: faultcode,
+            faultstring: faultstring,
+            detail: FaultDetail::new(code, string),
         }
     }
     pub fn generate<W: Write>(
@@ -1303,7 +1932,34 @@ impl Fault {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for Fault {
+    fn arbitrary<G: Gen>(g: &mut G) -> Fault {
+        Fault::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.faultcode.clone(),
+                self.faultstring.clone(),
+                self.detail.clone(),
+            )
+                .shrink()
+                .map(|(c, s, d)| Fault {
+                    faultcode: c,
+                    faultstring: s,
+                    detail: d,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AllQueuedTransfers {
     command_key: String,
     state: String,
@@ -1315,25 +1971,60 @@ pub struct AllQueuedTransfers {
 
 impl AllQueuedTransfers {
     pub fn new(
-        command_key: &str,
-        state: &str,
+        command_key: String,
+        state: String,
         is_download: u8,
-        file_type: &str,
+        file_type: String,
         file_size: u32,
-        target_filename: &str,
+        target_filename: String,
     ) -> Self {
         AllQueuedTransfers {
-            command_key: command_key.to_string(),
-            state: state.to_string(),
+            command_key: command_key,
+            state: state,
             is_download: is_download,
-            file_type: file_type.to_string(),
+            file_type: file_type,
             file_size: file_size,
-            target_filename: target_filename.to_string(),
+            target_filename: target_filename,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for AllQueuedTransfers {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        AllQueuedTransfers::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u8::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command_key.clone(),
+                self.state.clone(),
+                self.is_download.clone(),
+                self.file_type.clone(),
+                self.file_size.clone(),
+                self.target_filename.clone(),
+            )
+                .shrink()
+                .map(|(c, s, id, ft, fs, tf)| AllQueuedTransfers {
+                    command_key: c,
+                    state: s,
+                    is_download: id,
+                    file_type: ft,
+                    file_size: fs,
+                    target_filename: tf,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetAllQueuedTransfersResponse {
     transfer_list: Vec<AllQueuedTransfers>,
 }
@@ -1383,9 +2074,16 @@ impl GetAllQueuedTransfersResponse {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
-            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] => self
-                .transfer_list
-                .push(AllQueuedTransfers::new("", "", 0, "", 0, "")),
+            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] => {
+                self.transfer_list.push(AllQueuedTransfers::new(
+                    String::from(""),
+                    String::from(""),
+                    0,
+                    String::from(""),
+                    0,
+                    String::from(""),
+                ))
+            }
             _ => {}
         }
     }
@@ -1410,7 +2108,22 @@ impl GetAllQueuedTransfersResponse {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for GetAllQueuedTransfersResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetAllQueuedTransfersResponse::new(Vec::<AllQueuedTransfers>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.transfer_list
+                .clone()
+                .shrink()
+                .map(|tl| GetAllQueuedTransfersResponse { transfer_list: tl }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetAllQueuedTransfers;
 
 impl GetAllQueuedTransfers {
@@ -1423,7 +2136,7 @@ impl GetAllQueuedTransfers {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct OptionStruct {
     option_name: String,
     voucher_sn: String,
@@ -1436,19 +2149,19 @@ pub struct OptionStruct {
 
 impl OptionStruct {
     pub fn new(
-        option_name: &str,
-        voucher_sn: &str,
+        option_name: String,
+        voucher_sn: String,
         state: u8,
-        mode: &str,
+        mode: String,
         start_date: DateTime<Utc>,
         expiration_date: DateTime<Utc>,
         is_transferable: u8,
     ) -> Self {
         OptionStruct {
-            option_name: option_name.to_string(),
-            voucher_sn: voucher_sn.to_string(),
+            option_name: option_name,
+            voucher_sn: voucher_sn,
             state: state,
-            mode: mode.to_string(),
+            mode: mode,
             start_date: Some(start_date),
             expiration_date: Some(expiration_date),
             is_transferable: is_transferable,
@@ -1456,7 +2169,43 @@ impl OptionStruct {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for OptionStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        OptionStruct::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u8::arbitrary(g),
+            String::arbitrary(g),
+            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+            u8::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.option_name.clone(),
+                self.voucher_sn.clone(),
+                self.state.clone(),
+                self.mode.clone(),
+                self.is_transferable.clone(),
+            )
+                .shrink()
+                .map(|(on, vsn, s, m, i)| OptionStruct {
+                    option_name: on,
+                    voucher_sn: vsn,
+                    state: s,
+                    mode: m,
+                    is_transferable: i,
+                    start_date: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    expiration_date: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetOptionsResponse {
     option_list: Vec<OptionStruct>,
 }
@@ -1509,10 +2258,10 @@ impl GetOptionsResponse {
         match &path_pattern[..] {
             ["GetOptionsResponse", "OptionList", "OptionStruct"] => {
                 self.option_list.push(OptionStruct::new(
-                    "",
-                    "",
+                    String::from(""),
+                    String::from(""),
                     0,
-                    "",
+                    String::from(""),
                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                     0,
@@ -1549,15 +2298,30 @@ impl GetOptionsResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetOptionsResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetOptionsResponse::new(Vec::<OptionStruct>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.option_list
+                .clone()
+                .shrink()
+                .map(|ol| GetOptionsResponse { option_list: ol }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetOptions {
     option_name: String,
 }
 
 impl GetOptions {
-    pub fn new(option_name: &str) -> Self {
+    pub fn new(option_name: String) -> Self {
         GetOptions {
-            option_name: option_name.to_string(),
+            option_name: option_name,
         }
     }
     pub fn generate<W: Write>(
@@ -1577,12 +2341,32 @@ impl GetOptions {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for GetOptions {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetOptions::new(String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.option_name
+                .clone()
+                .shrink()
+                .map(|on| GetOptions { option_name: on }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterAttributes {
     pub parameternames: Vec<String>,
 }
 
 impl GetParameterAttributes {
+    pub fn new(parameternames: Vec<String>) -> Self {
+        GetParameterAttributes {
+            parameternames: parameternames,
+        }
+    }
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -1606,23 +2390,64 @@ impl GetParameterAttributes {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for GetParameterAttributes {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterAttributes::new(Vec::<String>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameternames
+                .clone()
+                .shrink()
+                .map(|pn| GetParameterAttributes { parameternames: pn }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ParameterAttribute {
     name: String,
     notification: String,
     accesslist: Vec<String>,
 }
 impl ParameterAttribute {
-    pub fn new(name: &str, notification: &str, accesslist: Vec<&str>) -> Self {
+    pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
         ParameterAttribute {
-            name: name.to_string(),
-            notification: notification.to_string(),
-            accesslist: accesslist.iter().map(|s| s.to_string()).collect(),
+            name: name,
+            notification: notification,
+            accesslist: accesslist,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for ParameterAttribute {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ParameterAttribute::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            Vec::<String>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.name.clone(),
+                self.notification.clone(),
+                self.accesslist.clone(),
+            )
+                .shrink()
+                .map(|(n, no, a)| ParameterAttribute {
+                    name: n,
+                    notification: no,
+                    accesslist: a,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterAttributesResponse {
     parameters: Vec<ParameterAttribute>,
 }
@@ -1674,9 +2499,13 @@ impl GetParameterAttributesResponse {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
-            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct"] => self
-                .parameters
-                .push(ParameterAttribute::new("", "", vec![])),
+            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct"] => {
+                self.parameters.push(ParameterAttribute::new(
+                    String::from(""),
+                    String::from(""),
+                    vec![],
+                ))
+            }
             _ => {}
         }
     }
@@ -1712,21 +2541,54 @@ impl GetParameterAttributesResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetParameterAttributesResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterAttributesResponse::new(Vec::<ParameterAttribute>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameters
+                .clone()
+                .shrink()
+                .map(|p| GetParameterAttributesResponse { parameters: p }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ParameterInfoStruct {
     name: String,
     writable: u8,
 }
 
 impl ParameterInfoStruct {
-    pub fn new(name: &str, writable: u8) -> Self {
+    pub fn new(name: String, writable: u8) -> Self {
         ParameterInfoStruct {
-            name: name.to_string(),
+            name: name,
             writable: writable,
         }
     }
 }
-#[derive(Debug, PartialEq, Eq, Default)]
+
+#[cfg(test)]
+impl Arbitrary for ParameterInfoStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ParameterInfoStruct::new(String::arbitrary(g), u8::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.name.clone(), self.writable.clone())
+                .shrink()
+                .map(|(n, w)| ParameterInfoStruct {
+                    name: n,
+                    writable: w,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterNamesResponse {
     parameter_list: Vec<ParameterInfoStruct>,
 }
@@ -1793,15 +2655,30 @@ impl GetParameterNamesResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetParameterNamesResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterNamesResponse::new(Vec::<ParameterInfoStruct>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameter_list
+                .clone()
+                .shrink()
+                .map(|pl| GetParameterNamesResponse { parameter_list: pl }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterNames {
     parameter_path: String,
     next_level: u32,
 }
 impl GetParameterNames {
-    pub fn new(parameter_path: &str, next_level: u32) -> Self {
+    pub fn new(parameter_path: String, next_level: u32) -> Self {
         GetParameterNames {
-            parameter_path: parameter_path.to_string(),
+            parameter_path: parameter_path,
             next_level: next_level,
         }
     }
@@ -1824,7 +2701,24 @@ impl GetParameterNames {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetParameterNames {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterNames::new(String::arbitrary(g), u32::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.parameter_path.clone(), self.next_level.clone())
+                .shrink()
+                .map(|(pp, nl)| GetParameterNames {
+                    parameter_path: pp,
+                    next_level: nl,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ParameterValue {
     name: String,
     r#type: String,
@@ -1832,16 +2726,38 @@ pub struct ParameterValue {
 }
 
 impl ParameterValue {
-    pub fn new(name: &str, param_type: &str, value: &str) -> Self {
+    pub fn new(name: String, param_type: String, value: String) -> Self {
         ParameterValue {
-            name: name.to_string(),
-            r#type: param_type.to_string(),
-            value: value.to_string(),
+            name: name,
+            r#type: param_type,
+            value: value,
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for ParameterValue {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ParameterValue::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.name.clone(), self.r#type.clone(), self.value.clone())
+                .shrink()
+                .map(|(n, t, v)| ParameterValue {
+                    name: n,
+                    r#type: t,
+                    value: v,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterValues {
     parameternames: Vec<String>,
 }
@@ -1875,7 +2791,22 @@ impl GetParameterValues {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for GetParameterValues {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterValues::new(Vec::<String>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameternames
+                .clone()
+                .shrink()
+                .map(|pn| GetParameterValues { parameternames: pn }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterValuesResponse {
     parameters: Vec<ParameterValue>,
 }
@@ -1921,7 +2852,11 @@ impl GetParameterValuesResponse {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct"] => {
-                self.parameters.push(ParameterValue::new("", "", ""))
+                self.parameters.push(ParameterValue::new(
+                    String::from(""),
+                    String::from(""),
+                    String::from(""),
+                ))
             }
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
@@ -1956,14 +2891,29 @@ impl GetParameterValuesResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetParameterValuesResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetParameterValuesResponse::new(Vec::<ParameterValue>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameters
+                .clone()
+                .shrink()
+                .map(|p| GetParameterValuesResponse { parameters: p }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct QueuedTransferStruct {
     command_key: Option<String>,
     state: Option<String>,
 }
 
 impl QueuedTransferStruct {
-    pub fn new(command_key: &str, state: &str) -> Self {
+    pub fn new(command_key: String, state: String) -> Self {
         QueuedTransferStruct {
             command_key: Some(command_key.to_string()),
             state: Some(state.to_string()),
@@ -1971,7 +2921,24 @@ impl QueuedTransferStruct {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for QueuedTransferStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        QueuedTransferStruct::new(String::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.command_key.clone(), self.state.clone())
+                .shrink()
+                .map(|(c, s)| QueuedTransferStruct {
+                    command_key: c,
+                    state: s,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetQueuedTransfersResponse {
     transfer_list: Vec<QueuedTransferStruct>,
 }
@@ -2040,7 +3007,22 @@ impl GetQueuedTransfersResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetQueuedTransfersResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetQueuedTransfersResponse::new(Vec::<QueuedTransferStruct>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.transfer_list
+                .clone()
+                .shrink()
+                .map(|t| GetQueuedTransfersResponse { transfer_list: t }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetQueuedTransfers {}
 
 impl GetQueuedTransfers {
@@ -2053,15 +3035,15 @@ impl GetQueuedTransfers {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetRPCMethodsResponse {
     method_list: Vec<String>,
 }
 
 impl GetRPCMethodsResponse {
-    pub fn new(method_list: Vec<&str>) -> Self {
+    pub fn new(method_list: Vec<String>) -> Self {
         GetRPCMethodsResponse {
-            method_list: method_list.iter().map(|s| s.to_string()).collect(),
+            method_list: method_list,
         }
     }
     pub fn generate<W: Write>(
@@ -2090,7 +3072,22 @@ impl GetRPCMethodsResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for GetRPCMethodsResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        GetRPCMethodsResponse::new(Vec::<String>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.method_list
+                .clone()
+                .shrink()
+                .map(|ml| GetRPCMethodsResponse { method_list: ml }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetRPCMethods {}
 
 impl GetRPCMethods {
@@ -2103,7 +3100,7 @@ impl GetRPCMethods {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct InformResponse {
     max_envelopes: u16,
 }
@@ -2133,7 +3130,22 @@ impl InformResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for InformResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        InformResponse::new(u16::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.max_envelopes
+                .clone()
+                .shrink()
+                .map(|me| InformResponse { max_envelopes: me }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeviceId {
     manufacturer: String,
     oui: String,
@@ -2141,32 +3153,83 @@ pub struct DeviceId {
     serial_number: String,
 }
 impl DeviceId {
-    pub fn new(manufacturer: &str, oui: &str, product_class: &str, serial_number: &str) -> Self {
+    pub fn new(
+        manufacturer: String,
+        oui: String,
+        product_class: String,
+        serial_number: String,
+    ) -> Self {
         DeviceId {
-            manufacturer: manufacturer.to_string(),
-            oui: oui.to_string(),
-            product_class: product_class.to_string(),
-            serial_number: serial_number.to_string(),
+            manufacturer: manufacturer,
+            oui: oui,
+            product_class: product_class,
+            serial_number: serial_number,
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for DeviceId {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        DeviceId::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.manufacturer.clone(),
+                self.oui.clone(),
+                self.product_class.clone(),
+                self.serial_number.clone(),
+            )
+                .shrink()
+                .map(|(m, o, p, s)| DeviceId {
+                    manufacturer: m,
+                    oui: o,
+                    product_class: p,
+                    serial_number: s,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct EventStruct {
     event_code: String,
     command_key: String,
 }
 
 impl EventStruct {
-    pub fn new(event_code: &str, command_key: &str) -> Self {
+    pub fn new(event_code: String, command_key: String) -> Self {
         EventStruct {
-            event_code: event_code.to_string(),
-            command_key: command_key.to_string(),
+            event_code: event_code,
+            command_key: command_key,
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for EventStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        EventStruct::new(String::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.event_code.clone(), self.command_key.clone())
+                .shrink()
+                .map(|(e, c)| EventStruct {
+                    event_code: e,
+                    command_key: c,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Inform {
     device_id: DeviceId,
     event: Vec<EventStruct>,
@@ -2317,16 +3380,48 @@ impl Inform {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for Inform {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Inform::new(
+            DeviceId::arbitrary(g),
+            Vec::<EventStruct>::arbitrary(g),
+            u32::arbitrary(g),
+            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            u32::arbitrary(g),
+            Vec::<ParameterValue>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.device_id.clone(),
+                self.event.clone(),
+                self.max_envelopes.clone(),
+                self.retry_count.clone(),
+                self.parameter_list.clone(),
+            )
+                .shrink()
+                .map(|(d, e, m, r, p)| Inform {
+                    device_id: d,
+                    event: e,
+                    max_envelopes: m,
+                    current_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    retry_count: r,
+                    parameter_list: p,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct KickedResponse {
     next_url: String,
 }
 
 impl KickedResponse {
-    pub fn new(next_url: &str) -> Self {
-        KickedResponse {
-            next_url: next_url.to_string(),
-        }
+    pub fn new(next_url: String) -> Self {
+        KickedResponse { next_url: next_url }
     }
     pub fn generate<W: Write>(
         &self,
@@ -2347,7 +3442,22 @@ impl KickedResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for KickedResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        KickedResponse::new(String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.next_url
+                .clone()
+                .shrink()
+                .map(|n| KickedResponse { next_url: n }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Kicked {
     command: String,
     referer: String,
@@ -2356,12 +3466,12 @@ pub struct Kicked {
 }
 
 impl Kicked {
-    pub fn new(command: &str, referer: &str, arg: &str, next: &str) -> Self {
+    pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
         Kicked {
-            command: command.to_string(),
-            referer: referer.to_string(),
-            arg: arg.to_string(),
-            next: next.to_string(),
+            command: command,
+            referer: referer,
+            arg: arg,
+            next: next,
         }
     }
     pub fn generate<W: Write>(
@@ -2395,7 +3505,36 @@ impl Kicked {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for Kicked {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Kicked::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command.clone(),
+                self.referer.clone(),
+                self.arg.clone(),
+                self.next.clone(),
+            )
+                .shrink()
+                .map(|(c, r, a, n)| Kicked {
+                    command: c,
+                    referer: r,
+                    arg: a,
+                    next: n,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct RebootResponse {}
 
 impl RebootResponse {
@@ -2408,15 +3547,15 @@ impl RebootResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Reboot {
     command_key: String,
 }
 
 impl Reboot {
-    pub fn new(command_key: &str) -> Self {
+    pub fn new(command_key: String) -> Self {
         Reboot {
-            command_key: command_key.to_string(),
+            command_key: command_key,
         }
     }
     pub fn generate<W: Write>(
@@ -2438,31 +3577,60 @@ impl Reboot {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for Reboot {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Reboot::new(String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.command_key
+                .clone()
+                .shrink()
+                .map(|c| Reboot { command_key: c }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ArgStruct {
     name: String,
     value: String,
 }
 
 impl ArgStruct {
-    pub fn new(name: &str, value: &str) -> Self {
+    pub fn new(name: String, value: String) -> Self {
         ArgStruct {
-            name: name.to_string(),
-            value: value.to_string(),
+            name: name,
+            value: value,
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for ArgStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ArgStruct::new(String::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.name.clone(), self.value.clone())
+                .shrink()
+                .map(|(n, v)| ArgStruct { name: n, value: v }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct RequestDownload {
     file_type: String,
     file_type_arg: Vec<ArgStruct>,
 }
 
 impl RequestDownload {
-    pub fn new(file_type: &str, file_type_arg: Vec<ArgStruct>) -> Self {
+    pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
         RequestDownload {
-            file_type: file_type.to_string(),
+            file_type: file_type,
             file_type_arg: file_type_arg,
         }
     }
@@ -2524,7 +3692,24 @@ impl RequestDownload {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for RequestDownload {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        RequestDownload::new(String::arbitrary(g), Vec::<ArgStruct>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.file_type.clone(), self.file_type_arg.clone())
+                .shrink()
+                .map(|(ft, fta)| RequestDownload {
+                    file_type: ft,
+                    file_type_arg: fta,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct RequestDownloadResponse {}
 
 impl RequestDownloadResponse {
@@ -2537,7 +3722,7 @@ impl RequestDownloadResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ScheduleDownloadResponse {}
 
 impl ScheduleDownloadResponse {
@@ -2550,7 +3735,7 @@ impl ScheduleDownloadResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct TimeWindow {
     window_start: u32,
     window_end: u32,
@@ -2562,20 +3747,53 @@ impl TimeWindow {
     pub fn new(
         window_start: u32,
         window_end: u32,
-        window_mode: &str,
-        user_message: &str,
+        window_mode: String,
+        user_message: String,
         max_retries: i32,
     ) -> Self {
         TimeWindow {
             window_start: window_start,
             window_end: window_end,
-            window_mode: window_mode.to_string(),
-            user_message: user_message.to_string(),
+            window_mode: window_mode,
+            user_message: user_message,
             max_retries: max_retries,
         }
     }
 }
-#[derive(Debug, PartialEq, Eq, Default)]
+
+#[cfg(test)]
+impl Arbitrary for TimeWindow {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        TimeWindow::new(
+            u32::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            i32::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.window_start.clone(),
+                self.window_end.clone(),
+                self.window_mode.clone(),
+                self.user_message.clone(),
+                self.max_retries.clone(),
+            )
+                .shrink()
+                .map(|(ws, we, wm, um, mr)| TimeWindow {
+                    window_start: ws,
+                    window_end: we,
+                    window_mode: wm,
+                    user_message: um,
+                    max_retries: mr,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ScheduleDownload {
     command_key: String,
     file_type: String,
@@ -2589,23 +3807,23 @@ pub struct ScheduleDownload {
 
 impl ScheduleDownload {
     pub fn new(
-        command_key: &str,
-        file_type: &str,
-        url: &str,
-        username: &str,
-        password: &str,
+        command_key: String,
+        file_type: String,
+        url: String,
+        username: String,
+        password: String,
         file_size: u32,
-        target_filename: &str,
+        target_filename: String,
         timewindow_list: Vec<TimeWindow>,
     ) -> Self {
         ScheduleDownload {
-            command_key: command_key.to_string(),
-            file_type: file_type.to_string(),
-            url: url.to_string(),
-            username: username.to_string(),
-            password: password.to_string(),
+            command_key: command_key,
+            file_type: file_type,
+            url: url,
+            username: username,
+            password: password,
             file_size: file_size,
-            target_filename: target_filename.to_string(),
+            target_filename: target_filename,
             timewindow_list: timewindow_list,
         }
     }
@@ -2697,7 +3915,48 @@ impl ScheduleDownload {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for ScheduleDownload {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ScheduleDownload::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+            String::arbitrary(g),
+            Vec::<TimeWindow>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command_key.clone(),
+                self.file_type.clone(),
+                self.url.clone(),
+                self.username.clone(),
+                self.password.clone(),
+                self.file_size.clone(),
+                self.target_filename.clone(),
+                self.timewindow_list.clone(),
+            )
+                .shrink()
+                .map(|(c, f, u, un, pw, fs, tf, tl)| ScheduleDownload {
+                    command_key: c,
+                    file_type: f,
+                    url: u,
+                    username: un,
+                    password: pw,
+                    file_size: fs,
+                    target_filename: tf,
+                    timewindow_list: tl,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ScheduleInformResponse {}
 
 impl ScheduleInformResponse {
@@ -2710,17 +3969,17 @@ impl ScheduleInformResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ScheduleInform {
     delay_seconds: u32,
     command_key: String,
 }
 
 impl ScheduleInform {
-    pub fn new(delay_seconds: u32, command_key: &str) -> Self {
+    pub fn new(delay_seconds: u32, command_key: String) -> Self {
         ScheduleInform {
             delay_seconds: delay_seconds,
-            command_key: command_key.to_string(),
+            command_key: command_key,
         }
     }
     pub fn generate<W: Write>(
@@ -2746,7 +4005,24 @@ impl ScheduleInform {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for ScheduleInform {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        ScheduleInform::new(u32::arbitrary(g), String::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.delay_seconds.clone(), self.command_key.clone())
+                .shrink()
+                .map(|(d, c)| ScheduleInform {
+                    delay_seconds: d,
+                    command_key: c,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterAttributesResponse {}
 
 impl SetParameterAttributesResponse {
@@ -2759,7 +4035,7 @@ impl SetParameterAttributesResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterAttributesStruct {
     name: String,
     notification_change: u8,
@@ -2770,22 +4046,55 @@ pub struct SetParameterAttributesStruct {
 
 impl SetParameterAttributesStruct {
     pub fn new(
-        name: &str,
+        name: String,
         notification_change: u8,
         notification: u8,
         access_list_change: u8,
-        access_list: Vec<&str>,
+        access_list: Vec<String>,
     ) -> Self {
         SetParameterAttributesStruct {
-            name: name.to_string(),
+            name: name,
             notification_change: notification_change,
             notification: notification,
             access_list_change: access_list_change,
-            access_list: access_list.iter().map(|s| s.to_string()).collect(),
+            access_list: access_list,
         }
     }
 }
-#[derive(Debug, PartialEq, Eq, Default)]
+
+#[cfg(test)]
+impl Arbitrary for SetParameterAttributesStruct {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SetParameterAttributesStruct::new(
+            String::arbitrary(g),
+            u8::arbitrary(g),
+            u8::arbitrary(g),
+            u8::arbitrary(g),
+            Vec::<String>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.name.clone(),
+                self.notification_change.clone(),
+                self.notification.clone(),
+                self.access_list_change.clone(),
+                self.access_list.clone(),
+            )
+                .shrink()
+                .map(|(name, nc, n, alc, al)| SetParameterAttributesStruct {
+                    name: name,
+                    notification_change: nc,
+                    notification: n,
+                    access_list_change: alc,
+                    access_list: al,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterAttributes {
     parameter_list: Vec<SetParameterAttributesStruct>,
 }
@@ -2878,7 +4187,22 @@ impl SetParameterAttributes {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SetParameterAttributes {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SetParameterAttributes::new(Vec::<SetParameterAttributesStruct>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.parameter_list
+                .clone()
+                .shrink()
+                .map(|pl| SetParameterAttributes { parameter_list: pl }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterValuesResponse {
     status: u32,
 }
@@ -2904,7 +4228,22 @@ impl SetParameterValuesResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SetParameterValuesResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SetParameterValuesResponse::new(u32::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.status
+                .clone()
+                .shrink()
+                .map(|s| SetParameterValuesResponse { status: s }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterValues {
     parameter_list: Vec<ParameterValue>,
     parameter_key: Option<String>,
@@ -2981,8 +4320,29 @@ impl SetParameterValues {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SetParameterValues {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SetParameterValues::new(
+            Option::<String>::arbitrary(g),
+            Vec::<ParameterValue>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.parameter_list.clone(), self.parameter_key.clone())
+                .shrink()
+                .map(|(pl, pk)| SetParameterValues {
+                    parameter_list: pl,
+                    parameter_key: pk,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetVouchersResponse {}
+
 impl SetVouchersResponse {
     pub fn generate<W: Write>(
         &self,
@@ -2992,15 +4352,16 @@ impl SetVouchersResponse {
         Ok(())
     }
 }
-#[derive(Debug, PartialEq, Eq, Default)]
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetVouchers {
     voucher_list: Vec<String>,
 }
 
 impl SetVouchers {
-    pub fn new(voucher_list: Vec<&str>) -> Self {
+    pub fn new(voucher_list: Vec<String>) -> Self {
         SetVouchers {
-            voucher_list: voucher_list.iter().map(|s| s.to_string()).collect(),
+            voucher_list: voucher_list,
         }
     }
     pub fn generate<W: Write>(
@@ -3046,7 +4407,22 @@ impl SetVouchers {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for SetVouchers {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        SetVouchers::new(Vec::<String>::arbitrary(g))
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            self.voucher_list
+                .clone()
+                .shrink()
+                .map(|vl| SetVouchers { voucher_list: vl }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct TransferCompleteResponse {}
 
 impl TransferCompleteResponse {
@@ -3059,7 +4435,7 @@ impl TransferCompleteResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct TransferComplete {
     command_key: String,
     fault: FaultStruct,
@@ -3069,7 +4445,7 @@ pub struct TransferComplete {
 
 impl TransferComplete {
     pub fn new(
-        command_key: &str,
+        command_key: String,
         fault: FaultStruct,
         start_time: Option<DateTime<Utc>>,
         complete_time: Option<DateTime<Utc>>,
@@ -3121,7 +4497,31 @@ impl TransferComplete {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for TransferComplete {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        TransferComplete::new(
+            String::arbitrary(g),
+            FaultStruct::arbitrary(g),
+            Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+            Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.command_key.clone(), self.fault.clone())
+                .shrink()
+                .map(|(c, f)| TransferComplete {
+                    command_key: c,
+                    fault: f,
+                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UploadResponse {
     status: u8,
     start_time: Option<DateTime<Utc>>,
@@ -3173,7 +4573,25 @@ impl UploadResponse {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Default)]
+#[cfg(test)]
+impl Arbitrary for UploadResponse {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        UploadResponse::new(
+            u8::arbitrary(g),
+            Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+            Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.status.clone().shrink().map(|s| UploadResponse {
+            status: s,
+            start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+            complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+        }))
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Upload {
     command_key: String,
     file_type: String,
@@ -3185,19 +4603,19 @@ pub struct Upload {
 
 impl Upload {
     pub fn new(
-        command_key: &str,
-        file_type: &str,
-        url: &str,
-        username: &str,
-        password: &str,
+        command_key: String,
+        file_type: String,
+        url: String,
+        username: String,
+        password: String,
         delay_seconds: u32,
     ) -> Self {
         Upload {
-            command_key: command_key.to_string(),
-            file_type: file_type.to_string(),
-            url: url.to_string(),
-            username: username.to_string(),
-            password: password.to_string(),
+            command_key: command_key,
+            file_type: file_type,
+            url: url,
+            username: username,
+            password: password,
             delay_seconds: delay_seconds,
         }
     }
@@ -3246,7 +4664,42 @@ impl Upload {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[cfg(test)]
+impl Arbitrary for Upload {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        Upload::new(
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            String::arbitrary(g),
+            u32::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (
+                self.command_key.clone(),
+                self.file_type.clone(),
+                self.url.clone(),
+                self.username.clone(),
+                self.password.clone(),
+                self.delay_seconds.clone(),
+            )
+                .shrink()
+                .map(|(c, f, u, un, pw, ds)| Upload {
+                    command_key: c,
+                    file_type: f,
+                    url: u,
+                    username: un,
+                    password: pw,
+                    delay_seconds: ds,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum BodyElement {
     AddObjectResponse(AddObjectResponse),
     AddObject(AddObject),
@@ -3305,11 +4758,236 @@ pub enum BodyElement {
     Upload(Upload),
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[cfg(test)]
+impl Arbitrary for BodyElement {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        let vals = vec![
+            BodyElement::AddObjectResponse(AddObjectResponse::arbitrary(g)),
+            BodyElement::AddObject(AddObject::arbitrary(g)),
+            BodyElement::AutonomousDUStateChangeCompleteResponse(
+                AutonomousDUStateChangeCompleteResponse {},
+            ),
+            BodyElement::AutonomousDUStateChangeComplete(
+                AutonomousDUStateChangeComplete::arbitrary(g),
+            ),
+            BodyElement::AutonomousTransferCompleteResponse(AutonomousTransferCompleteResponse {}),
+            BodyElement::AutonomousTransferComplete(AutonomousTransferComplete::arbitrary(g)),
+            BodyElement::CancelTransferResponse(CancelTransferResponse {}),
+            BodyElement::CancelTransfer(CancelTransfer::arbitrary(g)),
+            BodyElement::ChangeDUStateResponse(ChangeDUStateResponse {}),
+            BodyElement::ChangeDUState(ChangeDUState::arbitrary(g)),
+            BodyElement::DeleteObjectResponse(DeleteObjectResponse::arbitrary(g)),
+            BodyElement::DeleteObject(DeleteObject::arbitrary(g)),
+            BodyElement::DownloadResponse(DownloadResponse::arbitrary(g)),
+            BodyElement::Download(Download::arbitrary(g)),
+            BodyElement::DUStateChangeCompleteResponse(DUStateChangeCompleteResponse {}),
+            BodyElement::DUStateChangeComplete(DUStateChangeComplete::arbitrary(g)),
+            BodyElement::FactoryResetResponse(FactoryResetResponse {}),
+            BodyElement::FactoryReset(FactoryReset {}),
+            BodyElement::Fault(Fault::arbitrary(g)),
+            BodyElement::GetAllQueuedTransfersResponse(GetAllQueuedTransfersResponse::arbitrary(g)),
+            BodyElement::GetAllQueuedTransfers(GetAllQueuedTransfers {}),
+            BodyElement::GetOptionsResponse(GetOptionsResponse::arbitrary(g)),
+            BodyElement::GetOptions(GetOptions::arbitrary(g)),
+            BodyElement::GetParameterAttributes(GetParameterAttributes::arbitrary(g)),
+            BodyElement::GetParameterAttributesResponse(GetParameterAttributesResponse::arbitrary(
+                g,
+            )),
+            BodyElement::GetParameterNamesResponse(GetParameterNamesResponse::arbitrary(g)),
+            BodyElement::GetParameterNames(GetParameterNames::arbitrary(g)),
+            BodyElement::GetParameterValues(GetParameterValues::arbitrary(g)),
+            BodyElement::GetParameterValuesResponse(GetParameterValuesResponse::arbitrary(g)),
+            BodyElement::GetQueuedTransfersResponse(GetQueuedTransfersResponse::arbitrary(g)),
+            BodyElement::GetQueuedTransfers(GetQueuedTransfers {}),
+            BodyElement::GetRPCMethodsResponse(GetRPCMethodsResponse::arbitrary(g)),
+            BodyElement::GetRPCMethods(GetRPCMethods {}),
+            BodyElement::InformResponse(InformResponse::arbitrary(g)),
+            BodyElement::Inform(Inform::arbitrary(g)),
+            BodyElement::KickedResponse(KickedResponse::arbitrary(g)),
+            BodyElement::Kicked(Kicked::arbitrary(g)),
+            BodyElement::RebootResponse(RebootResponse {}),
+            BodyElement::Reboot(Reboot::arbitrary(g)),
+            BodyElement::RequestDownloadResponse(RequestDownloadResponse {}),
+            BodyElement::RequestDownload(RequestDownload::arbitrary(g)),
+            BodyElement::ScheduleDownloadResponse(ScheduleDownloadResponse {}),
+            BodyElement::ScheduleDownload(ScheduleDownload::arbitrary(g)),
+            BodyElement::ScheduleInformResponse(ScheduleInformResponse {}),
+            BodyElement::ScheduleInform(ScheduleInform::arbitrary(g)),
+            BodyElement::SetParameterAttributesResponse(SetParameterAttributesResponse {}),
+            BodyElement::SetParameterAttributes(SetParameterAttributes::arbitrary(g)),
+            BodyElement::SetParameterValuesResponse(SetParameterValuesResponse::arbitrary(g)),
+            BodyElement::SetParameterValues(SetParameterValues::arbitrary(g)),
+            BodyElement::SetVouchersResponse(SetVouchersResponse {}),
+            BodyElement::SetVouchers(SetVouchers::arbitrary(g)),
+            BodyElement::TransferCompleteResponse(TransferCompleteResponse {}),
+            BodyElement::TransferComplete(TransferComplete::arbitrary(g)),
+            BodyElement::UploadResponse(UploadResponse::arbitrary(g)),
+            BodyElement::Upload(Upload::arbitrary(g)),
+        ];
+        vals.choose(g).unwrap().clone()
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        match self {
+            &BodyElement::AddObjectResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::AddObjectResponse(s)))
+            }
+            &BodyElement::AddObject(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::AddObject(s)))
+            }
+            &BodyElement::AutonomousDUStateChangeCompleteResponse(_) => {
+                quickcheck::empty_shrinker()
+            }
+            &BodyElement::AutonomousDUStateChangeComplete(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::AutonomousDUStateChangeComplete(s)),
+            ),
+            &BodyElement::AutonomousTransferCompleteResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::AutonomousTransferComplete(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::AutonomousTransferComplete(s)),
+            ),
+            &BodyElement::CancelTransferResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::CancelTransfer(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::CancelTransfer(s)))
+            }
+            &BodyElement::ChangeDUStateResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::ChangeDUState(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::ChangeDUState(s)))
+            }
+            &BodyElement::DeleteObjectResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::DeleteObjectResponse(s)))
+            }
+            &BodyElement::DeleteObject(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::DeleteObject(s)))
+            }
+            &BodyElement::DownloadResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::DownloadResponse(s)))
+            }
+            &BodyElement::Download(ref x) => Box::new(x.shrink().map(|s| BodyElement::Download(s))),
+            &BodyElement::DUStateChangeCompleteResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::DUStateChangeComplete(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::DUStateChangeComplete(s)))
+            }
+            &BodyElement::FactoryResetResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::FactoryReset(_) => quickcheck::empty_shrinker(),
+            &BodyElement::Fault(ref x) => Box::new(x.shrink().map(|s| BodyElement::Fault(s))),
+            &BodyElement::GetAllQueuedTransfersResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::GetAllQueuedTransfersResponse(s)),
+            ),
+            &BodyElement::GetAllQueuedTransfers(_) => quickcheck::empty_shrinker(),
+            &BodyElement::GetOptionsResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetOptionsResponse(s)))
+            }
+            &BodyElement::GetOptions(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetOptions(s)))
+            }
+            &BodyElement::GetParameterAttributesResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::GetParameterAttributesResponse(s)),
+            ),
+            &BodyElement::GetParameterAttributes(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetParameterAttributes(s)))
+            }
+            &BodyElement::GetParameterNamesResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::GetParameterNamesResponse(s)),
+            ),
+            &BodyElement::GetParameterNames(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetParameterNames(s)))
+            }
+            &BodyElement::GetParameterValuesResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::GetParameterValuesResponse(s)),
+            ),
+            &BodyElement::GetParameterValues(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetParameterValues(s)))
+            }
+            &BodyElement::GetQueuedTransfersResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::GetQueuedTransfersResponse(s)),
+            ),
+            &BodyElement::GetQueuedTransfers(_) => quickcheck::empty_shrinker(),
+            &BodyElement::GetRPCMethodsResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::GetRPCMethodsResponse(s)))
+            }
+            &BodyElement::GetRPCMethods(_) => quickcheck::empty_shrinker(),
+            &BodyElement::InformResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::InformResponse(s)))
+            }
+            &BodyElement::Inform(ref x) => Box::new(x.shrink().map(|s| BodyElement::Inform(s))),
+            &BodyElement::KickedResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::KickedResponse(s)))
+            }
+            &BodyElement::Kicked(ref x) => Box::new(x.shrink().map(|s| BodyElement::Kicked(s))),
+            &BodyElement::RebootResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::Reboot(ref x) => Box::new(x.shrink().map(|s| BodyElement::Reboot(s))),
+            &BodyElement::RequestDownloadResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::RequestDownload(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::RequestDownload(s)))
+            }
+            &BodyElement::ScheduleDownloadResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::ScheduleDownload(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::ScheduleDownload(s)))
+            }
+            &BodyElement::ScheduleInformResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::ScheduleInform(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::ScheduleInform(s)))
+            }
+            &BodyElement::SetParameterAttributesResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::SetParameterAttributes(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::SetParameterAttributes(s)))
+            }
+            &BodyElement::SetParameterValuesResponse(ref x) => Box::new(
+                x.shrink()
+                    .map(|s| BodyElement::SetParameterValuesResponse(s)),
+            ),
+            &BodyElement::SetParameterValues(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::SetParameterValues(s)))
+            }
+            &BodyElement::SetVouchersResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::SetVouchers(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::SetVouchers(s)))
+            }
+            &BodyElement::TransferCompleteResponse(_) => quickcheck::empty_shrinker(),
+            &BodyElement::TransferComplete(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::TransferComplete(s)))
+            }
+            &BodyElement::UploadResponse(ref x) => {
+                Box::new(x.shrink().map(|s| BodyElement::UploadResponse(s)))
+            }
+            &BodyElement::Upload(ref x) => Box::new(x.shrink().map(|s| BodyElement::Upload(s))),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Envelope {
     cwmp: Option<String>,
     header: Vec<HeaderElement>,
     body: Vec<BodyElement>,
+}
+
+#[cfg(test)]
+impl Arbitrary for Envelope {
+    fn arbitrary<G: Gen>(g: &mut G) -> Envelope {
+        Envelope::new(
+            String::arbitrary(g),
+            Vec::<HeaderElement>::arbitrary(g),
+            Vec::<BodyElement>::arbitrary(g),
+        )
+    }
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.cwmp.clone(), self.header.clone(), self.body.clone())
+                .shrink()
+                .map(|(c, h, b)| Envelope {
+                    cwmp: c,
+                    header: h,
+                    body: b,
+                }),
+        )
+    }
 }
 
 pub enum GenerateError {
@@ -3346,9 +5024,9 @@ impl fmt::Debug for GenerateError {
 }
 
 impl Envelope {
-    pub fn new(cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) -> Self {
+    pub fn new(cwmp: String, header: Vec<HeaderElement>, body: Vec<BodyElement>) -> Self {
         Envelope {
-            cwmp: Some(cwmp.to_string()),
+            cwmp: Some(cwmp),
             header: header,
             body: body,
         }
@@ -3541,14 +5219,14 @@ impl Envelope {
                     }
                     "SupportedCWMPVersions" => {
                         self.header.push(HeaderElement::SupportedCWMPVersions(
-                            SupportedCWMPVersions::new(must_understand, ""),
+                            SupportedCWMPVersions::new(must_understand, String::from("")),
                         ))
                     }
                     "UseCWMPVersion" => {
                         self.header
                             .push(HeaderElement::UseCWMPVersion(UseCWMPVersion::new(
                                 must_understand,
-                                "",
+                                String::from(""),
                             )))
                     }
                     _ => {}
@@ -3581,17 +5259,17 @@ impl Envelope {
                         "AutonomousDUStateChangeComplete" => {
                             self.body.push(BodyElement::AutonomousDUStateChangeComplete(
                                 AutonomousDUStateChangeComplete::new(vec![AutoOpResult::new(
-                                    "",
-                                    "",
-                                    "",
-                                    "",
-                                    "",
-                                    "",
+                                    String::from(""),
+                                    String::from(""),
+                                    String::from(""),
+                                    String::from(""),
+                                    String::from(""),
+                                    String::from(""),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                     0,
-                                    "",
-                                    "",
+                                    String::from(""),
+                                    String::from(""),
                                 )]),
                             ))
                         }
@@ -3604,13 +5282,13 @@ impl Envelope {
                         "AutonomousTransferComplete" => {
                             self.body.push(BodyElement::AutonomousTransferComplete(
                                 AutonomousTransferComplete::new(
-                                    "",
-                                    "",
+                                    String::from(""),
+                                    String::from(""),
                                     0,
-                                    "",
+                                    String::from(""),
                                     0,
-                                    "",
-                                    FaultStruct::new(0, ""),
+                                    String::from(""),
+                                    FaultStruct::new(0, String::from("")),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                 ),
@@ -3619,37 +5297,51 @@ impl Envelope {
                         "CancelTransferResponse" => self.body.push(
                             BodyElement::CancelTransferResponse(CancelTransferResponse {}),
                         ),
-                        "CancelTransfer" => self
-                            .body
-                            .push(BodyElement::CancelTransfer(CancelTransfer::new(""))),
+                        "CancelTransfer" => {
+                            self.body
+                                .push(BodyElement::CancelTransfer(CancelTransfer::new(
+                                    String::from(""),
+                                )))
+                        }
                         "ChangeDUStateResponse" => self
                             .body
                             .push(BodyElement::ChangeDUStateResponse(ChangeDUStateResponse {})),
                         "ChangeDUState" => {
                             self.body
                                 .push(BodyElement::ChangeDUState(ChangeDUState::new(
-                                    "",
+                                    String::from(""),
                                     vec![],
                                     vec![],
                                     vec![],
                                 )))
                         }
-                        "DeleteObjectResponse" => self.body.push(
-                            BodyElement::DeleteObjectResponse(DeleteObjectResponse::new("")),
-                        ),
-                        "DeleteObject" => self
-                            .body
-                            .push(BodyElement::DeleteObject(DeleteObject::new("", ""))),
+                        "DeleteObjectResponse" => {
+                            self.body.push(BodyElement::DeleteObjectResponse(
+                                DeleteObjectResponse::new(String::from("")),
+                            ))
+                        }
+                        "DeleteObject" => self.body.push(BodyElement::DeleteObject(
+                            DeleteObject::new(String::from(""), String::from("")),
+                        )),
                         "DownloadResponse" => {
                             self.body
                                 .push(BodyElement::DownloadResponse(DownloadResponse::new(
-                                    "",
+                                    String::from(""),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                     Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
                                 )))
                         }
                         "Download" => self.body.push(BodyElement::Download(Download::new(
-                            "", "", "", "", "", 0, "", 0, "", "",
+                            String::from(""),
+                            String::from(""),
+                            String::from(""),
+                            String::from(""),
+                            String::from(""),
+                            0,
+                            String::from(""),
+                            0,
+                            String::from(""),
+                            String::from(""),
                         ))),
                         "DUStateChangeCompleteResponse" => {
                             self.body.push(BodyElement::DUStateChangeCompleteResponse(
@@ -3658,7 +5350,7 @@ impl Envelope {
                         }
                         "DUStateChangeComplete" => {
                             self.body.push(BodyElement::DUStateChangeComplete(
-                                DUStateChangeComplete::new("", vec![]),
+                                DUStateChangeComplete::new(String::from(""), vec![]),
                             ))
                         }
                         "FactoryResetResponse" => self
@@ -3667,9 +5359,12 @@ impl Envelope {
                         "FactoryReset" => {
                             self.body.push(BodyElement::FactoryReset(FactoryReset {}))
                         }
-                        "Fault" => self
-                            .body
-                            .push(BodyElement::Fault(Fault::new("", "", 0, ""))),
+                        "Fault" => self.body.push(BodyElement::Fault(Fault::new(
+                            String::from(""),
+                            String::from(""),
+                            0,
+                            String::from(""),
+                        ))),
                         "GetAllQueuedTransfersResponse" => {
                             self.body.push(BodyElement::GetAllQueuedTransfersResponse(
                                 GetAllQueuedTransfersResponse::new(vec![]),
@@ -3863,64 +5558,40 @@ impl Envelope {
         // println!("Path: {:?} Chars: {}", path, characters);
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
-            ["Envelope", "Header", "ID"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::ID(data) => {
-                            data.id = characters.to_string();
+            ["Envelope", "Header", header_element] => {
+                let last = self.header.last_mut();
+                match last {
+                    Some(HeaderElement::ID(data)) => {
+                        if header_element == &"ID" {
+                            data.id = characters.to_string()
                         }
-                        _ => {}
                     }
-                }
-            }
-            ["Envelope", "Header", "NoMoreRequests"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::NoMoreRequests(data) => {
+                    Some(HeaderElement::NoMoreRequests(data)) => {
+                        if header_element == &"NoMoreRequests" {
                             data.value = parse_to_int(characters, 0);
                         }
-                        _ => {}
                     }
-                }
-            }
-            ["Envelope", "Header", "HoldRequests"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::HoldRequests(data) => {
+                    Some(HeaderElement::HoldRequests(data)) => {
+                        if header_element == &"HoldRequests" {
                             data.hold = str2bool(characters);
                         }
-                        _ => {}
                     }
-                }
-            }
-            ["Envelope", "Header", "SessionTimeout"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::SessionTimeout(data) => {
+                    Some(HeaderElement::SessionTimeout(data)) => {
+                        if header_element == &"SessionTimeout" {
                             data.timeout = parse_to_int(characters, 0);
                         }
-                        _ => {}
                     }
-                }
-            }
-            ["Envelope", "Header", "SupportedCWMPVersions"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::SupportedCWMPVersions(data) => {
-                            data.value = characters.to_string();
+                    Some(HeaderElement::SupportedCWMPVersions(data)) => {
+                        if header_element == &"SupportedCWMPVersions" {
+                            data.value = characters.to_string()
                         }
-                        _ => {}
                     }
-                }
-            }
-            ["Envelope", "Header", "UseCWMPVersion"] => {
-                for elem in self.header.iter_mut() {
-                    match elem {
-                        HeaderElement::UseCWMPVersion(data) => {
-                            data.value = characters.to_string();
+                    Some(HeaderElement::UseCWMPVersion(data)) => {
+                        if header_element == &"UseCWMPVersion" {
+                            data.value = characters.to_string()
                         }
-                        _ => {}
                     }
+                    _ => {} // should never happen
                 }
             }
             ["Envelope", "Body", body_element, ..] => {

@@ -10,6 +10,9 @@ edition = "2018"
 xml-rs = "0.8"
 log = "0.4.8"
 chrono = "0.4.0"
+quickcheck = "0.9"
+quickcheck_macros = "0.9"
+rand = "0.7.3"
 
 [dev-dependencies]
 doc-comment = "0.3"
