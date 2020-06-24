@@ -1598,28 +1598,24 @@ mod tests {
         test_gap(&e);
     }
 
-    // #[quickcheck]
-    // fn generate_only(e: Envelope) -> bool {
-    //     match generate(&e) {
-    //         Ok(_xml) => true,
-    //         Err(_) => false
-    //     }
-    // }
+    #[test]
+    fn add_object_response_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::AddObjectResponse(AddObjectResponse::new(0, "".to_string()))]);
+        test_gap(&e);
+    }
 
     #[quickcheck]
     fn gen_and_parse(e: Envelope) -> bool {
         match generate(&e) {
             Ok(xml) => match parse(xml) {
-                Ok(r) => if r == e {
-                    return true
-                }
-                else {
+                Ok(r) => r == e,
+                Err(e) => {
+                    println!("ERROR DURING PARSE: {:?}", e);
                     false
                 }
-                Err(_) => false
             },
             Err(e) => {
-                println!("ERROR DURING PARSE: {:?}", e);
+                println!("ERROR DURING GENERATE: {:?}", e);
                 false 
             }
 
