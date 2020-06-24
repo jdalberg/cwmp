@@ -21,7 +21,7 @@ doctest!("../README.md");
 
 // parse a CWMP XML envelope and convert it to a rust struct
 pub fn parse(xml: String) -> Result<Envelope, Box<dyn Error>> {
-    let config = ParserConfig::new().trim_whitespace(true);
+    let config = ParserConfig::new().trim_whitespace(false).whitespace_to_characters(true);
     let parser = config.create_reader(xml.as_bytes());
     let mut state: State = State::new();
     for e in parser {
@@ -88,7 +88,7 @@ mod tests {
     fn add_object_response_1() {
         test(
             include_bytes!("xmlsamples/add_object_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("aa0642e34b23820801e7642ad7cb536c"),
@@ -102,7 +102,7 @@ mod tests {
     fn add_object_1() {
         test(
             include_bytes!("xmlsamples/add_object_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -119,7 +119,7 @@ mod tests {
     fn add_object_2() {
         test(
             include_bytes!("xmlsamples/add_object_2.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -135,7 +135,7 @@ mod tests {
     fn autonomous_dustate_change_complete_response_1() {
         test(
             include_bytes!("xmlsamples/autonomous_dustate_change_complete_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -163,10 +163,10 @@ mod tests {
 
         test(
             include_bytes!("xmlsamples/autonomous_dustate_change_complete_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::AutonomousDUStateChangeComplete(
-                protocol::AutonomousDUStateChangeComplete::new(vec![protocol::AutoOpResult::new(
+                protocol::AutonomousDUStateChangeComplete::new(vec![protocol::AutonOpResult::new(
                     String::from("some-uuid"),
                     String::from("uref"),
                     String::from("v2.1"),
@@ -187,7 +187,7 @@ mod tests {
     fn autonomous_transfer_complete_response_1() {
         test(
             include_bytes!("xmlsamples/autonomous_transfer_complete_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("1")))],
             vec![BodyElement::AutonomousTransferCompleteResponse(
                 protocol::AutonomousTransferCompleteResponse {},
@@ -210,7 +210,7 @@ mod tests {
         };
         test(
             include_bytes!("xmlsamples/autonomous_transfer_complete_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("1")))],
             vec![BodyElement::AutonomousTransferComplete(
                 protocol::AutonomousTransferComplete::new(
@@ -232,7 +232,7 @@ mod tests {
     fn cancel_transfer_response_1() {
         test(
             include_bytes!("xmlsamples/cancel_transfer_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -247,7 +247,7 @@ mod tests {
     fn cancel_transfer_1() {
         test(
             include_bytes!("xmlsamples/cancel_transfer_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -262,7 +262,7 @@ mod tests {
     fn change_du_state_response_1() {
         test(
             include_bytes!("xmlsamples/change_du_state_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -277,7 +277,7 @@ mod tests {
     fn change_du_state_1() {
         test(
             include_bytes!("xmlsamples/change_du_state_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
                 String::from("cmdkey"),
@@ -298,7 +298,7 @@ mod tests {
     fn change_du_state_2() {
         test(
             include_bytes!("xmlsamples/change_du_state_2.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
                 String::from("cmdkey"),
@@ -323,7 +323,7 @@ mod tests {
     fn change_du_state_3() {
         test(
             include_bytes!("xmlsamples/change_du_state_3.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::ChangeDUState(protocol::ChangeDUState::new(
                 String::from("cmdkey"),
@@ -354,7 +354,7 @@ mod tests {
     fn delete_object_response_1() {
         test(
             include_bytes!("xmlsamples/delete_object_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -369,7 +369,7 @@ mod tests {
     fn delete_object_1() {
         test(
             include_bytes!("xmlsamples/delete_object_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -395,7 +395,7 @@ mod tests {
         };
         test(
             include_bytes!("xmlsamples/download_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -410,7 +410,7 @@ mod tests {
     fn download_1() {
         test(
             include_bytes!("xmlsamples/download_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -434,7 +434,7 @@ mod tests {
     fn download_2() {
         test(
             include_bytes!("xmlsamples/download_2.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -458,7 +458,7 @@ mod tests {
     fn du_state_change_complete_response_1() {
         test(
             include_bytes!("xmlsamples/du_state_change_complete_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -484,7 +484,7 @@ mod tests {
             };
         test(
             include_bytes!("xmlsamples/du_state_change_complete_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::DUStateChangeComplete(
                 protocol::DUStateChangeComplete::new(
@@ -509,7 +509,7 @@ mod tests {
     fn factory_reset_response_1() {
         test(
             include_bytes!("xmlsamples/factory_reset_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -524,7 +524,7 @@ mod tests {
     fn factory_reset_1() {
         test(
             include_bytes!("xmlsamples/factory_reset_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -537,7 +537,7 @@ mod tests {
     fn fault_1() {
         test(
             include_bytes!("xmlsamples/fault_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::Fault(protocol::Fault::new(
                 String::from("SOAP-ENV:Client"),
@@ -552,7 +552,7 @@ mod tests {
     fn get_all_queued_transfer_response_1() {
         test(
             include_bytes!("xmlsamples/get_all_queued_transfer_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_953323a9b674bb42b7cad250b2cf0607"),
@@ -584,7 +584,7 @@ mod tests {
     fn get_all_queued_transfers_1() {
         test(
             include_bytes!("xmlsamples/get_all_queued_transfers_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -610,7 +610,7 @@ mod tests {
             };
         test(
             include_bytes!("xmlsamples/get_options_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_69412286f02e475b44783c61972f0a91"),
@@ -644,7 +644,7 @@ mod tests {
     fn get_options_1() {
         test(
             include_bytes!("xmlsamples/get_options_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_69412286f02e475b44783c61972f0a91"),
@@ -659,7 +659,7 @@ mod tests {
     fn get_parameter_attributes_response_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_attributes_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_953323a9b674bb42b7cad250b2cf0607"),
@@ -685,7 +685,7 @@ mod tests {
     fn get_parameter_attributes_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_attributes_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_953323a9b674bb42b7cad250b2cf0607"),
@@ -705,7 +705,7 @@ mod tests {
     fn get_parameter_names_response_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_names_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_28edd28d788a784422413db3914c34b0"),
@@ -726,7 +726,7 @@ mod tests {
     fn get_parameter_names_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_names_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_28edd28d788a784422413db3914c34b0"),
@@ -741,7 +741,7 @@ mod tests {
     fn get_parameter_values_response_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_values_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::GetParameterValuesResponse(
                 protocol::GetParameterValuesResponse::new(vec![
@@ -763,7 +763,7 @@ mod tests {
     fn get_parameter_values_1() {
         test(
             include_bytes!("xmlsamples/get_parameter_values_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::GetParameterValues(
                 protocol::GetParameterValues::new(vec![
@@ -778,15 +778,15 @@ mod tests {
     fn get_queued_transfers_response_1() {
         test(
             include_bytes!("xmlsamples/get_queued_transfers_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_28edd28d788a784422413db3914c34b0"),
             ))],
             vec![BodyElement::GetQueuedTransfersResponse(
                 protocol::GetQueuedTransfersResponse::new(vec![
-                    protocol::QueuedTransferStruct::new(String::from("cmdkey"), String::from("2")),
-                    protocol::QueuedTransferStruct::new(String::from("cmdkey2"), String::from("3")),
+                    protocol::QueuedTransferStruct::new(Some(String::from("cmdkey")), Some(String::from("2"))),
+                    protocol::QueuedTransferStruct::new(Some(String::from("cmdkey2")), Some(String::from("3"))),
                 ]),
             )],
         )
@@ -796,7 +796,7 @@ mod tests {
     fn get_queued_transfers_1() {
         test(
             include_bytes!("xmlsamples/get_queued_transfers_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_28edd28d788a784422413db3914c34b0"),
@@ -811,7 +811,7 @@ mod tests {
     fn get_rpc_methods_response_1() {
         test(
             include_bytes!("xmlsamples/get_rpc_methods_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -841,7 +841,7 @@ mod tests {
     fn get_rpc_methods_1() {
         test(
             include_bytes!("xmlsamples/get_rpc_methods_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -854,7 +854,7 @@ mod tests {
     fn inform_response_1() {
         test(
             include_bytes!("xmlsamples/inform_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![
                 HeaderElement::ID(ID::new(true, String::from("100"))),
                 HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
@@ -875,7 +875,7 @@ mod tests {
         };
         test(
             include_bytes!("xmlsamples/inform_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![               
                 HeaderElement::ID(ID::new(true, String::from("100"))),
                 HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
@@ -904,7 +904,7 @@ mod tests {
     fn kicked_response_1() {
         test(
             include_bytes!("xmlsamples/kicked_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::KickedResponse(protocol::KickedResponse::new(
                 String::from("http://example.com/next"),
@@ -916,7 +916,7 @@ mod tests {
     fn kicked_1() {
         test(
             include_bytes!("xmlsamples/kicked_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::Kicked(protocol::Kicked::new(
                 String::from("cmd"),
@@ -931,7 +931,7 @@ mod tests {
     fn reboot_response_1() {
         test(
             include_bytes!("xmlsamples/reboot_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_953323a9b674bb42b7cad250b2cf0607")))],
             vec![BodyElement::RebootResponse(protocol::RebootResponse {})],
         )
@@ -941,7 +941,7 @@ mod tests {
     fn reboot_1() {
         test(
             include_bytes!("xmlsamples/reboot_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_953323a9b674bb42b7cad250b2cf0607")))],
             vec![BodyElement::Reboot(protocol::Reboot::new(String::from("cmdkey")))],
         )
@@ -951,7 +951,7 @@ mod tests {
     fn request_download_response_1() {
         test(
             include_bytes!("xmlsamples/request_download_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::RequestDownloadResponse(
                 protocol::RequestDownloadResponse {},
@@ -963,7 +963,7 @@ mod tests {
     fn request_download_1() {
         test(
             include_bytes!("xmlsamples/request_download_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::RequestDownload(
                 protocol::RequestDownload::new(
@@ -978,7 +978,7 @@ mod tests {
     fn schedule_download_response_1() {
         test(
             include_bytes!("xmlsamples/schedule_download_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::ScheduleDownloadResponse(
                 protocol::ScheduleDownloadResponse {},
@@ -990,7 +990,7 @@ mod tests {
     fn schedule_download_1() {
         test(
             include_bytes!("xmlsamples/schedule_download_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::ScheduleDownload(
                 protocol::ScheduleDownload::new(
@@ -1017,7 +1017,7 @@ mod tests {
     fn schedule_inform_response_1() {
         test(
             include_bytes!("xmlsamples/schedule_inform_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_28edd28d788a784422413db3914c34b0")))],
             vec![BodyElement::ScheduleInformResponse(
                 protocol::ScheduleInformResponse {},
@@ -1029,7 +1029,7 @@ mod tests {
     fn schedule_inform_1() {
         test(
             include_bytes!("xmlsamples/schedule_inform_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_28edd28d788a784422413db3914c34b0")))],
             vec![BodyElement::ScheduleInform(protocol::ScheduleInform::new(
                 5, String::from("cmdkey"),
@@ -1041,7 +1041,7 @@ mod tests {
     fn set_parameter_attributes_response_1() {
         test(
             include_bytes!("xmlsamples/set_parameter_attributes_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::SetParameterAttributesResponse(
                 protocol::SetParameterAttributesResponse {},
@@ -1053,7 +1053,7 @@ mod tests {
     fn set_parameter_attributes_1() {
         test(
             include_bytes!("xmlsamples/set_parameter_attributes_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_7bfc27c1f4f0a2c1d775f8aa1840439e")))],
             vec![BodyElement::SetParameterAttributes(
                 protocol::SetParameterAttributes::new(vec![
@@ -1073,7 +1073,7 @@ mod tests {
     fn set_parameter_values_response_1() {
         test(
             include_bytes!("xmlsamples/set_parameter_values_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::SetParameterValuesResponse(
                 protocol::SetParameterValuesResponse::new(0),
@@ -1085,7 +1085,7 @@ mod tests {
     fn set_parameter_values_1() {
         test(
             include_bytes!("xmlsamples/set_parameter_values_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::SetParameterValues(
                 protocol::SetParameterValues::new(
@@ -1103,7 +1103,7 @@ mod tests {
     fn set_parameter_values_2() {
         test(
             include_bytes!("xmlsamples/set_parameter_values_2.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("50")))],
             vec![BodyElement::SetParameterValues(
                 protocol::SetParameterValues::new(
@@ -1121,7 +1121,7 @@ mod tests {
     fn set_vouchers_response_1() {
         test(
             include_bytes!("xmlsamples/set_vouchers_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![
                 HeaderElement::ID(ID::new(true, String::from("100"))),
                 HeaderElement::NoMoreRequests(protocol::NoMoreRequests::new(true, 1)),
@@ -1136,7 +1136,7 @@ mod tests {
     fn set_vouchers_1() {
         test(
             include_bytes!("xmlsamples/set_vouchers_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_69412286f02e475b44783c61972f0a91")))],
             vec![BodyElement::SetVouchers(protocol::SetVouchers::new(vec![
                 String::from("Rm9vTW9vQmFy"),
@@ -1148,7 +1148,7 @@ mod tests {
     fn transfer_complete_response_1() {
         test(
             include_bytes!("xmlsamples/transfer_complete_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("1")))],
             vec![BodyElement::TransferCompleteResponse(
                 protocol::TransferCompleteResponse {},
@@ -1170,7 +1170,7 @@ mod tests {
         };
         test(
             include_bytes!("xmlsamples/transfer_complete_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("1")))],
             vec![BodyElement::TransferComplete(
                 protocol::TransferComplete::new(
@@ -1197,7 +1197,7 @@ mod tests {
         };
         test(
             include_bytes!("xmlsamples/upload_response_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::UploadResponse(protocol::UploadResponse::new(
                 1,
@@ -1211,7 +1211,7 @@ mod tests {
     fn upload_1() {
         test(
             include_bytes!("xmlsamples/upload_1.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::Upload(protocol::Upload::new(
                 String::from("cmdkey"),
@@ -1228,7 +1228,7 @@ mod tests {
     fn upload_2() {
         test(
             include_bytes!("xmlsamples/upload_2.xml"),
-            "urn:dslforum-org:cwmp-1-0",
+            protocol::CwmpVersion::new(1,0),
             vec![HeaderElement::ID(ID::new(true, String::from("API_aa0642e34b23820801e7642ad7cb536c")))],
             vec![BodyElement::Upload(protocol::Upload::new(
                 String::from("cmdkey"),
@@ -1245,7 +1245,7 @@ mod tests {
     // Generate and Parse tests...
     #[test]
     fn add_object_gap_1() {
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
           vec![BodyElement::AddObject(protocol::AddObject::new(
                 String::from("Device.Test."),
@@ -1257,7 +1257,7 @@ mod tests {
 
     #[test]
     fn add_object_response_gap_1() {
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
           vec![BodyElement::AddObjectResponse(protocol::AddObjectResponse::new(
                1,String::from("0"),
@@ -1279,9 +1279,9 @@ mod tests {
             _ => bogus_utc_dt,
         };
       
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
-          vec![BodyElement::AutonomousDUStateChangeComplete(  protocol::AutonomousDUStateChangeComplete::new(vec![protocol::AutoOpResult::new(
+          vec![BodyElement::AutonomousDUStateChangeComplete(  protocol::AutonomousDUStateChangeComplete::new(vec![protocol::AutonOpResult::new(
             String::from("some-uuid"),
             String::from("uref"),
             String::from("v2.1"),
@@ -1300,7 +1300,7 @@ mod tests {
 
     #[test]
     fn autonomous_du_state_change_complete_response_gap_1() {
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
           vec![BodyElement::AutonomousDUStateChangeCompleteResponse(protocol::AutonomousDUStateChangeCompleteResponse {}
              )]);
@@ -1321,7 +1321,7 @@ mod tests {
             _ => bogus_utc_dt,
         };
       
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
             vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
             vec![BodyElement::AutonomousTransferComplete(  protocol::AutonomousTransferComplete::new(
                 String::from("http://example.com/announce"),
@@ -1341,7 +1341,7 @@ mod tests {
 
     #[test]
     fn autonomous_transfer_complete_response_gap_1() {
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
             vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
             vec![BodyElement::AutonomousTransferCompleteResponse(protocol::AutonomousTransferCompleteResponse {})]
         );
@@ -1352,7 +1352,7 @@ mod tests {
     #[test]
     fn cancel_transfer_gap_1() {
     
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
           vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -1368,7 +1368,7 @@ mod tests {
     
     #[test]
     fn upload_gap_1() {
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
         vec![BodyElement::Upload(protocol::Upload::new(
             String::from("cmdkey"),
@@ -1395,7 +1395,7 @@ mod tests {
             _ => bogus_utc_dt,
         };
       
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
         vec![BodyElement::UploadResponse(protocol::UploadResponse::new(
             1,
@@ -1411,7 +1411,7 @@ mod tests {
         let start_time: DateTime<Utc> = Utc::now();
         let complete_time: DateTime<Utc> = Utc::now();
       
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
         vec![HeaderElement::ID(ID::new(true, String::from("12345678")))],
         vec![BodyElement::UploadResponse(protocol::UploadResponse::new(
             1,
@@ -1422,8 +1422,8 @@ mod tests {
         test_gap(&e);
     }
 
-    fn test(input: &[u8], cwmp: &str, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
-        let should_be = Envelope::new(cwmp.to_string(), header, body);
+    fn test(input: &[u8], cwmp: CwmpVersion, header: Vec<HeaderElement>, body: Vec<BodyElement>) {
+        let should_be = Envelope::new(Some(cwmp), header, body);
         let envelope: protocol::Envelope =
             parse(str::from_utf8(input).unwrap().to_string()).unwrap();
         assert_eq!(envelope, should_be);
@@ -1432,6 +1432,8 @@ mod tests {
     fn test_gap(envelope: &Envelope) {
         // Generate xml from the envelope
         let xml: String = generate(envelope).unwrap();
+
+        println!("XML: [{}]", xml);
 
         // Parse the generated xml
         let parsed: protocol::Envelope =     
@@ -1444,7 +1446,7 @@ mod tests {
     #[test]
     fn cancel_transfer_multiple_bodies_gap_1() {
     
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
           vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -1463,7 +1465,7 @@ mod tests {
     #[test]
     fn cancel_transfer_multiple_headers_same_type_gap_1() {
     
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
           vec![HeaderElement::ID(ID::new(
                 true,
                 String::from("API_aa0642e34b23820801e7642ad7cb536c"),
@@ -1483,7 +1485,7 @@ mod tests {
     #[test]
     fn cancel_transfer_multiple_headers_same_type_gap_2() {
     
-        let e = protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"),
+        let e = protocol::Envelope::new(Some(protocol::CwmpVersion::new(1,0)),
           vec![HeaderElement::SessionTimeout(SessionTimeout::new(
                 true,
                 45
@@ -1500,6 +1502,101 @@ mod tests {
         test_gap(&e);
     }
 
+    #[test]
+    fn get_options_response_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetOptionsResponse(GetOptionsResponse::new(vec![]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn set_parameter_values_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::SetParameterValues(SetParameterValues::new(None, vec![]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn get_parameter_values_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetParameterValues(GetParameterValues::new(vec!["".to_string()]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn get_queued_transfers_response_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetQueuedTransfersResponse(GetQueuedTransfersResponse::new(vec![QueuedTransferStruct::new(None, Some("".to_string()))]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn autonomous_du_state_change_complete_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::AutonomousDUStateChangeComplete(AutonomousDUStateChangeComplete::new(vec![]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn request_download_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::RequestDownload(RequestDownload::new("".to_string(), vec![ArgStruct::new("".to_string(), "\t".to_string())]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn get_options_response_qcfail_gap_2() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetOptionsResponse(GetOptionsResponse::new(vec![OptionStruct::new("?>".to_string(), "".to_string(), 0, "".to_string(), Utc::now(), Utc::now(), 0)]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn set_parameter_values_qcfail_gap_2() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::SetParameterValues(SetParameterValues::new(Some("".to_string()), vec![]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn set_parameter_values_qcfail_gap_3() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::SetParameterValues(SetParameterValues::new(None, vec![ParameterValue::new("".to_string(), "".to_string(), "".to_string())]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn get_all_queued_transfers_response_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetAllQueuedTransfersResponse(GetAllQueuedTransfersResponse::new(vec![AllQueuedTransfers::new(String::from(""), String::from(""), 1, "".to_string(), 0, "".to_string())]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn get_parameter_attributes_response_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::GetParameterAttributesResponse(GetParameterAttributesResponse::new(vec![ParameterAttribute::new(String::from(""), String::from(""), vec![String::from("")])]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn du_state_change_complete_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::DUStateChangeComplete(DUStateChangeComplete::new("".to_string(), vec![]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn set_parameter_attributes_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::SetParameterAttributes(SetParameterAttributes::new(vec![SetParameterAttributesStruct::new("".to_string(), 0, 0, 0, vec!["".to_string()])]) )]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn change_dustate_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![BodyElement::ChangeDUState(ChangeDUState::new("".to_string(), vec![], vec![], vec![UpdateOp::new("".to_string(), "".to_string(), "".to_string(), "".to_string(), "".to_string())]))]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn use_cwmp_version_header_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![HeaderElement::UseCWMPVersion(UseCWMPVersion::new(false, "".to_string()))], vec![]);
+        test_gap(&e);
+    }
+
+    #[test]
+    fn blank_envelope_qcfail_gap_1() {
+        let e = Envelope::new(None, vec![], vec![]);
+        test_gap(&e);
+    }
 
     // #[quickcheck]
     // fn generate_only(e: Envelope) -> bool {
@@ -1509,27 +1606,25 @@ mod tests {
     //     }
     // }
 
-    // #[quickcheck]
-    // fn gen_and_parse(e: Envelope) -> bool {
-    //     match generate(&e) {
-    //         Ok(xml) => match parse(xml) {
-    //             Ok(r) => if r == e {
-    //                 return true
-    //             }
-    //             else {
-    //                 println!("r: {:?}", r);
-    //                 println!("e: {:?}", e);
-    //                 false
-    //             }
-    //             Err(_) => false
-    //         },
-    //         Err(e) => {
-    //             println!("ERROR DURING PARSE: {:?}", e);
-    //             false 
-    //         }
+    #[quickcheck]
+    fn gen_and_parse(e: Envelope) -> bool {
+        match generate(&e) {
+            Ok(xml) => match parse(xml) {
+                Ok(r) => if r == e {
+                    return true
+                }
+                else {
+                    false
+                }
+                Err(_) => false
+            },
+            Err(e) => {
+                println!("ERROR DURING PARSE: {:?}", e);
+                false 
+            }
 
-    //     }
-    // }
+        }
+    }
    
 
 }
