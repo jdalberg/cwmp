@@ -77,9 +77,10 @@ impl ID {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:ID")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "ID")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
         writer.write(&self.id[..])?;
@@ -121,9 +122,10 @@ impl HoldRequests {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:HoldRequests")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "HoldRequests")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
 
@@ -167,9 +169,10 @@ impl SessionTimeout {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:SessionTimeout")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "SessionTimeout")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
         writer.write(&self.timeout.to_string()[..])?;
@@ -211,9 +214,10 @@ impl NoMoreRequests {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:NoMoreRequests")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "NoMoreRequests")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
         writer.write(&self.value.to_string()[..])?;
@@ -256,9 +260,10 @@ impl SupportedCWMPVersions {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:SupportedCWMPVersions")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "SupportedCWMPVersions")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
         writer.write(&self.value.to_string()[..])?;
@@ -301,9 +306,10 @@ impl UseCWMPVersion {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(
-            XmlEvent::start_element("cwmp:UseCWMPVersion")
+            XmlEvent::start_element(&cwmp_prefix(has_cwmp, "UseCWMPVersion")[..])
                 .attr("mustUnderstand", bool2str(self.must_understand)),
         )?;
         writer.write(&self.value.to_string()[..])?;
@@ -426,8 +432,11 @@ impl AddObjectResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:AddObjectResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "AddObjectResponse")[..],
+        ))?;
 
         writer.write(XmlEvent::start_element("InstanceNumber"))?;
         writer.write(&self.instance_number.to_string()[..])?;
@@ -486,8 +495,11 @@ impl AddObject {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:AddObject"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "AddObject")[..],
+        ))?;
         write_simple(writer, "ObjectName", &self.object_name)?;
         write_simple(writer, "ParameterKey", &self.parameter_key)?;
         writer.write(XmlEvent::end_element())?;
@@ -531,14 +543,18 @@ impl AutonomousDUStateChangeCompleteResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:AutonomousDUStateChangeCompleteResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "AutonomousDUStateChangeCompleteResponse")[..],
+        )?;
         Ok(())
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct AutoOpResult {
+pub struct AutonOpResult {
     uuid: String,
     deployment_unit_ref: String,
     version: String,
@@ -551,7 +567,7 @@ pub struct AutoOpResult {
     operation_performed: String,
 }
 
-impl AutoOpResult {
+impl AutonOpResult {
     pub fn new(
         uuid: String,
         deployment_unit_ref: String,
@@ -565,7 +581,7 @@ impl AutoOpResult {
         fault_string: String,
         operation_performed: String,
     ) -> Self {
-        AutoOpResult {
+        AutonOpResult {
             uuid: uuid.to_string(),
             deployment_unit_ref: deployment_unit_ref.to_string(),
             version: version.to_string(),
@@ -581,12 +597,12 @@ impl AutoOpResult {
 }
 
 #[cfg(test)]
-impl Arbitrary for AutoOpResult {
+impl Arbitrary for AutonOpResult {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         let bogus_st = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
         let bogus_ct = Utc.ymd(2014, 11, 29).and_hms(12, 0, 9);
 
-        AutoOpResult::new(
+        AutonOpResult::new(
             String::arbitrary(g),
             String::arbitrary(g),
             String::arbitrary(g),
@@ -619,7 +635,7 @@ impl Arbitrary for AutoOpResult {
                 self.operation_performed.clone(),
             )
                 .shrink()
-                .map(|(uuid, dur, ver, cs, res, eurl, f, op)| AutoOpResult {
+                .map(|(uuid, dur, ver, cs, res, eurl, f, op)| AutonOpResult {
                     uuid: uuid,
                     deployment_unit_ref: dur,
                     version: ver,
@@ -637,22 +653,28 @@ impl Arbitrary for AutoOpResult {
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AutonomousDUStateChangeComplete {
-    results: Vec<AutoOpResult>,
+    results: Vec<AutonOpResult>,
 }
 
 impl AutonomousDUStateChangeComplete {
-    pub fn new(results: Vec<AutoOpResult>) -> Self {
+    pub fn new(results: Vec<AutonOpResult>) -> Self {
         AutonomousDUStateChangeComplete { results: results }
     }
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            "cwmp:AutonomousDUStateChangeComplete",
-        ))?;
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element(
+                "cwmp:AutonomousDUStateChangeComplete",
+            ))?;
+            format!("cwmp:AutonOpResultStruct[{}]", self.results.len())
+        } else {
+            writer.write(XmlEvent::start_element("AutonomousDUStateChangeComplete"))?;
 
-        let ss = format!("cwmp::AutoOpResultStruct[{}]", self.results.len());
+            format!("AutonOpResultStruct[{}]", self.results.len())
+        };
 
         writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
@@ -686,6 +708,20 @@ impl AutonomousDUStateChangeComplete {
         writer.write(XmlEvent::end_element())?;
 
         Ok(())
+    }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct"] => {
+                self.results.push(AutonOpResult::default());
+            }
+            _ => {}
+        }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
@@ -738,7 +774,7 @@ impl AutonomousDUStateChangeComplete {
 #[cfg(test)]
 impl Arbitrary for AutonomousDUStateChangeComplete {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        AutonomousDUStateChangeComplete::new(Vec::<AutoOpResult>::arbitrary(g))
+        AutonomousDUStateChangeComplete::new(Vec::<AutonOpResult>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -756,8 +792,12 @@ impl AutonomousTransferCompleteResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:AutonomousTransferCompleteResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "AutonomousTransferCompleteResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -803,8 +843,11 @@ impl AutonomousTransferComplete {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:AutonomousTransferComplete"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "AutonomousTransferComplete")[..],
+        ))?;
         write_simple(writer, "AnnounceURL", &self.announce_url)?;
         write_simple(writer, "TransferURL", &self.transfer_url)?;
         write_simple(writer, "IsDownload", &self.is_download.to_string())?;
@@ -917,8 +960,9 @@ impl CancelTransferResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:CancelTransferResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "CancelTransferResponse")[..])?;
         Ok(())
     }
 }
@@ -937,8 +981,11 @@ impl CancelTransfer {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:CancelTransfer"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "CancelTransfer")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         writer.write(XmlEvent::end_element())?;
 
@@ -976,8 +1023,9 @@ impl ChangeDUStateResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:ChangeDUStateResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "ChangeDUStateResponse")[..])?;
         Ok(())
     }
 }
@@ -1169,8 +1217,11 @@ impl ChangeDUState {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:ChangeDUState"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "ChangeDUState")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         writer.write(XmlEvent::start_element("Operations"))?;
 
@@ -1191,7 +1242,7 @@ impl ChangeDUState {
             writer.write(XmlEvent::end_element())?;
         }
         for uo in self.update_operations.iter() {
-            writer.write(XmlEvent::start_element("UninstallOpStruct"))?;
+            writer.write(XmlEvent::start_element("UpdateOpStruct"))?;
             write_simple(writer, "URL", &uo.url)?;
             write_simple(writer, "UUID", &uo.uuid)?;
             write_simple(writer, "Username", &uo.username)?;
@@ -1327,8 +1378,11 @@ impl DeleteObjectResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:DeleteObjectResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "DeleteObjectResponse")[..],
+        ))?;
         write_simple(writer, "Status", &self.status)?;
         writer.write(XmlEvent::end_element())?;
 
@@ -1373,8 +1427,11 @@ impl DeleteObject {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:DeleteObject"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "DeleteObject")[..],
+        ))?;
         write_simple(writer, "ObjectName", &self.object_name)?;
         write_simple(writer, "ParameterKey", &self.parameter_key)?;
         writer.write(XmlEvent::end_element())?;
@@ -1429,8 +1486,11 @@ impl DownloadResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:DownloadResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "DownloadResponse")[..],
+        ))?;
         write_simple(writer, "Status", &self.status)?;
         match self.start_time {
             None => {}
@@ -1523,8 +1583,11 @@ impl Download {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:Download"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "Download")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         write_simple(writer, "FileType", &self.file_type)?;
         write_simple(writer, "URL", &self.url)?;
@@ -1689,8 +1752,12 @@ impl DUStateChangeCompleteResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:DUStateChangeCompleteResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "DUStateChangeCompleteResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -1711,10 +1778,17 @@ impl DUStateChangeComplete {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:DUStateChangeComplete"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "DUStateChangeComplete")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
-        let ss = format!("cwmp::OpResultStruct[{}]", self.results.len());
+        let ss = if has_cwmp {
+            format!("cwmp:OpResultStruct[{}]", self.results.len())
+        } else {
+            format!("OpResultStruct[{}]", self.results.len())
+        };
 
         writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
@@ -1750,17 +1824,9 @@ impl DUStateChangeComplete {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
-            ["DUStateChangeComplete", "Results"] => self.results.push(OpResult::new(
-                String::from(""),
-                String::from(""),
-                String::from(""),
-                String::from(""),
-                0,
-                String::from(""),
-                Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                FaultStruct::new(0, String::from("")),
-            )),
+            ["DUStateChangeComplete", "Results", "OpResultStruct"] => {
+                self.results.push(OpResult::default())
+            }
             _ => {}
         }
     }
@@ -1834,8 +1900,9 @@ impl FactoryResetResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:FactoryResetResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "FactoryResetResponse")[..])?;
         Ok(())
     }
 }
@@ -1847,8 +1914,9 @@ impl FactoryReset {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:FactoryReset")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "FactoryReset")[..])?;
         Ok(())
     }
 }
@@ -1900,12 +1968,13 @@ impl Fault {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(XmlEvent::start_element("SOAP-ENV:Fault"))?;
         write_simple(writer, "faultcode", &self.faultcode)?;
         write_simple(writer, "faultstring", &self.faultstring)?;
         writer.write(XmlEvent::start_element("detail"))?;
-        writer.write(XmlEvent::start_element("cwmp:Fault"))?;
+        writer.write(XmlEvent::start_element(&cwmp_prefix(has_cwmp, "Fault")[..]))?;
         write_simple(writer, "FaultCode", &self.detail.code.to_string())?;
         write_simple(writer, "FaultString", &self.detail.string.to_string())?;
         writer.write(XmlEvent::end_element())?;
@@ -2038,9 +2107,10 @@ impl GetAllQueuedTransfersResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(XmlEvent::start_element(
-            "cwmp:GetAllQueuedTransfersResponse",
+            &cwmp_prefix(has_cwmp, "GetAllQueuedTransfersResponse")[..],
         ))?;
 
         let ss = format!(
@@ -2055,7 +2125,7 @@ impl GetAllQueuedTransfersResponse {
             writer.write(XmlEvent::start_element("AllQueuedTransferStruct"))?;
             write_simple(writer, "CommandKey", &t.command_key)?;
             write_simple(writer, "State", &t.state)?;
-            write_simple(writer, "IsDownload", &t.state)?;
+            write_simple(writer, "IsDownload", &t.is_download.to_string())?;
             write_simple(writer, "FileType", &t.file_type)?;
             write_simple(writer, "FileSize", &t.file_size.to_string())?;
             write_simple(writer, "TargetFileName", &t.target_filename)?;
@@ -2130,8 +2200,9 @@ impl GetAllQueuedTransfers {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:GetAllQueuedTransfers")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "GetAllQueuedTransfers")[..])?;
         Ok(())
     }
 }
@@ -2219,9 +2290,15 @@ impl GetOptionsResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetOptionsResponse"))?;
-        let ss = format!("cwmp::OptionStruct[{}]", self.option_list.len());
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element("cwmp:GetOptionsResponse"))?;
+            format!("cwmp:OptionStruct[{}]", self.option_list.len())
+        } else {
+            writer.write(XmlEvent::start_element("GetOptionsResponse"))?;
+            format!("OptionStruct[{}]", self.option_list.len())
+        };
 
         writer.write(XmlEvent::start_element("OptionList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
@@ -2327,8 +2404,11 @@ impl GetOptions {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetOptions"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "GetOptions")[..],
+        ))?;
         write_simple(writer, "OptionName", &self.option_name)?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -2370,8 +2450,11 @@ impl GetParameterAttributes {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetParameterAttributes"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "GetParameterAttributes")[..],
+        ))?;
         writer.write(XmlEvent::start_element("ParameterNames"))?;
         for p in self.parameternames.iter() {
             write_simple(writer, "string", &p)?;
@@ -2380,10 +2463,28 @@ impl GetParameterAttributes {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetParameterAttributes", "ParameterNames", "string"] => {
+                self.parameternames.push(String::from(""));
+            }
+            _ => {}
+        }
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterAttributes", "ParameterNames", "string"] => {
-                self.parameternames.push(characters.to_string())
+                let last = self.parameternames.last_mut();
+                match last {
+                    Some(l) => *l = characters.to_string(),
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -2461,11 +2562,17 @@ impl GetParameterAttributesResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            "cwmp:GetParameterAttributesResponse",
-        ))?;
-        let ss = format!("cwmp:ParameterAttributeStruct[{}]", self.parameters.len());
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element(
+                "cwmp:GetParameterAttributesResponse",
+            ))?;
+            format!("cwmp:ParameterAttributeStruct[{}]", self.parameters.len())
+        } else {
+            writer.write(XmlEvent::start_element("GetParameterAttributesResponse"))?;
+            format!("ParameterAttributeStruct[{}]", self.parameters.len())
+        };
 
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
@@ -2506,34 +2613,32 @@ impl GetParameterAttributesResponse {
                     vec![],
                 ))
             }
+            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
+                if let Some(e) = self.parameters.last_mut() {
+                    e.accesslist.push(String::from(""));
+                }
+            }
             _ => {}
         }
     }
 
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
-            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Name"] =>
-            {
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.name = characters.to_string(),
-                    None => {}
+            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Name"] => {
+                if let Some(e) = self.parameters.last_mut() {
+                    e.name = characters.to_string();
                 }
             }
-            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Notification"] =>
-            {
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.notification = characters.to_string(),
-                    None => {}
+            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Notification"] => {
+                if let Some(e) = self.parameters.last_mut() {
+                    e.notification = characters.to_string();
                 }
             }
-            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] =>
-            {
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.accesslist.push(characters.to_string()),
-                    None => {}
+            ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
+                if let Some(e) = self.parameters.last_mut() {
+                    if let Some(last) = e.accesslist.last_mut() {
+                        *last = characters.to_string();
+                    }
                 }
             }
             _ => {}
@@ -2616,9 +2721,15 @@ impl GetParameterNamesResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetParameterNamesResponse"))?;
-        let ss = format!("cwmp:ParameterInfoStruct[{}]", self.parameter_list.len());
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element("cwmp:GetParameterNamesResponse"))?;
+            format!("cwmp:ParameterInfoStruct[{}]", self.parameter_list.len())
+        } else {
+            writer.write(XmlEvent::start_element("GetParameterNamesResponse"))?;
+            format!("ParameterInfoStruct[{}]", self.parameter_list.len())
+        };
 
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
@@ -2685,8 +2796,11 @@ impl GetParameterNames {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetParameterNames"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "GetParameterNames")[..],
+        ))?;
         write_simple(writer, "ParameterPath", &self.parameter_path)?;
         write_simple(writer, "NextLevel", &self.next_level.to_string())?;
         writer.write(XmlEvent::end_element())?;
@@ -2771,8 +2885,11 @@ impl GetParameterValues {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetParameterValues"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "GetParameterValues")[..],
+        ))?;
         writer.write(XmlEvent::start_element("ParameterNames"))?;
         for p in self.parameternames.iter() {
             write_simple(writer, "string", &p)?;
@@ -2781,10 +2898,29 @@ impl GetParameterValues {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetParameterValues", "ParameterNames", "string"] => {
+                self.parameternames.push(String::from(""));
+            }
+            _ => {}
+        }
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
+            // no hit on this if we have <string></string>
             ["GetParameterValues", "ParameterNames", "string"] => {
-                self.parameternames.push(characters.to_string());
+                let last = self.parameternames.last_mut();
+                match last {
+                    Some(l) => *l = characters.to_string(),
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -2820,10 +2956,15 @@ impl GetParameterValuesResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetParameterValuesResponse"))?;
-        let ss = format!("cwmp:ParameterValueStruct[{}]", self.parameters.len());
-
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element("cwmp:GetParameterValuesResponse"))?;
+            format!("cwmp:ParameterValueStruct[{}]", self.parameters.len())
+        } else {
+            writer.write(XmlEvent::start_element("GetParameterValuesResponse"))?;
+            format!("ParameterValueStruct[{}]", self.parameters.len())
+        };
         writer.write(
             XmlEvent::start_element("ParameterList")
                 .attr("xsi:type", "SOAP-ENC:Array")
@@ -2913,10 +3054,10 @@ pub struct QueuedTransferStruct {
 }
 
 impl QueuedTransferStruct {
-    pub fn new(command_key: String, state: String) -> Self {
+    pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
         QueuedTransferStruct {
-            command_key: Some(command_key.to_string()),
-            state: Some(state.to_string()),
+            command_key: command_key,
+            state: state,
         }
     }
 }
@@ -2924,7 +3065,10 @@ impl QueuedTransferStruct {
 #[cfg(test)]
 impl Arbitrary for QueuedTransferStruct {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        QueuedTransferStruct::new(String::arbitrary(g), String::arbitrary(g))
+        QueuedTransferStruct::new(
+            Option::<String>::arbitrary(g),
+            Option::<String>::arbitrary(g),
+        )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -2952,9 +3096,15 @@ impl GetQueuedTransfersResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetQueuedTransfersResponse"))?;
-        let ss = format!("cwmp:QueuedTransferStruct[{}]", self.transfer_list.len());
+        let ss = if has_cwmp {
+            writer.write(XmlEvent::start_element("cwmp:GetQueuedTransfersResponse"))?;
+            format!("cwmp:QueuedTransferStruct[{}]", self.transfer_list.len())
+        } else {
+            writer.write(XmlEvent::start_element("GetQueuedTransfersResponse"))?;
+            format!("QueuedTransferStruct[{}]", self.transfer_list.len())
+        };
 
         writer
             .write(XmlEvent::start_element("TransferList").attr("SOAP-ENC:arrayType", &ss[..]))?;
@@ -2985,6 +3135,20 @@ impl GetQueuedTransfersResponse {
         match &path_pattern[..] {
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct"] => {
                 self.transfer_list.push(QueuedTransferStruct::default())
+            }
+            ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "CommandKey"] => {
+                let last = self.transfer_list.last_mut();
+                match last {
+                    Some(l) => l.command_key = Some("".to_string()),
+                    None => {}
+                }
+            }
+            ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "State"] => {
+                let last = self.transfer_list.last_mut();
+                match last {
+                    Some(l) => l.state = Some("".to_string()),
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -3029,8 +3193,9 @@ impl GetQueuedTransfers {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:GetQueuedTransfers")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "GetQueuedTransfers"))?;
         Ok(())
     }
 }
@@ -3049,8 +3214,11 @@ impl GetRPCMethodsResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:GetRPCMethodsResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "GetRPCMethodsResponse")[..],
+        ))?;
         let ss = format!("xsd:string[{}]", self.method_list.len());
 
         writer.write(XmlEvent::start_element("MethodList").attr("SOAP-ENC:arrayType", &ss[..]))?;
@@ -3062,10 +3230,28 @@ impl GetRPCMethodsResponse {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
+    fn start_handler(
+        &mut self,
+        path: &[&str],
+        _name: &xml::name::OwnedName,
+        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+    ) {
+        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        match &path_pattern[..] {
+            ["GetRPCMethodsResponse", "MethodList", "string"] => {
+                self.method_list.push(String::from(""));
+            }
+            _ => {}
+        }
+    }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetRPCMethodsResponse", "MethodList", "string"] => {
-                self.method_list.push(characters.to_string());
+                let last = self.method_list.last_mut();
+                match last {
+                    Some(l) => *l = characters.to_string(),
+                    None => {}
+                }
             }
             _ => {}
         }
@@ -3094,8 +3280,9 @@ impl GetRPCMethods {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:GetRPCMethods")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "GetRPCMethods")[..])?;
         Ok(())
     }
 }
@@ -3114,8 +3301,11 @@ impl InformResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:InformResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "InformResponse")[..],
+        ))?;
         write_simple(writer, "MaxEnvelopes", &self.max_envelopes.to_string())?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -3260,8 +3450,11 @@ impl Inform {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:Inform"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "Inform")[..],
+        ))?;
         writer.write(XmlEvent::start_element("DeviceId"))?;
         write_simple(writer, "Manufacturer", &self.device_id.manufacturer)?;
         write_simple(writer, "OUI", &self.device_id.oui)?;
@@ -3426,8 +3619,11 @@ impl KickedResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:KickedResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "KickedResponse")[..],
+        ))?;
         write_simple(writer, "NextURL", &self.next_url)?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -3477,8 +3673,11 @@ impl Kicked {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:Kicked"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "Kicked")[..],
+        ))?;
         write_simple(writer, "Command", &self.command)?;
         write_simple(writer, "Referer", &self.referer)?;
         write_simple(writer, "Arg", &self.arg)?;
@@ -3541,8 +3740,9 @@ impl RebootResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:RebootResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "RebootResponse")[..])?;
         Ok(())
     }
 }
@@ -3561,8 +3761,11 @@ impl Reboot {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:Kicked"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "Reboot")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -3637,8 +3840,11 @@ impl RequestDownload {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:RequestDownload"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "RequestDownload")[..],
+        ))?;
         write_simple(writer, "FileType", &self.file_type)?;
         let argss = format!("cwmp:ArgStruct[{}]", self.file_type_arg.len());
         writer
@@ -3667,6 +3873,21 @@ impl RequestDownload {
             ["RequestDownload", "FileTypeArg", "ArgStruct"] => {
                 self.file_type_arg.push(ArgStruct::default())
             }
+            // // in case of blanks, where characters wont fire
+            // ["RequestDownload", "FileTypeArg", "ArgStruct", "Name"] => {
+            //     let last = self.file_type_arg.last_mut();
+            //     match last {
+            //         Some(l) => l.name = "".to_string(),
+            //         None => {}
+            //     }
+            // }
+            // ["RequestDownload", "FileTypeArg", "ArgStruct", "Value"] => {
+            //     let last = self.file_type_arg.last_mut();
+            //     match last {
+            //         Some(l) => l.value = "".to_string(),
+            //         None => {}
+            //     }
+            // }
             _ => {}
         }
     }
@@ -3716,8 +3937,12 @@ impl RequestDownloadResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:RequestDownloadResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "RequestDownloadResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -3729,8 +3954,12 @@ impl ScheduleDownloadResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:ScheduleDownloadResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "ScheduleDownloadResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -3844,8 +4073,11 @@ impl ScheduleDownload {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:ScheduleDownload"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "ScheduleDownload")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         write_simple(writer, "FileType", &self.file_type)?;
         write_simple(writer, "URL", &self.url)?;
@@ -3963,8 +4195,9 @@ impl ScheduleInformResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:ScheduleInformResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "ScheduleInformResponse")[..])?;
         Ok(())
     }
 }
@@ -3985,8 +4218,11 @@ impl ScheduleInform {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:ScheduleInform"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "ScheduleInform")[..],
+        ))?;
         write_simple(writer, "DelaySeconds", &self.delay_seconds.to_string())?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         writer.write(XmlEvent::end_element())?;
@@ -4029,8 +4265,12 @@ impl SetParameterAttributesResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:SetParameterAttributesResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "SetParameterAttributesResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -4115,14 +4355,22 @@ impl SetParameterAttributes {
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct"] => self
                 .parameter_list
                 .push(SetParameterAttributesStruct::default()),
+            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] => {
+                if let Some(p) = self.parameter_list.last_mut() {
+                    p.access_list.push(String::from(""));
+                }
+            }
             _ => {}
         }
     }
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:SetParameterAttributes"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "SetParameterAttributes")[..],
+        ))?;
 
         let pas = format!(
             "cwmp:SetParameterAttributesStruct[{}]",
@@ -4160,25 +4408,22 @@ impl SetParameterAttributes {
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
-            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] =>
-            {
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => e.access_list.push(characters.to_string()),
-                    _ => {}
+            ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] => {
+                if let Some(p) = self.parameter_list.last_mut() {
+                    if let Some(a) = p.access_list.last_mut() {
+                        *a = characters.to_string();
+                    }
                 }
             }
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", key] => {
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.parameter_list.last_mut() {
+                    match key {
                         "Name" => e.name = characters.to_string(),
                         "NotificationChange" => e.notification_change = parse_to_int(characters, 0),
                         "Notification" => e.notification = parse_to_int(characters, 0),
                         "AccessListChange" => e.access_list_change = parse_to_int(characters, 0),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
 
@@ -4214,8 +4459,11 @@ impl SetParameterValuesResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:SetParameterValuesResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "SetParameterValuesResponse")[..],
+        ))?;
         write_simple(writer, "Status", &self.status.to_string())?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -4259,21 +4507,37 @@ impl SetParameterValues {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:SetParameterValues"))?;
+        let pvs = if has_cwmp {
+            writer.write(XmlEvent::start_element("cwmp:SetParameterValues"))?;
+            format!("cwmp:ParameterValueStruct[{}]", self.parameter_list.len())
+        } else {
+            writer.write(XmlEvent::start_element("SetParameterValues"))?;
+            format!("ParameterValueStruct[{}]", self.parameter_list.len())
+        };
 
-        let pvs = format!("cwmp:ParameterValuesStruct[{}]", self.parameter_list.len());
-        writer
-            .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pvs[..]))?;
-
-        for p in self.parameter_list.iter() {
-            writer.write(XmlEvent::start_element("ParameterValuesStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
-            writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
-            writer.write(&p.value[..])?;
-            writer.write(XmlEvent::end_element())?; // Value
-            writer.write(XmlEvent::end_element())?;
+        if let Some(pk) = &self.parameter_key {
+            write_simple(writer, "ParameterKey", &pk)?;
         }
+        if self.parameter_list.len() > 0 {
+            writer.write(
+                XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pvs[..]),
+            )?;
+
+            for p in self.parameter_list.iter() {
+                writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
+                write_simple(writer, "Name", &p.name)?;
+                writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
+                writer.write(&p.value[..])?;
+                writer.write(XmlEvent::end_element())?; // Value
+                writer.write(XmlEvent::end_element())?;
+            }
+            writer.write(XmlEvent::end_element())?;
+        } else {
+            write_empty_tag(writer, "ParameterList")?;
+        }
+
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
@@ -4285,6 +4549,9 @@ impl SetParameterValues {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
+            ["SetParameterValues", "ParameterKey"] => {
+                self.parameter_key = Some(String::from(""));
+            }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct"] => {
                 self.parameter_list.push(ParameterValue::default())
             }
@@ -4347,8 +4614,9 @@ impl SetVouchersResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:SetVouchersResponse")?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "SetVouchersResponse")[..])?;
         Ok(())
     }
 }
@@ -4367,8 +4635,11 @@ impl SetVouchers {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:SetVouchers"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "SetVouchers")[..],
+        ))?;
 
         let vls = format!("base64[{}]", self.voucher_list.len());
         writer
@@ -4429,8 +4700,12 @@ impl TransferCompleteResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, "cwmp:TransferCompleteResponse")?;
+        write_empty_tag(
+            writer,
+            &cwmp_prefix(has_cwmp, "TransferCompleteResponse")[..],
+        )?;
         Ok(())
     }
 }
@@ -4460,8 +4735,11 @@ impl TransferComplete {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:TransferComplete"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "TransferComplete")[..],
+        ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         write_fault_struct(writer, &self.fault)?;
         match self.start_time {
@@ -4543,8 +4821,11 @@ impl UploadResponse {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element("cwmp:UploadResponse"))?;
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "UploadResponse")[..],
+        ))?;
         write_simple(writer, "Status", &self.status.to_string())?;
         match self.start_time {
             None => {}
@@ -4623,10 +4904,11 @@ impl Upload {
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
+        has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        let s = XmlEvent::start_element("cwmp:Upload");
-        writer.write(s)?;
-
+        writer.write(XmlEvent::start_element(
+            &cwmp_prefix(has_cwmp, "Upload")[..],
+        ))?;
         writer.write(XmlEvent::start_element("CommandKey"))?;
         writer.write(&self.command_key[..])?;
         writer.write(XmlEvent::end_element())?;
@@ -4962,8 +5244,44 @@ impl Arbitrary for BodyElement {
 }
 
 #[derive(Debug, PartialEq, Default, Clone)]
+pub struct CwmpVersion {
+    major: u8,
+    minor: u8,
+}
+
+impl CwmpVersion {
+    pub fn new(major: u8, minor: u8) -> Self {
+        CwmpVersion {
+            major: major,
+            minor: minor,
+        }
+    }
+}
+
+#[cfg(test)]
+impl Arbitrary for CwmpVersion {
+    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+        CwmpVersion {
+            major: u8::arbitrary(g),
+            minor: u8::arbitrary(g),
+        }
+    }
+
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(
+            (self.major.clone(), self.minor.clone())
+                .shrink()
+                .map(|(ma, mi)| CwmpVersion {
+                    major: ma,
+                    minor: mi,
+                }),
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Envelope {
-    cwmp: Option<String>,
+    cwmp_version: Option<CwmpVersion>,
     header: Vec<HeaderElement>,
     body: Vec<BodyElement>,
 }
@@ -4971,18 +5289,25 @@ pub struct Envelope {
 #[cfg(test)]
 impl Arbitrary for Envelope {
     fn arbitrary<G: Gen>(g: &mut G) -> Envelope {
-        Envelope::new(
-            String::arbitrary(g),
-            Vec::<HeaderElement>::arbitrary(g),
-            Vec::<BodyElement>::arbitrary(g),
-        )
+        // cwmp version is handled a bit special, because
+        // a value of Some("") becomes xmlns:cwmp="" which
+        // is unparsable
+        let header = Vec::<HeaderElement>::arbitrary(g);
+        let body = Vec::<BodyElement>::arbitrary(g);
+        let cwmp = Option::<CwmpVersion>::arbitrary(g);
+
+        Envelope::new(cwmp.clone(), header, body)
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.cwmp.clone(), self.header.clone(), self.body.clone())
+            (
+                self.cwmp_version.clone(),
+                self.header.clone(),
+                self.body.clone(),
+            )
                 .shrink()
                 .map(|(c, h, b)| Envelope {
-                    cwmp: c,
+                    cwmp_version: c,
                     header: h,
                     body: b,
                 }),
@@ -5024,39 +5349,47 @@ impl fmt::Debug for GenerateError {
 }
 
 impl Envelope {
-    pub fn new(cwmp: String, header: Vec<HeaderElement>, body: Vec<BodyElement>) -> Self {
+    pub fn new(
+        cwmp_version: Option<CwmpVersion>,
+        header: Vec<HeaderElement>,
+        body: Vec<BodyElement>,
+    ) -> Self {
         Envelope {
-            cwmp: Some(cwmp),
+            cwmp_version: cwmp_version,
             header: header,
             body: body,
         }
+    }
+    pub fn cwmp_version(self) -> Option<CwmpVersion> {
+        self.cwmp_version
+    }
+    pub fn header(self) -> Vec<HeaderElement> {
+        self.header
+    }
+    pub fn body(self) -> Vec<BodyElement> {
+        self.body
     }
     pub fn generate(&self) -> Result<String, GenerateError> {
         let mut writer = EmitterConfig::new()
             .perform_indent(true)
             .create_writer(Vec::new());
 
-        let start_event = match &self.cwmp {
-            None => XmlEvent::start_element("Envelope")
-                .ns("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
-                .ns("SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/")
-                .ns("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-                .ns("xsd", "http://www.w3.org/2001/XMLSchema")
-                .attr(
-                    "SOAP-ENV:encodingStyle",
-                    "http://schemas.xmlsoap.org/soap/encoding/",
-                ),
-            Some(version) => XmlEvent::start_element("Envelope")
-                .ns("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
-                .ns("SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/")
-                .ns("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-                .ns("xsd", "http://www.w3.org/2001/XMLSchema")
-                .ns("cwmp", version)
-                .attr(
-                    "SOAP-ENV:encodingStyle",
-                    "http://schemas.xmlsoap.org/soap/encoding/",
-                ),
-        };
+        let mut start_event = XmlEvent::start_element("Envelope")
+            .ns("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
+            .ns("SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/")
+            .ns("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            .ns("xsd", "http://www.w3.org/2001/XMLSchema");
+
+        if let Some(cwmp) = &self.cwmp_version {
+            start_event = start_event.ns(
+                "cwmp",
+                format!("urn:dslforum-org:cwmp-{}-{}", cwmp.major, cwmp.minor),
+            );
+        }
+        start_event = start_event.attr(
+            "SOAP-ENV:encodingStyle",
+            "http://schemas.xmlsoap.org/soap/encoding/",
+        );
 
         writer.write(start_event)?;
 
@@ -5066,12 +5399,22 @@ impl Envelope {
 
         for he in self.header.iter() {
             match he {
-                HeaderElement::ID(e) => e.generate(&mut writer)?,
-                HeaderElement::HoldRequests(e) => e.generate(&mut writer)?,
-                HeaderElement::NoMoreRequests(e) => e.generate(&mut writer)?,
-                HeaderElement::SessionTimeout(e) => e.generate(&mut writer)?,
-                HeaderElement::SupportedCWMPVersions(e) => e.generate(&mut writer)?,
-                HeaderElement::UseCWMPVersion(e) => e.generate(&mut writer)?,
+                HeaderElement::ID(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                HeaderElement::HoldRequests(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                HeaderElement::NoMoreRequests(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                HeaderElement::SessionTimeout(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                HeaderElement::SupportedCWMPVersions(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                HeaderElement::UseCWMPVersion(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
             };
         }
 
@@ -5084,63 +5427,159 @@ impl Envelope {
 
         for be in self.body.iter() {
             match be {
-                BodyElement::AddObject(e) => e.generate(&mut writer)?,
-                BodyElement::AddObjectResponse(e) => e.generate(&mut writer)?,
-                BodyElement::AutonomousDUStateChangeComplete(e) => e.generate(&mut writer)?,
-                BodyElement::AutonomousDUStateChangeCompleteResponse(e) => {
-                    e.generate(&mut writer)?
+                BodyElement::AddObject(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
                 }
-                BodyElement::AutonomousTransferComplete(e) => e.generate(&mut writer)?,
-                BodyElement::AutonomousTransferCompleteResponse(e) => e.generate(&mut writer)?,
-                BodyElement::CancelTransferResponse(e) => e.generate(&mut writer)?,
-                BodyElement::CancelTransfer(e) => e.generate(&mut writer)?,
-                BodyElement::ChangeDUStateResponse(e) => e.generate(&mut writer)?,
-                BodyElement::ChangeDUState(e) => e.generate(&mut writer)?,
-                BodyElement::DeleteObjectResponse(e) => e.generate(&mut writer)?,
-                BodyElement::DeleteObject(e) => e.generate(&mut writer)?,
-                BodyElement::DownloadResponse(e) => e.generate(&mut writer)?,
-                BodyElement::Download(e) => e.generate(&mut writer)?,
-                BodyElement::DUStateChangeCompleteResponse(e) => e.generate(&mut writer)?,
-                BodyElement::DUStateChangeComplete(e) => e.generate(&mut writer)?,
-                BodyElement::FactoryResetResponse(e) => e.generate(&mut writer)?,
-                BodyElement::FactoryReset(e) => e.generate(&mut writer)?,
-                BodyElement::Fault(e) => e.generate(&mut writer)?,
-                BodyElement::GetAllQueuedTransfersResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetAllQueuedTransfers(e) => e.generate(&mut writer)?,
-                BodyElement::GetOptionsResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetOptions(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterAttributes(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterAttributesResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterNamesResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterNames(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterValues(e) => e.generate(&mut writer)?,
-                BodyElement::GetParameterValuesResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetQueuedTransfersResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetQueuedTransfers(e) => e.generate(&mut writer)?,
-                BodyElement::GetRPCMethodsResponse(e) => e.generate(&mut writer)?,
-                BodyElement::GetRPCMethods(e) => e.generate(&mut writer)?,
-                BodyElement::InformResponse(e) => e.generate(&mut writer)?,
-                BodyElement::Inform(e) => e.generate(&mut writer)?,
-                BodyElement::KickedResponse(e) => e.generate(&mut writer)?,
-                BodyElement::Kicked(e) => e.generate(&mut writer)?,
-                BodyElement::RebootResponse(e) => e.generate(&mut writer)?,
-                BodyElement::Reboot(e) => e.generate(&mut writer)?,
-                BodyElement::RequestDownloadResponse(e) => e.generate(&mut writer)?,
-                BodyElement::RequestDownload(e) => e.generate(&mut writer)?,
-                BodyElement::ScheduleDownloadResponse(e) => e.generate(&mut writer)?,
-                BodyElement::ScheduleDownload(e) => e.generate(&mut writer)?,
-                BodyElement::ScheduleInformResponse(e) => e.generate(&mut writer)?,
-                BodyElement::ScheduleInform(e) => e.generate(&mut writer)?,
-                BodyElement::SetParameterAttributesResponse(e) => e.generate(&mut writer)?,
-                BodyElement::SetParameterAttributes(e) => e.generate(&mut writer)?,
-                BodyElement::SetParameterValuesResponse(e) => e.generate(&mut writer)?,
-                BodyElement::SetParameterValues(e) => e.generate(&mut writer)?,
-                BodyElement::SetVouchersResponse(e) => e.generate(&mut writer)?,
-                BodyElement::SetVouchers(e) => e.generate(&mut writer)?,
-                BodyElement::TransferCompleteResponse(e) => e.generate(&mut writer)?,
-                BodyElement::TransferComplete(e) => e.generate(&mut writer)?,
-                BodyElement::Upload(e) => e.generate(&mut writer)?,
-                BodyElement::UploadResponse(e) => e.generate(&mut writer)?,
+                BodyElement::AddObjectResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::AutonomousDUStateChangeComplete(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::AutonomousDUStateChangeCompleteResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::AutonomousTransferComplete(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::AutonomousTransferCompleteResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::CancelTransferResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::CancelTransfer(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ChangeDUStateResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ChangeDUState(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::DeleteObjectResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::DeleteObject(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::DownloadResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Download(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::DUStateChangeCompleteResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::DUStateChangeComplete(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::FactoryResetResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::FactoryReset(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Fault(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::GetAllQueuedTransfersResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetAllQueuedTransfers(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetOptionsResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetOptions(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterAttributes(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterAttributesResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterNamesResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterNames(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterValues(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetParameterValuesResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetQueuedTransfersResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetQueuedTransfers(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetRPCMethodsResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::GetRPCMethods(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::InformResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Inform(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::KickedResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Kicked(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::RebootResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Reboot(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::RequestDownloadResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::RequestDownload(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ScheduleDownloadResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ScheduleDownload(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ScheduleInformResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::ScheduleInform(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetParameterAttributesResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetParameterAttributes(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetParameterValuesResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetParameterValues(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetVouchersResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::SetVouchers(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::TransferCompleteResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::TransferComplete(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
+                BodyElement::Upload(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
+                BodyElement::UploadResponse(e) => {
+                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                }
             }
         }
 
@@ -5165,19 +5604,10 @@ impl Envelope {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["Envelope"] => {
-                // find the cwmp attribute, and parse it
-                let cwmp_filter = attributes
-                    .iter()
-                    .filter(|&x| x.name.local_name == "cwmp")
-                    .next();
-                if cwmp_filter.is_some() {
-                    self.cwmp = Some(cwmp_filter.unwrap().value.to_string());
-                } else {
-                    // search through the namespaces to find a cwmp value
-                    match namespace.get("cwmp") {
-                        Some(ns) => self.cwmp = Some(ns.to_string()),
-                        None => self.cwmp = None,
-                    }
+                // search through the namespaces to find a cwmp value
+                match namespace.get("cwmp") {
+                    Some(ns) => self.cwmp_version = Some(cwmp_urn_to_version(ns)),
+                    None => self.cwmp_version = None,
                 }
             }
             ["Envelope", "Header", header_element] => {
@@ -5190,7 +5620,11 @@ impl Envelope {
                     .filter(|&x| x.name.local_name == "mustUnderstand")
                     .next();
 
-                let must_understand: bool = must_understand_filter.is_some();
+                let must_understand: bool = if let Some(mua) = must_understand_filter {
+                    str2bool(&mua.value.to_string())
+                } else {
+                    true
+                };
                 match *header_element {
                     "ID" => self.header.push(HeaderElement::ID(ID {
                         must_understand: must_understand,
@@ -5258,19 +5692,7 @@ impl Envelope {
                         }
                         "AutonomousDUStateChangeComplete" => {
                             self.body.push(BodyElement::AutonomousDUStateChangeComplete(
-                                AutonomousDUStateChangeComplete::new(vec![AutoOpResult::new(
-                                    String::from(""),
-                                    String::from(""),
-                                    String::from(""),
-                                    String::from(""),
-                                    String::from(""),
-                                    String::from(""),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                    0,
-                                    String::from(""),
-                                    String::from(""),
-                                )]),
+                                AutonomousDUStateChangeComplete::default(),
                             ))
                         }
                         "AutonomousTransferCompleteResponse" => {
@@ -5487,7 +5909,13 @@ impl Envelope {
                 }
                 let last = self.body.last_mut();
                 match last {
+                    Some(BodyElement::AutonomousDUStateChangeComplete(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
                     Some(BodyElement::GetParameterAttributesResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetParameterAttributes(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::GetParameterValuesResponse(e)) => {
@@ -5508,7 +5936,13 @@ impl Envelope {
                     Some(BodyElement::GetParameterNamesResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
+                    Some(BodyElement::GetParameterValues(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
                     Some(BodyElement::GetQueuedTransfersResponse(e)) => {
+                        e.start_handler(&path_pattern[2..], name, attributes)
+                    }
+                    Some(BodyElement::GetRPCMethodsResponse(e)) => {
                         e.start_handler(&path_pattern[2..], name, attributes)
                     }
                     Some(BodyElement::Inform(e)) => {
@@ -5728,6 +6162,32 @@ fn extract_attribute(
         Some(e) => e.value.to_string(),
         None => String::from(""),
     }
+}
+
+fn cwmp_prefix(envelope_has_cwmp_version: bool, postfix: &str) -> String {
+    if envelope_has_cwmp_version {
+        format!("cwmp:{}", postfix)
+    } else {
+        postfix.to_string()
+    }
+}
+
+// parses urns like "urn:dslforum-org:cwmp-1-0" into
+// CwmpVersion, i.e. (1,0) in this example
+fn cwmp_urn_to_version(urn: &str) -> CwmpVersion {
+    let mut version_string: Vec<&str> = urn.split("-").collect();
+    let mi = if let Some(mi_s) = version_string.pop() {
+        parse_to_int(&mi_s.to_string(), 0)
+    } else {
+        0
+    };
+    let ma = if let Some(ma_s) = version_string.pop() {
+        parse_to_int(&ma_s.to_string(), 0)
+    } else {
+        0
+    };
+
+    CwmpVersion::new(ma, mi)
 }
 
 pub trait Parseable {}
