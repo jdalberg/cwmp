@@ -16,7 +16,7 @@ fn parse_1() {
     };
     test(
         include_bytes!("samples/inform_1.xml"),
-        cwmp::protocol::Envelope::new(String::from("urn:dslforum-org:cwmp-1-0"), 
+        cwmp::protocol::Envelope::new(Some(cwmp::protocol::CwmpVersion::new(1,0)), 
             vec![
                 cwmp::protocol::HeaderElement::ID(cwmp::protocol::ID::new(true, String::from("100"))),
                 cwmp::protocol::HeaderElement::NoMoreRequests(cwmp::protocol::NoMoreRequests::new(true, 1)),
