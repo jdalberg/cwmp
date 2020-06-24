@@ -17,7 +17,7 @@ fn bool2str(b: bool) -> &'static str {
     return if b { "1" } else { "0" };
 }
 fn str2bool(s: &str) -> bool {
-    return if s == "1" { true } else { false };
+    return if s == "0" { false } else { true };
 }
 
 fn write_simple<W: Write>(
@@ -1835,9 +1835,8 @@ impl DUStateChangeComplete {
         match *path {
             ["DUStateChangeComplete", "CommandKey"] => self.command_key = characters.to_string(),
             ["DUStateChangeComplete", "Results", "OpResultStruct", key] => {
-                let last = self.results.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.results.last_mut() {
+                    match key {
                         "UUID" => e.uuid = characters.to_string(),
                         "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
                         "Version" => e.version = characters.to_string(),
@@ -1855,19 +1854,16 @@ impl DUStateChangeComplete {
                             _ => {}
                         },
                         _ => {}
-                    },
-                    None => {}
+                    }
                 }
             }
             ["DUStateChangeComplete", "Results", "OpResultStruct", "Fault", "FaultStruct", key] => {
-                let last = self.results.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.results.last_mut() {
+                    match key {
                         "FaultCode" => e.fault.set_code(parse_to_int(characters, 0)),
                         "FaultString" => e.fault.set_string(characters),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
 
@@ -2160,8 +2156,8 @@ impl GetAllQueuedTransfersResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] => {
-                match self.transfer_list.last_mut() {
-                    Some(last) => match key {
+                if let Some(last) = self.transfer_list.last_mut() {
+                    match key {
                         "CommandKey" => last.command_key = characters.to_string(),
                         "State" => last.state = characters.to_string(),
                         "IsDownload" => last.is_download = parse_to_int(characters, 0),
@@ -2169,8 +2165,7 @@ impl GetAllQueuedTransfersResponse {
                         "FileSize" => last.file_size = parse_to_int(characters, 0),
                         "TargetFileName" => last.target_filename = characters.to_string(),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
             _ => {}
@@ -2308,13 +2303,11 @@ impl GetOptionsResponse {
             write_simple(writer, "VoucherSN", &o.voucher_sn)?;
             write_simple(writer, "State", &o.state.to_string())?;
             write_simple(writer, "Mode", &o.mode)?;
-            match o.start_date {
-                None => {}
-                Some(dt) => write_simple(writer, "StartDate", &dt.to_rfc3339())?,
+            if let Some(dt) = o.start_date {
+                write_simple(writer, "StartDate", &dt.to_rfc3339())?;
             }
-            match o.expiration_date {
-                None => {}
-                Some(dt) => write_simple(writer, "ExpirationDate", &dt.to_rfc3339())?,
+            if let Some(dt) = o.expiration_date {
+                write_simple(writer, "ExpirationDate", &dt.to_rfc3339())?;
             }
             write_simple(writer, "IsTransferable", &o.is_transferable.to_string())?;
 
@@ -2334,15 +2327,7 @@ impl GetOptionsResponse {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["GetOptionsResponse", "OptionList", "OptionStruct"] => {
-                self.option_list.push(OptionStruct::new(
-                    String::from(""),
-                    String::from(""),
-                    0,
-                    String::from(""),
-                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                    0,
-                ))
+                self.option_list.push(OptionStruct::default());
             }
             _ => {}
         }
@@ -2350,8 +2335,8 @@ impl GetOptionsResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetOptionsResponse", "OptionList", "OptionStruct", key] => {
-                match self.option_list.last_mut() {
-                    Some(last) => match key {
+                if let Some(last) = self.option_list.last_mut() {
+                    match key {
                         "OptionName" => last.option_name = characters.to_string(),
                         "VoucherSN" => last.voucher_sn = characters.to_string(),
                         "State" => last.state = parse_to_int(characters, 0),
@@ -2366,8 +2351,7 @@ impl GetOptionsResponse {
                         },
                         "IsTransferable" => last.is_transferable = parse_to_int(characters, 0),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
             _ => {}
@@ -2480,10 +2464,8 @@ impl GetParameterAttributes {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterAttributes", "ParameterNames", "string"] => {
-                let last = self.parameternames.last_mut();
-                match last {
-                    Some(l) => *l = characters.to_string(),
-                    None => {}
+                if let Some(l) = self.parameternames.last_mut() {
+                    *l = characters.to_string();
                 }
             }
             _ => {}
@@ -2607,11 +2589,7 @@ impl GetParameterAttributesResponse {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct"] => {
-                self.parameters.push(ParameterAttribute::new(
-                    String::from(""),
-                    String::from(""),
-                    vec![],
-                ))
+                self.parameters.push(ParameterAttribute::default());
             }
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
                 if let Some(e) = self.parameters.last_mut() {
@@ -2621,7 +2599,6 @@ impl GetParameterAttributesResponse {
             _ => {}
         }
     }
-
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Name"] => {
@@ -2748,17 +2725,13 @@ impl GetParameterNamesResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Name"] => {
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => e.name = characters.to_string(),
-                    None => {}
+                if let Some(e) = self.parameter_list.last_mut() {
+                    e.name = characters.to_string();
                 }
             }
             ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Writable"] => {
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => e.writable = parse_to_int(characters, 0),
-                    None => {}
+                if let Some(e) = self.parameter_list.last_mut() {
+                    e.writable = parse_to_int(characters, 0);
                 }
             }
             _ => {}
@@ -2916,10 +2889,8 @@ impl GetParameterValues {
         match *path {
             // no hit on this if we have <string></string>
             ["GetParameterValues", "ParameterNames", "string"] => {
-                let last = self.parameternames.last_mut();
-                match last {
-                    Some(l) => *l = characters.to_string(),
-                    None => {}
+                if let Some(l) = self.parameternames.last_mut() {
+                    *l = characters.to_string();
                 }
             }
             _ => {}
@@ -2993,38 +2964,27 @@ impl GetParameterValuesResponse {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct"] => {
-                self.parameters.push(ParameterValue::new(
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                ))
+                self.parameters.push(ParameterValue::default());
             }
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.r#type = extract_attribute(attributes, "type"),
-                    None => {}
+                if let Some(e) = self.parameters.last_mut() {
+                    e.r#type = extract_attribute(attributes, "type");
                 }
             }
             _ => {}
         }
     }
-
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Name"] => {
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.name = characters.to_string(),
-                    None => {}
+                if let Some(e) = self.parameters.last_mut() {
+                    e.name = characters.to_string();
                 }
             }
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Value"] => {
-                let last = self.parameters.last_mut();
-                match last {
-                    Some(e) => e.value = characters.to_string(),
-                    None => {}
+                if let Some(e) = self.parameters.last_mut() {
+                    e.value = characters.to_string();
                 }
             }
             _ => {}
@@ -3111,13 +3071,11 @@ impl GetQueuedTransfersResponse {
 
         for p in self.transfer_list.iter() {
             writer.write(XmlEvent::start_element("QueuedTransferStruct"))?;
-            match &p.command_key {
-                Some(ck) => write_simple(writer, "CommandKey", &ck)?,
-                None => {}
+            if let Some(ck) = &p.command_key {
+                write_simple(writer, "CommandKey", &ck)?;
             }
-            match &p.state {
-                Some(s) => write_simple(writer, "State", &s)?,
-                None => {}
+            if let Some(s) = &p.state {
+                write_simple(writer, "State", &s)?;
             }
             writer.write(XmlEvent::end_element())?;
         }
@@ -3137,17 +3095,13 @@ impl GetQueuedTransfersResponse {
                 self.transfer_list.push(QueuedTransferStruct::default())
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "CommandKey"] => {
-                let last = self.transfer_list.last_mut();
-                match last {
-                    Some(l) => l.command_key = Some("".to_string()),
-                    None => {}
+                if let Some(l) = self.transfer_list.last_mut() {
+                    l.command_key = Some("".to_string());
                 }
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "State"] => {
-                let last = self.transfer_list.last_mut();
-                match last {
-                    Some(l) => l.state = Some("".to_string()),
-                    None => {}
+                if let Some(l) = self.transfer_list.last_mut() {
+                    l.state = Some("".to_string());
                 }
             }
             _ => {}
@@ -3156,14 +3110,12 @@ impl GetQueuedTransfersResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", key] => {
-                let last = self.transfer_list.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.transfer_list.last_mut() {
+                    match key {
                         "CommandKey" => e.command_key = Some(characters.to_string()),
                         "State" => e.state = Some(characters.to_string()),
                         _ => {}
-                    },
-                    None => {}
+                    }
                 }
             }
             _ => {}
@@ -3476,9 +3428,8 @@ impl Inform {
         writer.write(XmlEvent::end_element())?;
 
         write_simple(writer, "MaxEnvelopes", &self.max_envelopes.to_string())?;
-        match self.current_time {
-            None => {}
-            Some(dt) => write_simple(writer, "CurrentTime", &dt.to_rfc3339())?,
+        if let Some(dt) = self.current_time {
+            write_simple(writer, "CurrentTime", &dt.to_rfc3339())?;
         }
         write_simple(writer, "RetryCount", &self.retry_count.to_string())?;
 
@@ -3515,10 +3466,8 @@ impl Inform {
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => e.r#type = extract_attribute(attributes, "type"),
-                    None => {}
+                if let Some(e) = self.parameter_list.last_mut() {
+                    e.r#type = extract_attribute(attributes, "type");
                 }
             }
             _ => {}
@@ -3537,14 +3486,12 @@ impl Inform {
                 self.device_id.serial_number = characters.to_string()
             }
             ["Inform", "Event", "EventStruct", key] => {
-                let event = self.event.last_mut();
-                match event {
-                    Some(e) => match key {
+                if let Some(e) = self.event.last_mut() {
+                    match key {
                         "EventCode" => e.event_code = characters.to_string(),
                         "CommandKey" => e.command_key = characters.to_string(),
                         _ => {}
-                    },
-                    None => {}
+                    }
                 }
             }
             ["Inform", "MaxEnvelopes"] => self.max_envelopes = parse_to_int(characters, 0),
@@ -3554,20 +3501,15 @@ impl Inform {
                 _ => {}
             },
             ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
-                let param = self.parameter_list.last_mut();
-                match param {
-                    Some(p) => p.name = characters.to_string(),
-                    None => {}
+                if let Some(p) = self.parameter_list.last_mut() {
+                    p.name = characters.to_string();
                 }
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
-                let param = self.parameter_list.last_mut();
-                match param {
-                    Some(p) => p.value = characters.to_string(),
-                    None => {}
+                if let Some(p) = self.parameter_list.last_mut() {
+                    p.value = characters.to_string();
                 }
             }
-
             _ => {}
         }
     }
@@ -3873,21 +3815,6 @@ impl RequestDownload {
             ["RequestDownload", "FileTypeArg", "ArgStruct"] => {
                 self.file_type_arg.push(ArgStruct::default())
             }
-            // // in case of blanks, where characters wont fire
-            // ["RequestDownload", "FileTypeArg", "ArgStruct", "Name"] => {
-            //     let last = self.file_type_arg.last_mut();
-            //     match last {
-            //         Some(l) => l.name = "".to_string(),
-            //         None => {}
-            //     }
-            // }
-            // ["RequestDownload", "FileTypeArg", "ArgStruct", "Value"] => {
-            //     let last = self.file_type_arg.last_mut();
-            //     match last {
-            //         Some(l) => l.value = "".to_string(),
-            //         None => {}
-            //     }
-            // }
             _ => {}
         }
     }
@@ -3897,14 +3824,12 @@ impl RequestDownload {
                 self.file_type = characters.to_string();
             }
             ["RequestDownload", "FileTypeArg", "ArgStruct", key] => {
-                let last = self.file_type_arg.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.file_type_arg.last_mut() {
+                    match key {
                         "Name" => e.name = characters.to_string(),
                         "Value" => e.value = characters.to_string(),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
 
@@ -4128,17 +4053,15 @@ impl ScheduleDownload {
                 self.target_filename = characters.to_string();
             }
             ["ScheduleDownload", "TimeWindowList", "TimeWindowStruct", key] => {
-                let last = self.timewindow_list.last_mut();
-                match last {
-                    Some(e) => match key {
+                if let Some(e) = self.timewindow_list.last_mut() {
+                    match key {
                         "WindowStart" => e.window_start = parse_to_int(characters, 0),
                         "WindowEnd" => e.window_end = parse_to_int(characters, 0),
                         "WindowMode" => e.window_mode = characters.to_string(),
                         "UserMessage" => e.user_message = characters.to_string(),
                         "MaxRetries" => e.max_retries = parse_to_int(characters, 0),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
 
@@ -4557,10 +4480,8 @@ impl SetParameterValues {
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => e.r#type = extract_attribute(attributes, "type"),
-                    None => {}
+                if let Some(p) = self.parameter_list.last_mut() {
+                    p.r#type = extract_attribute(attributes, "type");
                 }
             }
             _ => {}
@@ -4572,14 +4493,12 @@ impl SetParameterValues {
                 self.parameter_key = Some(characters.to_string())
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
-                let last = self.parameter_list.last_mut();
-                match last {
-                    Some(e) => match key {
-                        "Name" => e.name = characters.to_string(),
-                        "Value" => e.value = characters.to_string(),
+                if let Some(p) = self.parameter_list.last_mut() {
+                    match key {
+                        "Name" => p.name = characters.to_string(),
+                        "Value" => p.value = characters.to_string(),
                         _ => {}
-                    },
-                    _ => {}
+                    }
                 }
             }
             _ => {}
@@ -4667,10 +4586,8 @@ impl SetVouchers {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["SetVouchers", "VoucherList", "base64"] => {
-                let last = self.voucher_list.last_mut();
-                match last {
-                    Some(e) => *e = characters.to_string(),
-                    _ => {}
+                if let Some(v) = self.voucher_list.last_mut() {
+                    *v = characters.to_string();
                 }
             }
             _ => {}
@@ -4742,13 +4659,11 @@ impl TransferComplete {
         ))?;
         write_simple(writer, "CommandKey", &self.command_key)?;
         write_fault_struct(writer, &self.fault)?;
-        match self.start_time {
-            None => {}
-            Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
+        if let Some(dt) = self.start_time {
+            write_simple(writer, "StartTime", &dt.to_rfc3339())?;
         }
-        match self.complete_time {
-            None => {}
-            Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
+        if let Some(dt) = self.complete_time {
+            write_simple(writer, "CompleteTime", &dt.to_rfc3339())?;
         }
 
         writer.write(XmlEvent::end_element())?;
@@ -4827,13 +4742,11 @@ impl UploadResponse {
             &cwmp_prefix(has_cwmp, "UploadResponse")[..],
         ))?;
         write_simple(writer, "Status", &self.status.to_string())?;
-        match self.start_time {
-            None => {}
-            Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
+        if let Some(dt) = self.start_time {
+            write_simple(writer, "StartTime", &dt.to_rfc3339())?;
         }
-        match self.complete_time {
-            None => {}
-            Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
+        if let Some(dt) = self.complete_time {
+            write_simple(writer, "CompleteTime", &dt.to_rfc3339())?;
         }
         writer.write(XmlEvent::end_element())?;
         Ok(())
@@ -5673,17 +5586,10 @@ impl Envelope {
                 if path_pattern.len() == 3 {
                     // an actual new Body element
                     match *body_element {
-                        "AddObject" => self.body.push(BodyElement::AddObject(AddObject {
-                            object_name: String::from(""),
-                            parameter_key: String::from(""),
-                        })),
-                        "AddObjectResponse" => {
-                            self.body
-                                .push(BodyElement::AddObjectResponse(AddObjectResponse {
-                                    instance_number: 0,
-                                    status: String::from("0"),
-                                }))
-                        }
+                        "AddObject" => self.body.push(BodyElement::AddObject(AddObject::default())),
+                        "AddObjectResponse" => self
+                            .body
+                            .push(BodyElement::AddObjectResponse(AddObjectResponse::default())),
                         "AutonomousDUStateChangeCompleteResponse" => {
                             self.body
                                 .push(BodyElement::AutonomousDUStateChangeCompleteResponse(
@@ -5703,110 +5609,64 @@ impl Envelope {
                         }
                         "AutonomousTransferComplete" => {
                             self.body.push(BodyElement::AutonomousTransferComplete(
-                                AutonomousTransferComplete::new(
-                                    String::from(""),
-                                    String::from(""),
-                                    0,
-                                    String::from(""),
-                                    0,
-                                    String::from(""),
-                                    FaultStruct::new(0, String::from("")),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                ),
+                                AutonomousTransferComplete::default(),
                             ))
                         }
                         "CancelTransferResponse" => self.body.push(
                             BodyElement::CancelTransferResponse(CancelTransferResponse {}),
                         ),
-                        "CancelTransfer" => {
-                            self.body
-                                .push(BodyElement::CancelTransfer(CancelTransfer::new(
-                                    String::from(""),
-                                )))
-                        }
+                        "CancelTransfer" => self
+                            .body
+                            .push(BodyElement::CancelTransfer(CancelTransfer::default())),
                         "ChangeDUStateResponse" => self
                             .body
                             .push(BodyElement::ChangeDUStateResponse(ChangeDUStateResponse {})),
-                        "ChangeDUState" => {
-                            self.body
-                                .push(BodyElement::ChangeDUState(ChangeDUState::new(
-                                    String::from(""),
-                                    vec![],
-                                    vec![],
-                                    vec![],
-                                )))
-                        }
-                        "DeleteObjectResponse" => {
-                            self.body.push(BodyElement::DeleteObjectResponse(
-                                DeleteObjectResponse::new(String::from("")),
-                            ))
-                        }
-                        "DeleteObject" => self.body.push(BodyElement::DeleteObject(
-                            DeleteObject::new(String::from(""), String::from("")),
-                        )),
-                        "DownloadResponse" => {
-                            self.body
-                                .push(BodyElement::DownloadResponse(DownloadResponse::new(
-                                    String::from(""),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                    Utc.ymd(1970, 1, 1).and_hms(0, 0, 0),
-                                )))
-                        }
-                        "Download" => self.body.push(BodyElement::Download(Download::new(
-                            String::from(""),
-                            String::from(""),
-                            String::from(""),
-                            String::from(""),
-                            String::from(""),
-                            0,
-                            String::from(""),
-                            0,
-                            String::from(""),
-                            String::from(""),
-                        ))),
+                        "ChangeDUState" => self
+                            .body
+                            .push(BodyElement::ChangeDUState(ChangeDUState::default())),
+                        "DeleteObjectResponse" => self.body.push(
+                            BodyElement::DeleteObjectResponse(DeleteObjectResponse::default()),
+                        ),
+                        "DeleteObject" => self
+                            .body
+                            .push(BodyElement::DeleteObject(DeleteObject::default())),
+                        "DownloadResponse" => self
+                            .body
+                            .push(BodyElement::DownloadResponse(DownloadResponse::default())),
+                        "Download" => self.body.push(BodyElement::Download(Download::default())),
                         "DUStateChangeCompleteResponse" => {
                             self.body.push(BodyElement::DUStateChangeCompleteResponse(
                                 DUStateChangeCompleteResponse {},
                             ))
                         }
-                        "DUStateChangeComplete" => {
-                            self.body.push(BodyElement::DUStateChangeComplete(
-                                DUStateChangeComplete::new(String::from(""), vec![]),
-                            ))
-                        }
+                        "DUStateChangeComplete" => self.body.push(
+                            BodyElement::DUStateChangeComplete(DUStateChangeComplete::default()),
+                        ),
                         "FactoryResetResponse" => self
                             .body
                             .push(BodyElement::FactoryResetResponse(FactoryResetResponse {})),
                         "FactoryReset" => {
                             self.body.push(BodyElement::FactoryReset(FactoryReset {}))
                         }
-                        "Fault" => self.body.push(BodyElement::Fault(Fault::new(
-                            String::from(""),
-                            String::from(""),
-                            0,
-                            String::from(""),
-                        ))),
+                        "Fault" => self.body.push(BodyElement::Fault(Fault::default())),
                         "GetAllQueuedTransfersResponse" => {
                             self.body.push(BodyElement::GetAllQueuedTransfersResponse(
-                                GetAllQueuedTransfersResponse::new(vec![]),
+                                GetAllQueuedTransfersResponse::default(),
                             ))
                         }
                         "GetAllQueuedTransfers" => self
                             .body
                             .push(BodyElement::GetAllQueuedTransfers(GetAllQueuedTransfers {})),
                         "GetOptionsResponse" => self.body.push(BodyElement::GetOptionsResponse(
-                            GetOptionsResponse::new(vec![]),
+                            GetOptionsResponse::default(),
                         )),
                         "GetOptions" => self.body.push(BodyElement::GetOptions(Default::default())),
                         "GetParameterAttributes" => self.body.push(
-                            BodyElement::GetParameterAttributes(GetParameterAttributes {
-                                parameternames: vec![],
-                            }),
+                            BodyElement::GetParameterAttributes(GetParameterAttributes::default()),
                         ),
                         "GetParameterAttributesResponse" => {
                             self.body.push(BodyElement::GetParameterAttributesResponse(
-                                GetParameterAttributesResponse { parameters: vec![] },
+                                GetParameterAttributesResponse::default(),
                             ))
                         }
                         "GetParameterNamesResponse" => {
@@ -5817,27 +5677,24 @@ impl Envelope {
                         "GetParameterNames" => self
                             .body
                             .push(BodyElement::GetParameterNames(GetParameterNames::default())),
-                        "GetParameterValues" => {
-                            self.body
-                                .push(BodyElement::GetParameterValues(GetParameterValues {
-                                    parameternames: vec![],
-                                }))
-                        }
+                        "GetParameterValues" => self.body.push(BodyElement::GetParameterValues(
+                            GetParameterValues::default(),
+                        )),
                         "GetParameterValuesResponse" => {
                             self.body.push(BodyElement::GetParameterValuesResponse(
-                                GetParameterValuesResponse { parameters: vec![] },
+                                GetParameterValuesResponse::default(),
                             ))
                         }
                         "GetQueuedTransfersResponse" => {
                             self.body.push(BodyElement::GetQueuedTransfersResponse(
-                                GetQueuedTransfersResponse::new(vec![]),
+                                GetQueuedTransfersResponse::default(),
                             ))
                         }
                         "GetQueuedTransfers" => self
                             .body
                             .push(BodyElement::GetQueuedTransfers(GetQueuedTransfers {})),
                         "GetRPCMethodsResponse" => self.body.push(
-                            BodyElement::GetRPCMethodsResponse(GetRPCMethodsResponse::new(vec![])),
+                            BodyElement::GetRPCMethodsResponse(GetRPCMethodsResponse::default()),
                         ),
                         "GetRPCMethods" => {
                             self.body.push(BodyElement::GetRPCMethods(GetRPCMethods {}))
