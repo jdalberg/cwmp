@@ -1,7 +1,5 @@
 name: Rust
 
-before_install: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
-
 on:
   push:
     branches: [ master ]
@@ -14,6 +12,8 @@ env:
   RUSTDOCFLAGS: -Cpanic=abort
 
 jobs:
+  before_install: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+
   build:
 
     runs-on: ubuntu-latest
