@@ -12,7 +12,6 @@ env:
   RUSTDOCFLAGS: -Cpanic=abort
 
 jobs:
-  before_install: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
 
   build:
 
@@ -20,6 +19,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Grcov Install
+      run: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
     - name: Build
       run: cargo build --verbose
     - name: Run tests
