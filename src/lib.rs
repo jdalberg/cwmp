@@ -1604,23 +1604,23 @@ mod tests {
         test_gap(&e);
     }
 
-    // #[quickcheck]
-    // fn gen_and_parse(e: Envelope) -> bool {
-    //     match generate(&e) {
-    //         Ok(xml) => match parse(xml) {
-    //             Ok(r) => r == e,
-    //             Err(e) => {
-    //                 println!("ERROR DURING PARSE: {:?}", e);
-    //                 false
-    //             }
-    //         },
-    //         Err(e) => {
-    //             println!("ERROR DURING GENERATE: {:?}", e);
-    //             false 
-    //         }
+    #[quickcheck]
+    fn gen_and_parse(e: Envelope) -> bool {
+        match generate(&e) {
+            Ok(xml) => match parse(xml) {
+                Ok(r) => r == e,
+                Err(e) => {
+                    println!("ERROR DURING PARSE: {:?}", e);
+                    false
+                }
+            },
+            Err(e) => {
+                println!("ERROR DURING GENERATE: {:?}", e);
+                false 
+            }
 
-    //     }
-    // }
+        }
+    }
    
 
 }
