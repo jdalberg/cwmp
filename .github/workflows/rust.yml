@@ -34,24 +34,19 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install grcov
         run: curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
-      - name: Build
+      - name: Ensure nightly toolchain
+        uses: actions-rs/toolchain@v1
         with:    
-          toolchain: nightly
+                  toolchain: nightly
+
+      - name: Build
         run: cargo build --verbose
       - name: Run tests
-        with:    
-            toolchain: nightly
         run: cargo test --verbose
       - name: Coverage Zip
-        with:    
-              toolchain: nightly
         run: zip -0 ccov.zip `find . \( -name "cwmp*.gc*" \) -print`
       - name: Coverage generate lcov.info
-        with:    
-              toolchain: nightly
         run: ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info
       - name: Coverage parse lcov.info
-        with:    
-              toolchain: nightly
         run: bash <(curl -s https://codecov.io/bash) -f lcov.info
         
