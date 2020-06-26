@@ -37,12 +37,12 @@ jobs:
       - name: Ensure nightly toolchain
         uses: actions-rs/toolchain@v1
         with:    
-                  toolchain: nightly
+          toolchain: nightly
 
       - name: Build
-        run: cargo build --verbose
+        run: cargo +nightly build --verbose
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo +nightly test --verbose
       - name: Coverage Zip
         run: zip -0 ccov.zip `find . \( -name "cwmp*.gc*" \) -print`
       - name: Coverage generate lcov.info
