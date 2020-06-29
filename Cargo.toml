@@ -10,8 +10,8 @@ edition = "2018"
 xml-rs = { git = "https://github.com/jdalberg/xml-rs", branch = "parsefix" }
 log = "0.4.8"
 chrono = "0.4.0"
-quickcheck = "0.9"
-quickcheck_macros = "0.9"
+quickcheck = "0.9.1"
+quickcheck_macros = "0.9.1"
 rand = "0.7.3"
 
 
