@@ -1,8 +1,8 @@
 name: Coverage
 
 on:
-  schedule:
-    - cron:  '0 2 * * *'
+  push:
+    branches: [ master ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,7 +33,7 @@ jobs:
       - name: Coverage Zip
         run: zip -0 ccov.zip `find . \( -name "cwmp*.gc*" \) -print`
       - name: Coverage generate lcov.info
-        run: ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore-not-existing --excl-start "    fn shrink" --excl-stop "^    }" --ignore "/*" -o lcov.info
+        run: ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --excl-start "    fn shrink" --excl-stop "^    }" --ignore "/*" -o lcov.info
       - name: Coverage parse lcov.info
         run: bash <(curl -s https://codecov.io/bash) -f lcov.info -t b5f52310-db75-4eb7-aba3-d6726960a42c
         
