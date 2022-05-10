@@ -1,3 +1,4 @@
+#[cfg(test)]
 use chrono::prelude::TimeZone;
 use chrono::{DateTime, Utc};
 use core::fmt::Debug;
