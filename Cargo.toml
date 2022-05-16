@@ -8,7 +8,7 @@ description = "Parse and generate CWMP messages"
 repository = "https://github.com/jdalberg/cwmp/"
 readme = "README.md"
 keywords = ["cwmp", "tr-069", "acs"]
-categories = ["parsers"]
+categories = ["parsing"]
 
 [dependencies]
 xml-rs = "0.8"
