@@ -20,10 +20,14 @@ doctest!("../README.md");
 
 // parse a CWMP XML envelope and convert it to a rust struct
 pub fn parse(xml: String) -> Result<Envelope, Box<dyn Error>> {
-    let config = ParserConfig::new()
+    parse_bytes(xml.as_bytes())
+}
+
+pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
+     let config = ParserConfig::new()
         .trim_whitespace(false)
         .whitespace_to_characters(true);
-    let parser = config.create_reader(xml.as_bytes());
+    let parser = config.create_reader(xml);
     let mut state: State = State::new();
     for e in parser {
         match e {
@@ -55,7 +59,6 @@ pub fn parse(xml: String) -> Result<Envelope, Box<dyn Error>> {
         Some(b) => Err(b),
     }
 }
-
 pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> {
     envelope.generate()
 }
@@ -67,7 +70,10 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 #[cfg(test)]
 mod tests {
+    use crate::protocol::*;
+
     use super::*;
+    use chrono::{Utc, TimeZone};
     use protocol::Envelope;
     extern crate quickcheck;
 
@@ -84,6 +90,45 @@ mod tests {
             Err(e) => {
                 println!("ERROR DURING GENERATE: {:?}", e);
                 false
+            }
+        }
+    }
+
+    #[test]
+    fn bytes() {
+        let e: Envelope = Envelope::new(
+            Some(CwmpVersion::new(1,0)), 
+            vec![HeaderElement::ID(ID::new(true,String::from("1234")))], 
+            vec![BodyElement::Inform(
+                    Inform::new(
+                        DeviceId::new(String::from("MyManufacturer"), String::from("OUI"), String::from("MyProductClass"), String::from("S123456")),
+                        vec![EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
+                        1,
+                        Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+                        0,
+                        vec![
+                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceSummary"),String::from("xsd:string"),String::from("InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.SpecVersion"),String::from("xsd:string"),String::from("1.0")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.HardwareVersion"),String::from("xsd:string"),String::from("HW1.0")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.SoftwareVersion"),String::from("xsd:string"),String::from("V1.00(beta)")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.ProvisioningCode"),String::from("xsd:string"),String::from("")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.ManagementServer.ConnectionRequestURL"),String::from("xsd:string"),String::from("http://2.2.2.2:7676/CWMP/ConnectionRequest")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.ManagementServer.ParameterKey"),String::from("xsd:string"),String::from("")),
+                            ParameterValue::new(String::from("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress"),String::from("xsd:string"),String::from("2.2.2.2")),
+                        ],
+        
+                    )
+                )
+            ]);
+        match generate(&e) {
+            Ok(xml) => match parse_bytes(xml.as_bytes()) {
+                Ok(r) => assert_eq!(r , e),
+                Err(e) => {
+                    panic!("ERROR DURING PARSE: {:?}", e);
+                }
+            },
+            Err(e) => {
+                panic!("ERROR DURING GENERATE: {:?}", e);
             }
         }
     }
