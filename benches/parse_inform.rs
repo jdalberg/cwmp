@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cwmp::parse;
 
 fn criterion_benchmark(c: &mut Criterion) {
-  c.bench_function("parse add_object", |b| b.iter(|| parse(black_box(String::from(r#"<SOAP-ENV:Envelope
+    c.bench_function("parse add_object", |b| b.iter(|| parse(black_box(r#"<SOAP-ENV:Envelope
     SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
     xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
@@ -66,7 +66,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         </ParameterList>
       </cwmp:Inform>
     </SOAP-ENV:Body>
-  </SOAP-ENV:Envelope>"#)))));
+  </SOAP-ENV:Envelope>"#))));
 }
 
 criterion_group!(benches, criterion_benchmark);

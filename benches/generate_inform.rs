@@ -3,12 +3,19 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cwmp::generate;
 use cwmp::protocol::*;
 
+fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
+    NaiveDate::from_ymd_opt(year, mon, day)
+        .unwrap_or(NaiveDate::default())
+        .and_hms_opt(hour, min, sec)
+        .unwrap_or(NaiveDateTime::default())
+        .and_utc()
+}
 fn criterion_benchmark(c: &mut Criterion) {
     let e: Envelope = Envelope::new(Some(CwmpVersion::new(1,0)), vec![HeaderElement::ID(ID::new(true, "1234".to_string()))],vec![BodyElement::Inform(Inform::new(
         DeviceId::new(String::from("The Company"), String::from("AA1234"), String::from("IAD_001"), String::from("S99998888")),
         vec![EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
         1,
-        Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+        gen_utc_date(2014, 11, 28, 12, 0, 9),
         0,
         vec![
             ParameterValue::new(String::from("InternetGatewayDevice.DeviceSummary"),String::from("xsd:string"),String::from("InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)")),
