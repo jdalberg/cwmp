@@ -1,6 +1,6 @@
 [package]
 name = "cwmp"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Jesper Dalberg"]
 edition = "2018"
 license = "Unlicense"
@@ -12,15 +12,15 @@ categories = ["parsing"]
 
 [dependencies]
 xml-rs = "0.8"
-log = "0.4.8"
-chrono = "0.4.0"
-rand = "0.7.3"
+log = "0.4"
+chrono = "0.4"
+rand = "0.8"
 
 [dev-dependencies]
 doc-comment = "0.3"
 criterion = "0.3"
-quickcheck = "0.9"
-quickcheck_macros = "0.9"
+quickcheck = "1"
+quickcheck_macros = "1"
 
 [[bench]]
 name = "parse_add_object"
