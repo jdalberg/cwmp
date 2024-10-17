@@ -1,5 +1,3 @@
-#[cfg(test)]
-use chrono::prelude::TimeZone;
 use chrono::{DateTime, Utc};
 use core::fmt::Debug;
 use log::warn;
@@ -10,9 +8,11 @@ use xml::writer::{EmitterConfig, XmlEvent};
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
+use chrono::{NaiveDate, NaiveDateTime};
+#[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 #[cfg(test)]
-use rand::seq::SliceRandom;
+use rand::Rng;
 
 fn bool2str(b: bool) -> &'static str {
     return if b { "1" } else { "0" };
@@ -92,7 +92,7 @@ impl ID {
 
 #[cfg(test)]
 impl Arbitrary for ID {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ID::new(bool::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -139,7 +139,7 @@ impl HoldRequests {
 
 #[cfg(test)]
 impl Arbitrary for HoldRequests {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         HoldRequests::new(bool::arbitrary(g), bool::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -184,7 +184,7 @@ impl SessionTimeout {
 
 #[cfg(test)]
 impl Arbitrary for SessionTimeout {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SessionTimeout::new(bool::arbitrary(g), u32::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -230,7 +230,7 @@ impl NoMoreRequests {
 
 #[cfg(test)]
 impl Arbitrary for NoMoreRequests {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         NoMoreRequests::new(bool::arbitrary(g), u8::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -276,7 +276,7 @@ impl SupportedCWMPVersions {
 
 #[cfg(test)]
 impl Arbitrary for SupportedCWMPVersions {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SupportedCWMPVersions::new(bool::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -322,7 +322,7 @@ impl UseCWMPVersion {
 
 #[cfg(test)]
 impl Arbitrary for UseCWMPVersion {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         UseCWMPVersion::new(bool::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -349,7 +349,7 @@ pub enum HeaderElement {
 
 #[cfg(test)]
 impl Arbitrary for HeaderElement {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         let vals = vec![
             HeaderElement::ID(ID::arbitrary(g)),
             HeaderElement::HoldRequests(HoldRequests::arbitrary(g)),
@@ -358,7 +358,16 @@ impl Arbitrary for HeaderElement {
             HeaderElement::SupportedCWMPVersions(SupportedCWMPVersions::arbitrary(g)),
             HeaderElement::UseCWMPVersion(UseCWMPVersion::arbitrary(g)),
         ];
-        vals.choose(g).unwrap().clone()
+        let mut rng = rand::thread_rng();
+        let idxs = std::ops::Range {
+            start: 0,
+            end: vals.len() - 1,
+        };
+        let random_index: usize = rng.gen_range(idxs);
+        match vals.get(random_index) {
+            Some(v) => v.clone(),
+            None => HeaderElement::ID(ID::arbitrary(g)),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
@@ -405,7 +414,7 @@ impl FaultStruct {
 
 #[cfg(test)]
 impl Arbitrary for FaultStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         FaultStruct::new(u32::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -465,7 +474,7 @@ impl AddObjectResponse {
 
 #[cfg(test)]
 impl Arbitrary for AddObjectResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         AddObjectResponse::new(u32::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -522,7 +531,7 @@ impl AddObject {
 
 #[cfg(test)]
 impl Arbitrary for AddObject {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         AddObject::new(String::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -598,10 +607,19 @@ impl AutonOpResult {
 }
 
 #[cfg(test)]
+pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
+    NaiveDate::from_ymd_opt(year, mon, day)
+        .unwrap_or(NaiveDate::default())
+        .and_hms_opt(hour, min, sec)
+        .unwrap_or(NaiveDateTime::default())
+        .and_utc()
+}
+
+#[cfg(test)]
 impl Arbitrary for AutonOpResult {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        let bogus_st = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
-        let bogus_ct = Utc.ymd(2014, 11, 29).and_hms(12, 0, 9);
+    fn arbitrary(g: &mut Gen) -> Self {
+        let bogus_st = gen_utc_date(2014, 11, 28, 12, 0, 9);
+        let bogus_ct = gen_utc_date(2014, 11, 28, 12, 0, 9);
 
         AutonOpResult::new(
             String::arbitrary(g),
@@ -643,8 +661,8 @@ impl Arbitrary for AutonOpResult {
                     current_state: cs,
                     resolved: res,
                     execution_unit_ref_list: eurl,
-                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+                    complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
                     fault: f,
                     operation_performed: op,
                 }),
@@ -774,7 +792,7 @@ impl AutonomousDUStateChangeComplete {
 
 #[cfg(test)]
 impl Arbitrary for AutonomousDUStateChangeComplete {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         AutonomousDUStateChangeComplete::new(Vec::<AutonOpResult>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -912,7 +930,7 @@ impl AutonomousTransferComplete {
 
 #[cfg(test)]
 impl Arbitrary for AutonomousTransferComplete {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         // times are not arbitrary due to qc
         // tuple (used in shrink) limitations
         AutonomousTransferComplete::new(
@@ -923,8 +941,8 @@ impl Arbitrary for AutonomousTransferComplete {
             u32::arbitrary(g),
             String::arbitrary(g),
             FaultStruct::arbitrary(g),
-            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
-            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+            gen_utc_date(2014, 11, 28, 12, 0, 9),
+            gen_utc_date(2014, 11, 29, 12, 0, 9),
         )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -947,8 +965,8 @@ impl Arbitrary for AutonomousTransferComplete {
                     file_size: fs,
                     target_filename: tf,
                     fault: f,
-                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+                    complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
                 }),
         )
     }
@@ -1004,7 +1022,7 @@ impl CancelTransfer {
 
 #[cfg(test)]
 impl Arbitrary for CancelTransfer {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         CancelTransfer::new(String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -1060,7 +1078,7 @@ impl InstallOp {
 
 #[cfg(test)]
 impl Arbitrary for InstallOp {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         InstallOp::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -1109,7 +1127,7 @@ impl UninstallOp {
 
 #[cfg(test)]
 impl Arbitrary for UninstallOp {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         UninstallOp::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -1162,7 +1180,7 @@ impl UpdateOp {
 
 #[cfg(test)]
 impl Arbitrary for UpdateOp {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         UpdateOp::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -1340,7 +1358,7 @@ impl ChangeDUState {
 
 #[cfg(test)]
 impl Arbitrary for ChangeDUState {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ChangeDUState::new(
             String::arbitrary(g),
             Vec::<InstallOp>::arbitrary(g),
@@ -1399,7 +1417,7 @@ impl DeleteObjectResponse {
 
 #[cfg(test)]
 impl Arbitrary for DeleteObjectResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         DeleteObjectResponse::new(String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -1454,7 +1472,7 @@ impl DeleteObject {
 
 #[cfg(test)]
 impl Arbitrary for DeleteObject {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         DeleteObject::new(String::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -1525,18 +1543,17 @@ impl DownloadResponse {
 
 #[cfg(test)]
 impl Arbitrary for DownloadResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        DownloadResponse::new(
-            String::arbitrary(g),
-            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
-            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
-        )
+    fn arbitrary(g: &mut Gen) -> Self {
+        let bogus_st = gen_utc_date(2014, 11, 28, 12, 0, 9);
+        let bogus_ct = gen_utc_date(2014, 11, 28, 12, 0, 9);
+
+        DownloadResponse::new(String::arbitrary(g), bogus_st, bogus_ct)
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(self.status.clone().shrink().map(|s| DownloadResponse {
             status: s,
-            start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-            complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+            start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
         }))
     }
 }
@@ -1622,7 +1639,7 @@ impl Download {
 
 #[cfg(test)]
 impl Arbitrary for Download {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         Download::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -1706,7 +1723,7 @@ impl OpResult {
 
 #[cfg(test)]
 impl Arbitrary for OpResult {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         OpResult::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -1714,8 +1731,8 @@ impl Arbitrary for OpResult {
             String::arbitrary(g),
             u32::arbitrary(g),
             String::arbitrary(g),
-            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
-            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+            gen_utc_date(2014, 11, 28, 12, 0, 9),
+            gen_utc_date(2014, 11, 29, 12, 0, 9),
             FaultStruct::arbitrary(g),
         )
     }
@@ -1738,8 +1755,8 @@ impl Arbitrary for OpResult {
                     current_state: cs,
                     resolved: r,
                     execution_unit_ref_list: eurl,
-                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+                    complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
                     fault: f,
                 }),
         )
@@ -1875,7 +1892,7 @@ impl DUStateChangeComplete {
 
 #[cfg(test)]
 impl Arbitrary for DUStateChangeComplete {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         DUStateChangeComplete::new(String::arbitrary(g), Vec::<OpResult>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -1935,7 +1952,7 @@ impl FaultDetail {
 
 #[cfg(test)]
 impl Arbitrary for FaultDetail {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         FaultDetail::new(u32::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2000,7 +2017,7 @@ impl Fault {
 
 #[cfg(test)]
 impl Arbitrary for Fault {
-    fn arbitrary<G: Gen>(g: &mut G) -> Fault {
+    fn arbitrary(g: &mut Gen) -> Fault {
         Fault::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -2057,7 +2074,7 @@ impl AllQueuedTransfers {
 
 #[cfg(test)]
 impl Arbitrary for AllQueuedTransfers {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         AllQueuedTransfers::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -2176,7 +2193,7 @@ impl GetAllQueuedTransfersResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetAllQueuedTransfersResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetAllQueuedTransfersResponse::new(Vec::<AllQueuedTransfers>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2238,14 +2255,14 @@ impl OptionStruct {
 
 #[cfg(test)]
 impl Arbitrary for OptionStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         OptionStruct::new(
             String::arbitrary(g),
             String::arbitrary(g),
             u8::arbitrary(g),
             String::arbitrary(g),
-            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
-            Utc.ymd(2014, 11, 29).and_hms(12, 0, 9),
+            gen_utc_date(2014, 11, 28, 12, 0, 9),
+            gen_utc_date(2014, 11, 29, 12, 0, 9),
             u8::arbitrary(g),
         )
     }
@@ -2265,8 +2282,8 @@ impl Arbitrary for OptionStruct {
                     state: s,
                     mode: m,
                     is_transferable: i,
-                    start_date: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-                    expiration_date: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    start_date: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+                    expiration_date: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
                 }),
         )
     }
@@ -2362,7 +2379,7 @@ impl GetOptionsResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetOptionsResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetOptionsResponse::new(Vec::<OptionStruct>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2408,7 +2425,7 @@ impl GetOptions {
 
 #[cfg(test)]
 impl Arbitrary for GetOptions {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetOptions::new(String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2476,7 +2493,7 @@ impl GetParameterAttributes {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterAttributes {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterAttributes::new(Vec::<String>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2507,7 +2524,7 @@ impl ParameterAttribute {
 
 #[cfg(test)]
 impl Arbitrary for ParameterAttribute {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ParameterAttribute::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -2626,7 +2643,7 @@ impl GetParameterAttributesResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterAttributesResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterAttributesResponse::new(Vec::<ParameterAttribute>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2656,7 +2673,7 @@ impl ParameterInfoStruct {
 
 #[cfg(test)]
 impl Arbitrary for ParameterInfoStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ParameterInfoStruct::new(String::arbitrary(g), u8::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2742,7 +2759,7 @@ impl GetParameterNamesResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterNamesResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterNamesResponse::new(Vec::<ParameterInfoStruct>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2791,7 +2808,7 @@ impl GetParameterNames {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterNames {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterNames::new(String::arbitrary(g), u32::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2825,7 +2842,7 @@ impl ParameterValue {
 
 #[cfg(test)]
 impl Arbitrary for ParameterValue {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ParameterValue::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -2901,7 +2918,7 @@ impl GetParameterValues {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterValues {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterValues::new(Vec::<String>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -2995,7 +3012,7 @@ impl GetParameterValuesResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetParameterValuesResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetParameterValuesResponse::new(Vec::<ParameterValue>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3025,7 +3042,7 @@ impl QueuedTransferStruct {
 
 #[cfg(test)]
 impl Arbitrary for QueuedTransferStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         QueuedTransferStruct::new(
             Option::<String>::arbitrary(g),
             Option::<String>::arbitrary(g),
@@ -3126,7 +3143,7 @@ impl GetQueuedTransfersResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetQueuedTransfersResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetQueuedTransfersResponse::new(Vec::<QueuedTransferStruct>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3213,7 +3230,7 @@ impl GetRPCMethodsResponse {
 
 #[cfg(test)]
 impl Arbitrary for GetRPCMethodsResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         GetRPCMethodsResponse::new(Vec::<String>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3275,7 +3292,7 @@ impl InformResponse {
 
 #[cfg(test)]
 impl Arbitrary for InformResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         InformResponse::new(u16::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3313,7 +3330,7 @@ impl DeviceId {
 
 #[cfg(test)]
 impl Arbitrary for DeviceId {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         DeviceId::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -3357,7 +3374,7 @@ impl EventStruct {
 
 #[cfg(test)]
 impl Arbitrary for EventStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         EventStruct::new(String::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3518,12 +3535,12 @@ impl Inform {
 
 #[cfg(test)]
 impl Arbitrary for Inform {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         Inform::new(
             DeviceId::arbitrary(g),
             Vec::<EventStruct>::arbitrary(g),
             u32::arbitrary(g),
-            Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+            gen_utc_date(2014, 11, 28, 12, 0, 9),
             u32::arbitrary(g),
             Vec::<ParameterValue>::arbitrary(g),
         )
@@ -3542,7 +3559,7 @@ impl Arbitrary for Inform {
                     device_id: d,
                     event: e,
                     max_envelopes: m,
-                    current_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
+                    current_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
                     retry_count: r,
                     parameter_list: p,
                 }),
@@ -3583,7 +3600,7 @@ impl KickedResponse {
 
 #[cfg(test)]
 impl Arbitrary for KickedResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         KickedResponse::new(String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3649,7 +3666,7 @@ impl Kicked {
 
 #[cfg(test)]
 impl Arbitrary for Kicked {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         Kicked::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -3725,7 +3742,7 @@ impl Reboot {
 
 #[cfg(test)]
 impl Arbitrary for Reboot {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         Reboot::new(String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3755,7 +3772,7 @@ impl ArgStruct {
 
 #[cfg(test)]
 impl Arbitrary for ArgStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ArgStruct::new(String::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3841,7 +3858,7 @@ impl RequestDownload {
 
 #[cfg(test)]
 impl Arbitrary for RequestDownload {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         RequestDownload::new(String::arbitrary(g), Vec::<ArgStruct>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -3918,7 +3935,7 @@ impl TimeWindow {
 
 #[cfg(test)]
 impl Arbitrary for TimeWindow {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         TimeWindow::new(
             u32::arbitrary(g),
             u32::arbitrary(g),
@@ -4073,7 +4090,7 @@ impl ScheduleDownload {
 
 #[cfg(test)]
 impl Arbitrary for ScheduleDownload {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ScheduleDownload::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -4167,7 +4184,7 @@ impl ScheduleInform {
 
 #[cfg(test)]
 impl Arbitrary for ScheduleInform {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         ScheduleInform::new(u32::arbitrary(g), String::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -4228,7 +4245,7 @@ impl SetParameterAttributesStruct {
 
 #[cfg(test)]
 impl Arbitrary for SetParameterAttributesStruct {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SetParameterAttributesStruct::new(
             String::arbitrary(g),
             u8::arbitrary(g),
@@ -4358,7 +4375,7 @@ impl SetParameterAttributes {
 
 #[cfg(test)]
 impl Arbitrary for SetParameterAttributes {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SetParameterAttributes::new(Vec::<SetParameterAttributesStruct>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -4402,7 +4419,7 @@ impl SetParameterValuesResponse {
 
 #[cfg(test)]
 impl Arbitrary for SetParameterValuesResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SetParameterValuesResponse::new(u32::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -4509,7 +4526,7 @@ impl SetParameterValues {
 
 #[cfg(test)]
 impl Arbitrary for SetParameterValues {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SetParameterValues::new(
             Option::<String>::arbitrary(g),
             Vec::<ParameterValue>::arbitrary(g),
@@ -4598,7 +4615,7 @@ impl SetVouchers {
 
 #[cfg(test)]
 impl Arbitrary for SetVouchers {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         SetVouchers::new(Vec::<String>::arbitrary(g))
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -4693,12 +4710,12 @@ impl TransferComplete {
 
 #[cfg(test)]
 impl Arbitrary for TransferComplete {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         TransferComplete::new(
             String::arbitrary(g),
             FaultStruct::arbitrary(g),
-            Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-            Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+            Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
         )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
@@ -4708,8 +4725,8 @@ impl Arbitrary for TransferComplete {
                 .map(|(c, f)| TransferComplete {
                     command_key: c,
                     fault: f,
-                    start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-                    complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+                    start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+                    complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
                 }),
         )
     }
@@ -4770,18 +4787,18 @@ impl UploadResponse {
 
 #[cfg(test)]
 impl Arbitrary for UploadResponse {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         UploadResponse::new(
             u8::arbitrary(g),
-            Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-            Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+            Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
         )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(self.status.clone().shrink().map(|s| UploadResponse {
             status: s,
-            start_time: Some(Utc.ymd(2014, 11, 28).and_hms(12, 0, 9)),
-            complete_time: Some(Utc.ymd(2014, 11, 29).and_hms(12, 0, 9)),
+            start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
         }))
     }
 }
@@ -4862,7 +4879,7 @@ impl Upload {
 
 #[cfg(test)]
 impl Arbitrary for Upload {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         Upload::new(
             String::arbitrary(g),
             String::arbitrary(g),
@@ -4956,7 +4973,7 @@ pub enum BodyElement {
 
 #[cfg(test)]
 impl Arbitrary for BodyElement {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         let vals = vec![
             BodyElement::AddObjectResponse(AddObjectResponse::arbitrary(g)),
             BodyElement::AddObject(AddObject::arbitrary(g)),
@@ -5020,7 +5037,16 @@ impl Arbitrary for BodyElement {
             BodyElement::UploadResponse(UploadResponse::arbitrary(g)),
             BodyElement::Upload(Upload::arbitrary(g)),
         ];
-        vals.choose(g).unwrap().clone()
+        let mut rng = rand::thread_rng();
+        let idxs = std::ops::Range {
+            start: 0,
+            end: vals.len() - 1,
+        };
+        let random_index: usize = rng.gen_range(idxs);
+        match vals.get(random_index) {
+            Some(v) => v.clone(),
+            None => BodyElement::AddObjectResponse(AddObjectResponse::arbitrary(g)),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
@@ -5174,7 +5200,7 @@ impl CwmpVersion {
 
 #[cfg(test)]
 impl Arbitrary for CwmpVersion {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         CwmpVersion {
             major: u8::arbitrary(g),
             minor: u8::arbitrary(g),
@@ -5202,7 +5228,7 @@ pub struct Envelope {
 
 #[cfg(test)]
 impl Arbitrary for Envelope {
-    fn arbitrary<G: Gen>(g: &mut G) -> Envelope {
+    fn arbitrary(g: &mut Gen) -> Envelope {
         // cwmp version is handled a bit special, because
         // a value of Some("") becomes xmlns:cwmp="" which
         // is unparsable
@@ -6062,9 +6088,10 @@ fn parse_to_int<T: Parseable + std::str::FromStr>(chars: &String, default: T) ->
 }
 
 impl State {
+    #[must_use]
     pub fn new() -> Self {
         State {
-            last_text: String::from(""),
+            last_text: String::new(),
             envelope: Envelope::default(),
             path: vec![],
             error: None,
@@ -6091,6 +6118,12 @@ impl State {
     pub fn characters(&mut self, characters: &String) {
         self.last_text = String::from(characters);
         self.envelope.characters(&self.path, characters);
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
