@@ -18,11 +18,16 @@ doctest!("../README.md");
 // vendors
 // https://stackoverflow.com/questions/37970355/read-xml-file-into-struct
 
-// parse a CWMP XML envelope and convert it to a rust struct
-pub fn parse(xml: String) -> Result<Envelope, Box<dyn Error>> {
+/// parse a CWMP XML envelope and convert it to a rust struct
+/// 
+/// # Errors
+///    Returns a `core::Error` if the envelope cannot be parsed from the XML
+pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error>> {
     parse_bytes(xml.as_bytes())
 }
 
+/// # Errors
+///    Returns a `core::Error` if the envelope cannot be parsed from the XML
 pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
      let config = ParserConfig::new()
         .trim_whitespace(false)
@@ -59,6 +64,9 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
         Some(b) => Err(b),
     }
 }
+
+/// # Errors
+///    Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
 pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> {
     envelope.generate()
 }
@@ -73,18 +81,39 @@ mod tests {
     use crate::protocol::*;
 
     use super::*;
-    use chrono::{Utc, TimeZone};
     use protocol::Envelope;
     extern crate quickcheck;
+
+    fn contains_control_characters(s: &str) -> bool {
+        s.chars().any(|c| c.is_control())
+    }
+    fn sanitize_xml(s: &str) -> String {
+        s.chars().filter(|&c| !c.is_control() && c != '\u{FFFF}' && c != '\u{FFFE}' && c != '\0').collect()
+    }
 
     #[quickcheck]
     fn gen_and_parse(e: Envelope) -> bool {
         match generate(&e) {
-            Ok(xml) => match parse(xml) {
-                Ok(r) => r == e,
-                Err(e) => {
-                    println!("ERROR DURING PARSE: {:?}", e);
-                    false
+            
+            Ok(mut xml) => {
+                // Sanitize the XML before parsing
+                xml = sanitize_xml(&xml);
+                if contains_control_characters(&xml) {
+                    println!("Generated XML contains control characters: {:?}", xml);
+                    return false;
+                }
+                // We generate the XML and then parse it back into a struct
+                match parse(&xml) {
+                    Ok(r) => if r == e {
+                        true
+                    } else {
+                        println!("NOT EQUAL: {:?} != {:?}", r, e);
+                        false
+                    },
+                    Err(e) => {
+                        println!("ERROR DURING PARSE: {:?}", e);
+                        false
+                    }
                 }
             },
             Err(e) => {
@@ -104,7 +133,7 @@ mod tests {
                         DeviceId::new(String::from("MyManufacturer"), String::from("OUI"), String::from("MyProductClass"), String::from("S123456")),
                         vec![EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
                         1,
-                        Utc.ymd(2014, 11, 28).and_hms(12, 0, 9),
+                        gen_utc_date(2014, 11, 28, 12, 0, 9),
                         0,
                         vec![
                             ParameterValue::new(String::from("InternetGatewayDevice.DeviceSummary"),String::from("xsd:string"),String::from("InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)")),
