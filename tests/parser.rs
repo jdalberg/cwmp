@@ -5,9 +5,17 @@ use chrono::prelude::*;
 use chrono::{DateTime, Utc};
 use std::str;
 
+fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
+    NaiveDate::from_ymd_opt(year, mon, day)
+        .unwrap_or(NaiveDate::default())
+        .and_hms_opt(hour, min, sec)
+        .unwrap_or(NaiveDateTime::default())
+        .and_utc()
+}
+
 #[test]
 fn parse_1() {
-    let bogus_dt = Utc.ymd(2014, 11, 28).and_hms(12, 0, 9);
+    let bogus_dt = gen_utc_date(2014, 11, 28, 12, 0, 9);
     let bogus_utc_dt = bogus_dt.with_timezone(&Utc);
 
     let current_time: DateTime<Utc> = match "2015-01-19T23:08:24+00:00".parse::<DateTime<Utc>>() {
@@ -44,7 +52,7 @@ fn parse_1() {
 
 fn test(input: &[u8], expected: cwmp::protocol::Envelope) {
     match str::from_utf8(input) {
-        Ok(s) => match cwmp::parse(s.to_string()) {
+        Ok(s) => match cwmp::parse(s) {
             Ok(envelope) => {
                 if envelope != expected {
                     println!("{:?}", envelope);
