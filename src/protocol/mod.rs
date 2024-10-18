@@ -83,7 +83,11 @@ pub use updateop::UpdateOp;
 pub use usecwmpversion::UseCWMPVersion;
 
 fn bool2str(b: bool) -> &'static str {
-    if b { "1" } else { "0" }
+    if b {
+        "1"
+    } else {
+        "0"
+    }
 }
 fn str2bool(s: &str) -> bool {
     s != "0"
@@ -229,9 +233,7 @@ pub struct GetOptionsResponse {
 
 impl GetOptionsResponse {
     pub fn new(option_list: Vec<OptionStruct>) -> Self {
-        GetOptionsResponse {
-            option_list,
-        }
+        GetOptionsResponse { option_list }
     }
     pub fn generate<W: Write>(
         &self,
@@ -288,8 +290,16 @@ impl GetOptionsResponse {
                     "VoucherSN" => last.voucher_sn = characters.to_string(),
                     "State" => last.state = parse_to_int(characters, 0),
                     "Mode" => last.mode = characters.to_string(),
-                    "StartDate" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { last.start_date = Some(dt) },
-                    "ExpirationDate" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { last.expiration_date = Some(dt) },
+                    "StartDate" => {
+                        if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                            last.start_date = Some(dt)
+                        }
+                    }
+                    "ExpirationDate" => {
+                        if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                            last.expiration_date = Some(dt)
+                        }
+                    }
                     "IsTransferable" => last.is_transferable = parse_to_int(characters, 0),
                     _ => {}
                 }
@@ -320,9 +330,7 @@ pub struct GetOptions {
 
 impl GetOptions {
     pub fn new(option_name: String) -> Self {
-        GetOptions {
-            option_name,
-        }
+        GetOptions { option_name }
     }
     pub fn generate<W: Write>(
         &self,
@@ -337,7 +345,9 @@ impl GetOptions {
         Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["GetOptions", "OptionName"] = *path { self.option_name = characters.to_string() }
+        if let ["GetOptions", "OptionName"] = *path {
+            self.option_name = characters.to_string()
+        }
     }
 }
 
@@ -363,9 +373,7 @@ pub struct GetParameterAttributes {
 
 impl GetParameterAttributes {
     pub fn new(parameternames: Vec<String>) -> Self {
-        GetParameterAttributes {
-            parameternames,
-        }
+        GetParameterAttributes { parameternames }
     }
     pub fn generate<W: Write>(
         &self,
@@ -467,9 +475,7 @@ pub struct GetParameterAttributesResponse {
 
 impl GetParameterAttributesResponse {
     pub fn new(parameters: Vec<ParameterAttribute>) -> Self {
-        GetParameterAttributesResponse {
-            parameters,
-        }
+        GetParameterAttributesResponse { parameters }
     }
     pub fn generate<W: Write>(
         &self,
@@ -576,10 +582,7 @@ pub struct ParameterInfoStruct {
 
 impl ParameterInfoStruct {
     pub fn new(name: String, writable: u8) -> Self {
-        ParameterInfoStruct {
-            name,
-            writable,
-        }
+        ParameterInfoStruct { name, writable }
     }
 }
 
@@ -607,9 +610,7 @@ pub struct GetParameterNamesResponse {
 
 impl GetParameterNamesResponse {
     pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
-        GetParameterNamesResponse {
-            parameter_list,
-        }
+        GetParameterNamesResponse { parameter_list }
     }
     fn start_handler(
         &mut self,
@@ -618,7 +619,9 @@ impl GetParameterNamesResponse {
         _attributes: &Vec<xml::attribute::OwnedAttribute>,
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        if let ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct"] = &path_pattern[..] {
+        if let ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct"] =
+            &path_pattern[..]
+        {
             self.parameter_list.push(ParameterInfoStruct::default())
         }
     }
@@ -778,9 +781,7 @@ pub struct GetParameterValues {
 
 impl GetParameterValues {
     pub fn new(parameternames: Vec<String>) -> Self {
-        GetParameterValues {
-            parameternames,
-        }
+        GetParameterValues { parameternames }
     }
     pub fn generate<W: Write>(
         &self,
@@ -840,9 +841,7 @@ pub struct GetParameterValuesResponse {
 
 impl GetParameterValuesResponse {
     pub fn new(parameters: Vec<ParameterValue>) -> Self {
-        GetParameterValuesResponse {
-            parameters,
-        }
+        GetParameterValuesResponse { parameters }
     }
     pub fn generate<W: Write>(
         &self,
@@ -935,10 +934,7 @@ pub struct QueuedTransferStruct {
 
 impl QueuedTransferStruct {
     pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
-        QueuedTransferStruct {
-            command_key,
-            state,
-        }
+        QueuedTransferStruct { command_key, state }
     }
 }
 
@@ -969,9 +965,7 @@ pub struct GetQueuedTransfersResponse {
 
 impl GetQueuedTransfersResponse {
     pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
-        GetQueuedTransfersResponse {
-            transfer_list,
-        }
+        GetQueuedTransfersResponse { transfer_list }
     }
     pub fn generate<W: Write>(
         &self,
@@ -1076,9 +1070,7 @@ pub struct GetRPCMethodsResponse {
 
 impl GetRPCMethodsResponse {
     pub fn new(method_list: Vec<String>) -> Self {
-        GetRPCMethodsResponse {
-            method_list,
-        }
+        GetRPCMethodsResponse { method_list }
     }
     pub fn generate<W: Write>(
         &self,
@@ -1113,7 +1105,9 @@ impl GetRPCMethodsResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         if let ["GetRPCMethodsResponse", "MethodList", "string"] = *path {
             let last = self.method_list.last_mut();
-            if let Some(l) = last { *l = characters.to_string() }
+            if let Some(l) = last {
+                *l = characters.to_string()
+            }
         }
     }
 }
@@ -1154,9 +1148,7 @@ pub struct InformResponse {
 
 impl InformResponse {
     pub fn new(max_envelopes: u16) -> Self {
-        InformResponse {
-            max_envelopes,
-        }
+        InformResponse { max_envelopes }
     }
     pub fn generate<W: Write>(
         &self,
@@ -1401,7 +1393,11 @@ impl Inform {
             }
             ["Inform", "MaxEnvelopes"] => self.max_envelopes = parse_to_int(characters, 0),
             ["Inform", "RetryCount"] => self.retry_count = parse_to_int(characters, 0),
-            ["Inform", "CurrentTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.current_time = Some(dt) },
+            ["Inform", "CurrentTime"] => {
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.current_time = Some(dt)
+                }
+            }
             ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
                     p.name = characters.to_string();
@@ -1595,9 +1591,7 @@ pub struct Reboot {
 
 impl Reboot {
     pub fn new(command_key: String) -> Self {
-        Reboot {
-            command_key,
-        }
+        Reboot { command_key }
     }
     pub fn generate<W: Write>(
         &self,
@@ -1641,10 +1635,7 @@ pub struct ArgStruct {
 
 impl ArgStruct {
     pub fn new(name: String, value: String) -> Self {
-        ArgStruct {
-            name,
-            value,
-        }
+        ArgStruct { name, value }
     }
 }
 
@@ -2153,9 +2144,7 @@ pub struct SetParameterAttributes {
 }
 impl SetParameterAttributes {
     pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
-        SetParameterAttributes {
-            parameter_list,
-        }
+        SetParameterAttributes { parameter_list }
     }
     fn start_handler(
         &mut self,
@@ -2282,7 +2271,9 @@ impl SetParameterValuesResponse {
         Ok(())
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["SetParameterValuesResponse", "Status"] = *path { self.status = parse_to_int(characters, 0) }
+        if let ["SetParameterValuesResponse", "Status"] = *path {
+            self.status = parse_to_int(characters, 0)
+        }
     }
 }
 
@@ -2434,9 +2425,7 @@ pub struct SetVouchers {
 
 impl SetVouchers {
     pub fn new(voucher_list: Vec<String>) -> Self {
-        SetVouchers {
-            voucher_list,
-        }
+        SetVouchers { voucher_list }
     }
     pub fn generate<W: Write>(
         &self,
@@ -2465,7 +2454,9 @@ impl SetVouchers {
         _attributes: &Vec<xml::attribute::OwnedAttribute>,
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        if let ["SetVouchers", "VoucherList", "base64"] = &path_pattern[..] { self.voucher_list.push(String::from("")) }
+        if let ["SetVouchers", "VoucherList", "base64"] = &path_pattern[..] {
+            self.voucher_list.push(String::from(""))
+        }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         if let ["SetVouchers", "VoucherList", "base64"] = *path {
@@ -2553,8 +2544,16 @@ impl TransferComplete {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["TransferComplete", "CommandKey"] => self.command_key = characters.to_string(),
-            ["TransferComplete", "StartTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) },
-            ["TransferComplete", "CompleteTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) },
+            ["TransferComplete", "StartTime"] => {
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.start_time = Some(dt)
+                }
+            }
+            ["TransferComplete", "CompleteTime"] => {
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.complete_time = Some(dt)
+                }
+            }
             ["TransferComplete", "FaultStruct", "FaultCode"] => {
                 self.fault.set_code(parse_to_int(characters, 0))
             }
@@ -2629,8 +2628,16 @@ impl UploadResponse {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["UploadResponse", "Status"] => self.status = parse_to_int(characters, 0),
-            ["UploadResponse", "StartTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) },
-            ["UploadResponse", "CompleteTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) },
+            ["UploadResponse", "StartTime"] => {
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.start_time = Some(dt)
+                }
+            }
+            ["UploadResponse", "CompleteTime"] => {
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.complete_time = Some(dt)
+                }
+            }
             _ => {}
         }
     }
@@ -3042,10 +3049,7 @@ pub struct CwmpVersion {
 
 impl CwmpVersion {
     pub fn new(major: u8, minor: u8) -> Self {
-        CwmpVersion {
-            major,
-            minor,
-        }
+        CwmpVersion { major, minor }
     }
 }
 
@@ -3407,7 +3411,8 @@ impl Envelope {
 
                 // the mustUnderstand attributes is used in more than one header element
                 let must_understand_filter = attributes
-                    .iter().find(|&x| x.name.local_name == "mustUnderstand");
+                    .iter()
+                    .find(|&x| x.name.local_name == "mustUnderstand");
 
                 let must_understand: bool = if let Some(mua) = must_understand_filter {
                     str2bool(&mua.value.to_string())
@@ -3712,6 +3717,7 @@ impl Envelope {
         }
     }
 
+    // TODO: todo!("// match the ones who actually need and end_handler, and call their respective end_handler");
     fn end_handler(&mut self, path: &Vec<String>, _name: &xml::name::OwnedName) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         {}
@@ -3884,7 +3890,8 @@ fn extract_attribute(
     attrib_name: &str,
 ) -> String {
     let f = attributes
-        .iter().find(|&x| x.name.local_name == attrib_name);
+        .iter()
+        .find(|&x| x.name.local_name == attrib_name);
     match f {
         Some(e) => e.value.to_string(),
         None => String::from(""),
