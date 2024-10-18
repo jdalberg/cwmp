@@ -153,7 +153,8 @@ pub struct GetOptionsResponse {
 }
 
 impl GetOptionsResponse {
-    #[must_use] pub fn new(option_list: Vec<OptionStruct>) -> Self {
+    #[must_use]
+    pub fn new(option_list: Vec<OptionStruct>) -> Self {
         GetOptionsResponse { option_list }
     }
     pub fn generate<W: Write>(
@@ -250,7 +251,8 @@ pub struct GetOptions {
 }
 
 impl GetOptions {
-    #[must_use] pub fn new(option_name: String) -> Self {
+    #[must_use]
+    pub fn new(option_name: String) -> Self {
         GetOptions { option_name }
     }
     pub fn generate<W: Write>(
@@ -293,7 +295,8 @@ pub struct GetParameterAttributes {
 }
 
 impl GetParameterAttributes {
-    #[must_use] pub fn new(parameternames: Vec<String>) -> Self {
+    #[must_use]
+    pub fn new(parameternames: Vec<String>) -> Self {
         GetParameterAttributes { parameternames }
     }
     pub fn generate<W: Write>(
@@ -354,7 +357,8 @@ pub struct ParameterAttribute {
     accesslist: Vec<String>,
 }
 impl ParameterAttribute {
-    #[must_use] pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
+    #[must_use]
+    pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
         ParameterAttribute {
             name,
             notification,
@@ -395,7 +399,8 @@ pub struct GetParameterAttributesResponse {
 }
 
 impl GetParameterAttributesResponse {
-    #[must_use] pub fn new(parameters: Vec<ParameterAttribute>) -> Self {
+    #[must_use]
+    pub fn new(parameters: Vec<ParameterAttribute>) -> Self {
         GetParameterAttributesResponse { parameters }
     }
     pub fn generate<W: Write>(
@@ -502,7 +507,8 @@ pub struct ParameterInfoStruct {
 }
 
 impl ParameterInfoStruct {
-    #[must_use] pub fn new(name: String, writable: u8) -> Self {
+    #[must_use]
+    pub fn new(name: String, writable: u8) -> Self {
         ParameterInfoStruct { name, writable }
     }
 }
@@ -530,7 +536,8 @@ pub struct GetParameterNamesResponse {
 }
 
 impl GetParameterNamesResponse {
-    #[must_use] pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
+    #[must_use]
+    pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
         GetParameterNamesResponse { parameter_list }
     }
     fn start_handler(
@@ -611,7 +618,8 @@ pub struct GetParameterNames {
     next_level: u32,
 }
 impl GetParameterNames {
-    #[must_use] pub fn new(parameter_path: String, next_level: u32) -> Self {
+    #[must_use]
+    pub fn new(parameter_path: String, next_level: u32) -> Self {
         GetParameterNames {
             parameter_path,
             next_level,
@@ -664,7 +672,8 @@ pub struct ParameterValue {
 }
 
 impl ParameterValue {
-    #[must_use] pub fn new(name: String, param_type: String, value: String) -> Self {
+    #[must_use]
+    pub fn new(name: String, param_type: String, value: String) -> Self {
         ParameterValue {
             name,
             r#type: param_type,
@@ -701,7 +710,8 @@ pub struct GetParameterValues {
 }
 
 impl GetParameterValues {
-    #[must_use] pub fn new(parameternames: Vec<String>) -> Self {
+    #[must_use]
+    pub fn new(parameternames: Vec<String>) -> Self {
         GetParameterValues { parameternames }
     }
     pub fn generate<W: Write>(
@@ -761,7 +771,8 @@ pub struct GetParameterValuesResponse {
 }
 
 impl GetParameterValuesResponse {
-    #[must_use] pub fn new(parameters: Vec<ParameterValue>) -> Self {
+    #[must_use]
+    pub fn new(parameters: Vec<ParameterValue>) -> Self {
         GetParameterValuesResponse { parameters }
     }
     pub fn generate<W: Write>(
@@ -854,7 +865,8 @@ pub struct QueuedTransferStruct {
 }
 
 impl QueuedTransferStruct {
-    #[must_use] pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
+    #[must_use]
+    pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
         QueuedTransferStruct { command_key, state }
     }
 }
@@ -885,7 +897,8 @@ pub struct GetQueuedTransfersResponse {
 }
 
 impl GetQueuedTransfersResponse {
-    #[must_use] pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
+    #[must_use]
+    pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
         GetQueuedTransfersResponse { transfer_list }
     }
     pub fn generate<W: Write>(
@@ -990,7 +1003,8 @@ pub struct GetRPCMethodsResponse {
 }
 
 impl GetRPCMethodsResponse {
-    #[must_use] pub fn new(method_list: Vec<String>) -> Self {
+    #[must_use]
+    pub fn new(method_list: Vec<String>) -> Self {
         GetRPCMethodsResponse { method_list }
     }
     pub fn generate<W: Write>(
@@ -1068,7 +1082,8 @@ pub struct InformResponse {
 }
 
 impl InformResponse {
-    #[must_use] pub fn new(max_envelopes: u16) -> Self {
+    #[must_use]
+    pub fn new(max_envelopes: u16) -> Self {
         InformResponse { max_envelopes }
     }
     pub fn generate<W: Write>(
@@ -1113,7 +1128,8 @@ pub struct DeviceId {
     serial_number: String,
 }
 impl DeviceId {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         manufacturer: String,
         oui: String,
         product_class: String,
@@ -1164,7 +1180,8 @@ pub struct EventStruct {
 }
 
 impl EventStruct {
-    #[must_use] pub fn new(event_code: String, command_key: String) -> Self {
+    #[must_use]
+    pub fn new(event_code: String, command_key: String) -> Self {
         EventStruct {
             event_code,
             command_key,
@@ -1200,7 +1217,8 @@ pub struct Inform {
 }
 
 impl Inform {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         device_id: DeviceId,
         event: Vec<EventStruct>,
         max_envelopes: u32,
@@ -1374,7 +1392,8 @@ pub struct KickedResponse {
 }
 
 impl KickedResponse {
-    #[must_use] pub fn new(next_url: String) -> Self {
+    #[must_use]
+    pub fn new(next_url: String) -> Self {
         KickedResponse { next_url }
     }
     pub fn generate<W: Write>(
@@ -1420,7 +1439,8 @@ pub struct Kicked {
 }
 
 impl Kicked {
-    #[must_use] pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
+    #[must_use]
+    pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
         Kicked {
             command,
             referer,
@@ -1511,7 +1531,8 @@ pub struct Reboot {
 }
 
 impl Reboot {
-    #[must_use] pub fn new(command_key: String) -> Self {
+    #[must_use]
+    pub fn new(command_key: String) -> Self {
         Reboot { command_key }
     }
     pub fn generate<W: Write>(
@@ -1555,7 +1576,8 @@ pub struct ArgStruct {
 }
 
 impl ArgStruct {
-    #[must_use] pub fn new(name: String, value: String) -> Self {
+    #[must_use]
+    pub fn new(name: String, value: String) -> Self {
         ArgStruct { name, value }
     }
 }
@@ -1581,7 +1603,8 @@ pub struct RequestDownload {
 }
 
 impl RequestDownload {
-    #[must_use] pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
+    #[must_use]
+    pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
         RequestDownload {
             file_type,
             file_type_arg,
@@ -1703,7 +1726,8 @@ pub struct TimeWindow {
     max_retries: i32,
 }
 impl TimeWindow {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         window_start: u32,
         window_end: u32,
         window_mode: String,
@@ -1765,7 +1789,8 @@ pub struct ScheduleDownload {
 }
 
 impl ScheduleDownload {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         command_key: String,
         file_type: String,
         url: String,
@@ -1934,7 +1959,8 @@ pub struct ScheduleInform {
 }
 
 impl ScheduleInform {
-    #[must_use] pub fn new(delay_seconds: u32, command_key: String) -> Self {
+    #[must_use]
+    pub fn new(delay_seconds: u32, command_key: String) -> Self {
         ScheduleInform {
             delay_seconds,
             command_key,
@@ -2010,7 +2036,8 @@ pub struct SetParameterAttributesStruct {
 }
 
 impl SetParameterAttributesStruct {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         name: String,
         notification_change: u8,
         notification: u8,
@@ -2064,7 +2091,8 @@ pub struct SetParameterAttributes {
     parameter_list: Vec<SetParameterAttributesStruct>,
 }
 impl SetParameterAttributes {
-    #[must_use] pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
+    #[must_use]
+    pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
         SetParameterAttributes { parameter_list }
     }
     fn start_handler(
@@ -2176,7 +2204,8 @@ pub struct SetParameterValuesResponse {
 }
 
 impl SetParameterValuesResponse {
-    #[must_use] pub fn new(status: u32) -> Self {
+    #[must_use]
+    pub fn new(status: u32) -> Self {
         SetParameterValuesResponse { status }
     }
     pub fn generate<W: Write>(
@@ -2220,7 +2249,8 @@ pub struct SetParameterValues {
 }
 
 impl SetParameterValues {
-    #[must_use] pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
+    #[must_use]
+    pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
         SetParameterValues {
             parameter_list,
             parameter_key,
@@ -2345,7 +2375,8 @@ pub struct SetVouchers {
 }
 
 impl SetVouchers {
-    #[must_use] pub fn new(voucher_list: Vec<String>) -> Self {
+    #[must_use]
+    pub fn new(voucher_list: Vec<String>) -> Self {
         SetVouchers { voucher_list }
     }
     pub fn generate<W: Write>(
@@ -2429,7 +2460,8 @@ pub struct TransferComplete {
 }
 
 impl TransferComplete {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         command_key: String,
         fault: FaultStruct,
         start_time: Option<DateTime<Utc>>,
@@ -2517,7 +2549,8 @@ pub struct UploadResponse {
 }
 
 impl UploadResponse {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         status: u8,
         start_time: Option<DateTime<Utc>>,
         complete_time: Option<DateTime<Utc>>,
@@ -2593,7 +2626,8 @@ pub struct Upload {
 }
 
 impl Upload {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         command_key: String,
         file_type: String,
         url: String,
@@ -2969,7 +3003,8 @@ pub struct CwmpVersion {
 }
 
 impl CwmpVersion {
-    #[must_use] pub fn new(major: u8, minor: u8) -> Self {
+    #[must_use]
+    pub fn new(major: u8, minor: u8) -> Self {
         CwmpVersion { major, minor }
     }
 }
@@ -3065,7 +3100,8 @@ impl fmt::Debug for GenerateError {
 }
 
 impl Envelope {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         cwmp_version: Option<CwmpVersion>,
         header: Vec<HeaderElement>,
         body: Vec<BodyElement>,
@@ -3076,13 +3112,16 @@ impl Envelope {
             body,
         }
     }
-    #[must_use] pub fn cwmp_version(self) -> Option<CwmpVersion> {
+    #[must_use]
+    pub fn cwmp_version(self) -> Option<CwmpVersion> {
         self.cwmp_version
     }
-    #[must_use] pub fn header(self) -> Vec<HeaderElement> {
+    #[must_use]
+    pub fn header(self) -> Vec<HeaderElement> {
         self.header
     }
-    #[must_use] pub fn body(self) -> Vec<BodyElement> {
+    #[must_use]
+    pub fn body(self) -> Vec<BodyElement> {
         self.body
     }
     pub fn generate(&self) -> Result<String, GenerateError> {
@@ -3851,7 +3890,7 @@ impl Parseable for u16 {}
 impl Parseable for i32 {}
 impl Parseable for u8 {}
 
-fn parse_to_int<T: Parseable + std::str::FromStr>(chars: &String, default: T) -> T {
+fn parse_to_int<T: Parseable + std::str::FromStr>(chars: &str, default: T) -> T {
     match chars.parse::<T>() {
         Ok(parsed) => parsed,
         _ => default,
