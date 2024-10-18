@@ -17,6 +17,7 @@ use rand::Rng;
 mod addobject;
 mod addobjectresponse;
 mod allqueuedtransfers;
+mod argstruct;
 mod autonomousdustatechangecomplete;
 mod autonomousdustatechangecompleteresponse;
 mod autonomoustransfercomplete;
@@ -28,10 +29,12 @@ mod changedustate;
 mod changedustateresponse;
 mod deleteobject;
 mod deleteobjectresponse;
+mod deviceid;
 mod download;
 mod downloadresponse;
 mod dustatechangecomplete;
 mod dustatechangecompleteresponse;
+mod eventstruct;
 mod factoryreset;
 mod factoryresetresponse;
 mod fault;
@@ -52,7 +55,11 @@ mod getrpcmethodsresponse;
 mod headerelement;
 mod holdrequests;
 mod id;
+mod inform;
+mod informresponse;
 mod installop;
+mod kicked;
+mod kickedresponse;
 mod nomorerequests;
 mod opresult;
 mod optionstruct;
@@ -60,8 +67,14 @@ mod parameterattribute;
 mod parameterinfostruct;
 mod parametervalue;
 mod queuedtransferstruct;
+mod reboot;
+mod rebootresponse;
+mod requestdownload;
+mod requestdownloadresponse;
+mod scheduledownloadresponse;
 mod sessiontimeout;
 mod supportedcwmpversions;
+mod timewindow;
 mod uninstallop;
 mod updateop;
 mod upload;
@@ -70,6 +83,7 @@ mod usecwmpversion;
 pub use addobject::AddObject;
 pub use addobjectresponse::AddObjectResponse;
 pub use allqueuedtransfers::AllQueuedTransfers;
+pub use argstruct::ArgStruct;
 pub use autonomousdustatechangecomplete::AutonomousDUStateChangeComplete;
 pub use autonomousdustatechangecompleteresponse::AutonomousDUStateChangeCompleteResponse;
 pub use autonomoustransfercomplete::AutonomousTransferComplete;
@@ -81,10 +95,12 @@ pub use changedustate::ChangeDUState;
 pub use changedustateresponse::ChangeDUStateResponse;
 pub use deleteobject::DeleteObject;
 pub use deleteobjectresponse::DeleteObjectResponse;
+pub use deviceid::DeviceId;
 pub use download::Download;
 pub use downloadresponse::DownloadResponse;
 pub use dustatechangecomplete::DUStateChangeComplete;
 pub use dustatechangecompleteresponse::DUStateChangeCompleteResponse;
+pub use eventstruct::EventStruct;
 pub use factoryreset::FactoryReset;
 pub use factoryresetresponse::FactoryResetResponse;
 pub use fault::{Fault, FaultDetail, FaultStruct};
@@ -105,7 +121,11 @@ pub use getrpcmethodsresponse::GetRPCMethodsResponse;
 pub use headerelement::HeaderElement;
 pub use holdrequests::HoldRequests;
 pub use id::ID;
+pub use inform::Inform;
+pub use informresponse::InformResponse;
 pub use installop::InstallOp;
+pub use kicked::Kicked;
+pub use kickedresponse::KickedResponse;
 pub use nomorerequests::NoMoreRequests;
 pub use opresult::OpResult;
 pub use optionstruct::OptionStruct;
@@ -113,8 +133,14 @@ pub use parameterattribute::ParameterAttribute;
 pub use parameterinfostruct::ParameterInfoStruct;
 pub use parametervalue::ParameterValue;
 pub use queuedtransferstruct::QueuedTransferStruct;
+pub use reboot::Reboot;
+pub use rebootresponse::RebootResponse;
+pub use requestdownload::RequestDownload;
+pub use requestdownloadresponse::RequestDownloadResponse;
+pub use scheduledownloadresponse::ScheduleDownloadResponse;
 pub use sessiontimeout::SessionTimeout;
 pub use supportedcwmpversions::SupportedCWMPVersions;
+pub use timewindow::TimeWindow;
 pub use uninstallop::UninstallOp;
 pub use updateop::UpdateOp;
 pub use upload::Upload;
@@ -179,706 +205,6 @@ pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32
         .and_hms_opt(hour, min, sec)
         .unwrap_or(NaiveDateTime::default())
         .and_utc()
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct InformResponse {
-    max_envelopes: u16,
-}
-
-impl InformResponse {
-    #[must_use]
-    pub fn new(max_envelopes: u16) -> Self {
-        InformResponse { max_envelopes }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "InformResponse")[..],
-        ))?;
-        write_simple(writer, "MaxEnvelopes", &self.max_envelopes.to_string())?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["InformResponse", "MaxEnvelopes"] = *path {
-            self.max_envelopes = parse_to_int(characters, 1);
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for InformResponse {
-    fn arbitrary(g: &mut Gen) -> Self {
-        InformResponse::new(u16::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            self.max_envelopes
-                .clone()
-                .shrink()
-                .map(|me| InformResponse { max_envelopes: me }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct DeviceId {
-    manufacturer: String,
-    oui: String,
-    product_class: String,
-    serial_number: String,
-}
-impl DeviceId {
-    #[must_use]
-    pub fn new(
-        manufacturer: String,
-        oui: String,
-        product_class: String,
-        serial_number: String,
-    ) -> Self {
-        DeviceId {
-            manufacturer,
-            oui,
-            product_class,
-            serial_number,
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for DeviceId {
-    fn arbitrary(g: &mut Gen) -> Self {
-        DeviceId::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.manufacturer.clone(),
-                self.oui.clone(),
-                self.product_class.clone(),
-                self.serial_number.clone(),
-            )
-                .shrink()
-                .map(|(m, o, p, s)| DeviceId {
-                    manufacturer: m,
-                    oui: o,
-                    product_class: p,
-                    serial_number: s,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct EventStruct {
-    event_code: String,
-    command_key: String,
-}
-
-impl EventStruct {
-    #[must_use]
-    pub fn new(event_code: String, command_key: String) -> Self {
-        EventStruct {
-            event_code,
-            command_key,
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for EventStruct {
-    fn arbitrary(g: &mut Gen) -> Self {
-        EventStruct::new(String::arbitrary(g), String::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (self.event_code.clone(), self.command_key.clone())
-                .shrink()
-                .map(|(e, c)| EventStruct {
-                    event_code: e,
-                    command_key: c,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct Inform {
-    device_id: DeviceId,
-    event: Vec<EventStruct>,
-    max_envelopes: u32,
-    current_time: Option<DateTime<Utc>>,
-    retry_count: u32,
-    parameter_list: Vec<ParameterValue>,
-}
-
-impl Inform {
-    #[must_use]
-    pub fn new(
-        device_id: DeviceId,
-        event: Vec<EventStruct>,
-        max_envelopes: u32,
-        current_time: DateTime<Utc>,
-        retry_count: u32,
-        parameter_list: Vec<ParameterValue>,
-    ) -> Self {
-        Inform {
-            device_id,
-            event,
-            max_envelopes,
-            current_time: Some(current_time),
-            retry_count,
-            parameter_list,
-        }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "Inform")[..],
-        ))?;
-        writer.write(XmlEvent::start_element("DeviceId"))?;
-        write_simple(writer, "Manufacturer", &self.device_id.manufacturer)?;
-        write_simple(writer, "OUI", &self.device_id.oui)?;
-        write_simple(writer, "ProductClass", &self.device_id.product_class)?;
-        write_simple(writer, "SerialNumber", &self.device_id.serial_number)?;
-        writer.write(XmlEvent::end_element())?;
-
-        let ss = format!("cwmp:EventStruct[{}]", self.event.len());
-
-        writer.write(XmlEvent::start_element("Event").attr("SOAP-ENC:arrayType", &ss[..]))?;
-
-        for e in &self.event {
-            writer.write(XmlEvent::start_element("EventStruct"))?;
-            write_simple(writer, "EventCode", &e.event_code)?;
-            write_simple(writer, "CommandKey", &e.command_key)?;
-            writer.write(XmlEvent::end_element())?;
-        }
-        // Event
-        writer.write(XmlEvent::end_element())?;
-
-        write_simple(writer, "MaxEnvelopes", &self.max_envelopes.to_string())?;
-        if let Some(dt) = self.current_time {
-            write_simple(writer, "CurrentTime", &dt.to_rfc3339())?;
-        }
-        write_simple(writer, "RetryCount", &self.retry_count.to_string())?;
-
-        let pls = format!("cwmp:ParameterValueStruct[{}]", self.parameter_list.len());
-        writer
-            .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pls[..]))?;
-
-        for p in &self.parameter_list {
-            writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
-            writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
-            writer.write(&p.value[..])?;
-            writer.write(XmlEvent::end_element())?; // Value
-            writer.write(XmlEvent::end_element())?; // ParameterValueStruct
-        }
-
-        // ParameterList
-        writer.write(XmlEvent::end_element())?;
-
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn start_handler(
-        &mut self,
-        path: &[&str],
-        _name: &xml::name::OwnedName,
-        attributes: &Vec<xml::attribute::OwnedAttribute>,
-    ) {
-        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        match &path_pattern[..] {
-            ["Inform", "Event", "EventStruct"] => self.event.push(EventStruct::default()),
-            ["Inform", "ParameterList", "ParameterValueStruct"] => {
-                self.parameter_list.push(ParameterValue::default());
-            }
-            ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
-                // use the type attribute
-                if let Some(e) = self.parameter_list.last_mut() {
-                    e.r#type = extract_attribute(attributes, "type");
-                }
-            }
-            _ => {}
-        }
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["Inform", "DeviceId", "Manufacturer"] => {
-                self.device_id.manufacturer = characters.to_string();
-            }
-            ["Inform", "DeviceId", "OUI"] => self.device_id.oui = characters.to_string(),
-            ["Inform", "DeviceId", "ProductClass"] => {
-                self.device_id.product_class = characters.to_string();
-            }
-            ["Inform", "DeviceId", "SerialNumber"] => {
-                self.device_id.serial_number = characters.to_string();
-            }
-            ["Inform", "Event", "EventStruct", key] => {
-                if let Some(e) = self.event.last_mut() {
-                    match key {
-                        "EventCode" => e.event_code = characters.to_string(),
-                        "CommandKey" => e.command_key = characters.to_string(),
-                        _ => {}
-                    }
-                }
-            }
-            ["Inform", "MaxEnvelopes"] => self.max_envelopes = parse_to_int(characters, 0),
-            ["Inform", "RetryCount"] => self.retry_count = parse_to_int(characters, 0),
-            ["Inform", "CurrentTime"] => {
-                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.current_time = Some(dt);
-                }
-            }
-            ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
-                if let Some(p) = self.parameter_list.last_mut() {
-                    p.name = characters.to_string();
-                }
-            }
-            ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
-                if let Some(p) = self.parameter_list.last_mut() {
-                    p.value = characters.to_string();
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for Inform {
-    fn arbitrary(g: &mut Gen) -> Self {
-        Inform::new(
-            DeviceId::arbitrary(g),
-            Vec::<EventStruct>::arbitrary(g),
-            u32::arbitrary(g),
-            gen_utc_date(2014, 11, 28, 12, 0, 9),
-            u32::arbitrary(g),
-            Vec::<ParameterValue>::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.device_id.clone(),
-                self.event.clone(),
-                self.max_envelopes.clone(),
-                self.retry_count.clone(),
-                self.parameter_list.clone(),
-            )
-                .shrink()
-                .map(|(d, e, m, r, p)| Inform {
-                    device_id: d,
-                    event: e,
-                    max_envelopes: m,
-                    current_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
-                    retry_count: r,
-                    parameter_list: p,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct KickedResponse {
-    next_url: String,
-}
-
-impl KickedResponse {
-    #[must_use]
-    pub fn new(next_url: String) -> Self {
-        KickedResponse { next_url }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "KickedResponse")[..],
-        ))?;
-        write_simple(writer, "NextURL", &self.next_url)?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["KickedResponse", "NextURL"] = *path {
-            self.next_url = characters.to_string();
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for KickedResponse {
-    fn arbitrary(g: &mut Gen) -> Self {
-        KickedResponse::new(String::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            self.next_url
-                .clone()
-                .shrink()
-                .map(|n| KickedResponse { next_url: n }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct Kicked {
-    command: String,
-    referer: String,
-    arg: String,
-    next: String,
-}
-
-impl Kicked {
-    #[must_use]
-    pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
-        Kicked {
-            command,
-            referer,
-            arg,
-            next,
-        }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "Kicked")[..],
-        ))?;
-        write_simple(writer, "Command", &self.command)?;
-        write_simple(writer, "Referer", &self.referer)?;
-        write_simple(writer, "Arg", &self.arg)?;
-        write_simple(writer, "Next", &self.next)?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["Kicked", "Command"] => {
-                self.command = characters.to_string();
-            }
-            ["Kicked", "Referer"] => {
-                self.referer = characters.to_string();
-            }
-            ["Kicked", "Arg"] => {
-                self.arg = characters.to_string();
-            }
-            ["Kicked", "Next"] => {
-                self.next = characters.to_string();
-            }
-            _ => {}
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for Kicked {
-    fn arbitrary(g: &mut Gen) -> Self {
-        Kicked::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.command.clone(),
-                self.referer.clone(),
-                self.arg.clone(),
-                self.next.clone(),
-            )
-                .shrink()
-                .map(|(c, r, a, n)| Kicked {
-                    command: c,
-                    referer: r,
-                    arg: a,
-                    next: n,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct RebootResponse {}
-
-impl RebootResponse {
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "RebootResponse")[..])?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct Reboot {
-    command_key: String,
-}
-
-impl Reboot {
-    #[must_use]
-    pub fn new(command_key: String) -> Self {
-        Reboot { command_key }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "Reboot")[..],
-        ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["Reboot", "CommandKey"] = *path {
-            self.command_key = characters.to_string();
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for Reboot {
-    fn arbitrary(g: &mut Gen) -> Self {
-        Reboot::new(String::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            self.command_key
-                .clone()
-                .shrink()
-                .map(|c| Reboot { command_key: c }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct ArgStruct {
-    name: String,
-    value: String,
-}
-
-impl ArgStruct {
-    #[must_use]
-    pub fn new(name: String, value: String) -> Self {
-        ArgStruct { name, value }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for ArgStruct {
-    fn arbitrary(g: &mut Gen) -> Self {
-        ArgStruct::new(String::arbitrary(g), String::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (self.name.clone(), self.value.clone())
-                .shrink()
-                .map(|(n, v)| ArgStruct { name: n, value: v }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct RequestDownload {
-    file_type: String,
-    file_type_arg: Vec<ArgStruct>,
-}
-
-impl RequestDownload {
-    #[must_use]
-    pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
-        RequestDownload {
-            file_type,
-            file_type_arg,
-        }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "RequestDownload")[..],
-        ))?;
-        write_simple(writer, "FileType", &self.file_type)?;
-        let argss = format!("cwmp:ArgStruct[{}]", self.file_type_arg.len());
-        writer
-            .write(XmlEvent::start_element("FileTypeArg").attr("SOAP-ENC:arrayType", &argss[..]))?;
-
-        for a in &self.file_type_arg {
-            writer.write(XmlEvent::start_element("ArgStruct"))?;
-            write_simple(writer, "Name", &a.name)?;
-            write_simple(writer, "Value", &a.value)?;
-            writer.write(XmlEvent::end_element())?;
-        }
-
-        // FileTypeArg
-        writer.write(XmlEvent::end_element())?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn start_handler(
-        &mut self,
-        path: &[&str],
-        _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
-    ) {
-        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        if let ["RequestDownload", "FileTypeArg", "ArgStruct"] = &path_pattern[..] {
-            self.file_type_arg.push(ArgStruct::default());
-        }
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["RequestDownload", "FileType"] => {
-                self.file_type = characters.to_string();
-            }
-            ["RequestDownload", "FileTypeArg", "ArgStruct", key] => {
-                if let Some(e) = self.file_type_arg.last_mut() {
-                    match key {
-                        "Name" => e.name = characters.to_string(),
-                        "Value" => e.value = characters.to_string(),
-                        _ => {}
-                    }
-                }
-            }
-
-            _ => {}
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for RequestDownload {
-    fn arbitrary(g: &mut Gen) -> Self {
-        RequestDownload::new(String::arbitrary(g), Vec::<ArgStruct>::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (self.file_type.clone(), self.file_type_arg.clone())
-                .shrink()
-                .map(|(ft, fta)| RequestDownload {
-                    file_type: ft,
-                    file_type_arg: fta,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct RequestDownloadResponse {}
-
-impl RequestDownloadResponse {
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        write_empty_tag(
-            writer,
-            &cwmp_prefix(has_cwmp, "RequestDownloadResponse")[..],
-        )?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct ScheduleDownloadResponse {}
-
-impl ScheduleDownloadResponse {
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        write_empty_tag(
-            writer,
-            &cwmp_prefix(has_cwmp, "ScheduleDownloadResponse")[..],
-        )?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct TimeWindow {
-    window_start: u32,
-    window_end: u32,
-    window_mode: String,
-    user_message: String,
-    max_retries: i32,
-}
-impl TimeWindow {
-    #[must_use]
-    pub fn new(
-        window_start: u32,
-        window_end: u32,
-        window_mode: String,
-        user_message: String,
-        max_retries: i32,
-    ) -> Self {
-        TimeWindow {
-            window_start,
-            window_end,
-            window_mode,
-            user_message,
-            max_retries,
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for TimeWindow {
-    fn arbitrary(g: &mut Gen) -> Self {
-        TimeWindow::new(
-            u32::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            i32::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.window_start.clone(),
-                self.window_end.clone(),
-                self.window_mode.clone(),
-                self.user_message.clone(),
-                self.max_retries.clone(),
-            )
-                .shrink()
-                .map(|(ws, we, wm, um, mr)| TimeWindow {
-                    window_start: ws,
-                    window_end: we,
-                    window_mode: wm,
-                    user_message: um,
-                    max_retries: mr,
-                }),
-        )
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
