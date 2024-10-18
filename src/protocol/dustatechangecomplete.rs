@@ -16,8 +16,8 @@ pub struct DUStateChangeComplete {
 impl DUStateChangeComplete {
     pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
         DUStateChangeComplete {
-            command_key: command_key,
-            results: results,
+            command_key,
+            results,
         }
     }
     pub fn generate<W: Write>(
@@ -69,11 +69,8 @@ impl DUStateChangeComplete {
         _attributes: &Vec<xml::attribute::OwnedAttribute>,
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        match &path_pattern[..] {
-            ["DUStateChangeComplete", "Results", "OpResultStruct"] => {
-                self.results.push(OpResult::default())
-            }
-            _ => {}
+        if let ["DUStateChangeComplete", "Results", "OpResultStruct"] = &path_pattern[..] {
+            self.results.push(OpResult::default())
         }
     }
 
@@ -91,14 +88,8 @@ impl DUStateChangeComplete {
                         "ExecutionUnitRefList" => {
                             e.execution_unit_ref_list = characters.to_string()
                         }
-                        "StartTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.start_time = Some(dt),
-                            _ => {}
-                        },
-                        "CompleteTime" => match characters.parse::<DateTime<Utc>>() {
-                            Ok(dt) => e.complete_time = Some(dt),
-                            _ => {}
-                        },
+                        "StartTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.start_time = Some(dt) },
+                        "CompleteTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.complete_time = Some(dt) },
                         _ => {}
                     }
                 }

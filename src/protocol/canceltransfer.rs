@@ -31,11 +31,7 @@ impl CancelTransfer {
     }
 
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["CancelTransfer", "CommandKey"] => self.command_key = characters.to_string(),
-
-            _ => {}
-        }
+        if let ["CancelTransfer", "CommandKey"] = *path { self.command_key = characters.to_string() }
     }
 }
 

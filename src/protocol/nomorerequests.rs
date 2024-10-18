@@ -15,8 +15,8 @@ pub struct NoMoreRequests {
 impl NoMoreRequests {
     pub fn new(must_understand: bool, value: u8) -> Self {
         NoMoreRequests {
-            must_understand: must_understand,
-            value: value,
+            must_understand,
+            value,
         }
     }
     pub fn generate<W: Write>(

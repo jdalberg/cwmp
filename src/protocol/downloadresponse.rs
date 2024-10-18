@@ -50,14 +50,8 @@ impl DownloadResponse {
             ["DownloadResponse", "Status"] => {
                 self.status = characters.to_string();
             }
-            ["DownloadResponse", "StartTime"] => match characters.parse::<DateTime<Utc>>() {
-                Ok(dt) => self.start_time = Some(dt),
-                _ => {}
-            },
-            ["DownloadResponse", "CompleteTime"] => match characters.parse::<DateTime<Utc>>() {
-                Ok(dt) => self.complete_time = Some(dt),
-                _ => {}
-            },
+            ["DownloadResponse", "StartTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) },
+            ["DownloadResponse", "CompleteTime"] => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) },
             _ => {}
         }
     }

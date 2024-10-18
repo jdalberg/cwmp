@@ -15,8 +15,8 @@ pub struct SessionTimeout {
 impl SessionTimeout {
     pub fn new(must_understand: bool, timeout: u32) -> Self {
         SessionTimeout {
-            must_understand: must_understand,
-            timeout: timeout,
+            must_understand,
+            timeout,
         }
     }
     pub fn generate<W: Write>(

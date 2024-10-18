@@ -13,7 +13,7 @@ pub struct DeleteObjectResponse {
 
 impl DeleteObjectResponse {
     pub fn new(status: String) -> Self {
-        DeleteObjectResponse { status: status }
+        DeleteObjectResponse { status }
     }
     pub fn generate<W: Write>(
         &self,
@@ -29,10 +29,7 @@ impl DeleteObjectResponse {
         Ok(())
     }
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["DeleteObjectResponse", "Status"] => self.status = characters.to_string(),
-            _ => {}
-        }
+        if let ["DeleteObjectResponse", "Status"] = *path { self.status = characters.to_string() }
     }
 }
 

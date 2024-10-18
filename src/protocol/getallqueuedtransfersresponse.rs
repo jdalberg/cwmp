@@ -14,7 +14,7 @@ pub struct GetAllQueuedTransfersResponse {
 impl GetAllQueuedTransfersResponse {
     pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
         GetAllQueuedTransfersResponse {
-            transfer_list: transfer_list,
+            transfer_list,
         }
     }
     pub fn generate<W: Write>(
@@ -56,36 +56,30 @@ impl GetAllQueuedTransfersResponse {
         _attributes: &Vec<xml::attribute::OwnedAttribute>,
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        match &path_pattern[..] {
-            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] => {
-                self.transfer_list.push(AllQueuedTransfers::new(
-                    String::from(""),
-                    String::from(""),
-                    0,
-                    String::from(""),
-                    0,
-                    String::from(""),
-                ))
-            }
-            _ => {}
+        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] = &path_pattern[..] {
+            self.transfer_list.push(AllQueuedTransfers::new(
+                String::from(""),
+                String::from(""),
+                0,
+                String::from(""),
+                0,
+                String::from(""),
+            ))
         }
     }
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] => {
-                if let Some(last) = self.transfer_list.last_mut() {
-                    match key {
-                        "CommandKey" => last.command_key = characters.to_string(),
-                        "State" => last.state = characters.to_string(),
-                        "IsDownload" => last.is_download = parse_to_int(characters, 0),
-                        "FileType" => last.file_type = characters.to_string(),
-                        "FileSize" => last.file_size = parse_to_int(characters, 0),
-                        "TargetFileName" => last.target_filename = characters.to_string(),
-                        _ => {}
-                    }
+        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] = *path {
+            if let Some(last) = self.transfer_list.last_mut() {
+                match key {
+                    "CommandKey" => last.command_key = characters.to_string(),
+                    "State" => last.state = characters.to_string(),
+                    "IsDownload" => last.is_download = parse_to_int(characters, 0),
+                    "FileType" => last.file_type = characters.to_string(),
+                    "FileSize" => last.file_size = parse_to_int(characters, 0),
+                    "TargetFileName" => last.target_filename = characters.to_string(),
+                    _ => {}
                 }
             }
-            _ => {}
         }
     }
 }

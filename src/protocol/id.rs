@@ -15,8 +15,8 @@ pub struct ID {
 impl ID {
     pub fn new(must_understand: bool, id: String) -> Self {
         ID {
-            must_understand: must_understand,
-            id: id,
+            must_understand,
+            id,
         }
     }
     pub fn generate<W: Write>(

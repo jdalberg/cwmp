@@ -15,8 +15,8 @@ pub struct AddObjectResponse {
 impl AddObjectResponse {
     pub fn new(instance_number: u32, status: String) -> Self {
         AddObjectResponse {
-            instance_number: instance_number,
-            status: status,
+            instance_number,
+            status,
         }
     }
     pub fn generate<W: Write>(

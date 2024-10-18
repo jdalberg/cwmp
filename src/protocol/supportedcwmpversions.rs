@@ -15,8 +15,8 @@ pub struct SupportedCWMPVersions {
 impl SupportedCWMPVersions {
     pub fn new(must_understand: bool, value: String) -> Self {
         SupportedCWMPVersions {
-            must_understand: must_understand,
-            value: value,
+            must_understand,
+            value,
         }
     }
     pub fn generate<W: Write>(

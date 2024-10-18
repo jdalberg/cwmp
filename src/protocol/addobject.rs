@@ -15,8 +15,8 @@ pub struct AddObject {
 impl AddObject {
     pub fn new(object_name: String, parameter_key: String) -> Self {
         AddObject {
-            object_name: object_name,
-            parameter_key: parameter_key,
+            object_name,
+            parameter_key,
         }
     }
     pub fn generate<W: Write>(

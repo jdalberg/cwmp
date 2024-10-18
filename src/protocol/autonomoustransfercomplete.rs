@@ -37,13 +37,13 @@ impl AutonomousTransferComplete {
         complete_time: DateTime<Utc>,
     ) -> Self {
         AutonomousTransferComplete {
-            announce_url: announce_url,
-            transfer_url: transfer_url,
-            is_download: is_download,
-            file_type: file_type,
-            file_size: file_size,
-            target_filename: target_filename,
-            fault: fault,
+            announce_url,
+            transfer_url,
+            is_download,
+            file_type,
+            file_size,
+            target_filename,
+            fault,
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
@@ -96,16 +96,10 @@ impl AutonomousTransferComplete {
                 self.file_size = parse_to_int(characters, 0)
             }
             ["AutonomousTransferComplete", "StartTime"] => {
-                match characters.parse::<DateTime<Utc>>() {
-                    Ok(dt) => self.start_time = Some(dt),
-                    _ => {}
-                }
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) }
             }
             ["AutonomousTransferComplete", "CompleteTime"] => {
-                match characters.parse::<DateTime<Utc>>() {
-                    Ok(dt) => self.complete_time = Some(dt),
-                    _ => {}
-                }
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) }
             }
             ["AutonomousTransferComplete", "FaultStruct", "FaultCode"] => {
                 self.fault.set_code(parse_to_int(characters, 0))

@@ -22,10 +22,10 @@ impl ChangeDUState {
         update_operations: Vec<UpdateOp>,
     ) -> Self {
         ChangeDUState {
-            command_key: command_key,
-            install_operations: install_operations,
-            uninstall_operations: uninstall_operations,
-            update_operations: update_operations,
+            command_key,
+            install_operations,
+            uninstall_operations,
+            update_operations,
         }
     }
 
@@ -110,43 +110,34 @@ impl ChangeDUState {
             ["ChangeDUState", "CommandKey"] => self.command_key = characters.to_string(),
             ["ChangeDUState", "Operations", "InstallOpStruct", key] => {
                 let last = self.install_operations.last_mut();
-                match last {
-                    Some(e) => match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "Username" => e.username = characters.to_string(),
-                        "Password" => e.password = characters.to_string(),
-                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
-                        _ => {}
-                    },
-                    None => {}
-                }
+                if let Some(e) = last { match key {
+                    "URL" => e.url = characters.to_string(),
+                    "UUID" => e.uuid = characters.to_string(),
+                    "Username" => e.username = characters.to_string(),
+                    "Password" => e.password = characters.to_string(),
+                    "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                    _ => {}
+                } }
             }
             ["ChangeDUState", "Operations", "UninstallOpStruct", key] => {
                 let last = self.uninstall_operations.last_mut();
-                match last {
-                    Some(e) => match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
-                        _ => {}
-                    },
-                    None => {}
-                }
+                if let Some(e) = last { match key {
+                    "URL" => e.url = characters.to_string(),
+                    "UUID" => e.uuid = characters.to_string(),
+                    "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                    _ => {}
+                } }
             }
             ["ChangeDUState", "Operations", "UpdateOpStruct", key] => {
                 let last = self.update_operations.last_mut();
-                match last {
-                    Some(e) => match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "Username" => e.username = characters.to_string(),
-                        "Password" => e.password = characters.to_string(),
-                        "Version" => e.version = characters.to_string(),
-                        _ => {}
-                    },
-                    None => {}
-                }
+                if let Some(e) = last { match key {
+                    "URL" => e.url = characters.to_string(),
+                    "UUID" => e.uuid = characters.to_string(),
+                    "Username" => e.username = characters.to_string(),
+                    "Password" => e.password = characters.to_string(),
+                    "Version" => e.version = characters.to_string(),
+                    _ => {}
+                } }
             }
             _ => {}
         }
