@@ -16,6 +16,7 @@ use rand::Rng;
 
 mod addobject;
 mod addobjectresponse;
+mod allqueuedtransfers;
 mod autonomousdustatechangecomplete;
 mod autonomousdustatechangecompleteresponse;
 mod autonomoustransfercomplete;
@@ -34,6 +35,7 @@ mod dustatechangecompleteresponse;
 mod factoryreset;
 mod factoryresetresponse;
 mod fault;
+mod getallqueuedtransfersresponse;
 mod headerelement;
 mod holdrequests;
 mod id;
@@ -48,6 +50,7 @@ mod usecwmpversion;
 
 pub use addobject::AddObject;
 pub use addobjectresponse::AddObjectResponse;
+pub use allqueuedtransfers::AllQueuedTransfers;
 pub use autonomousdustatechangecomplete::AutonomousDUStateChangeComplete;
 pub use autonomousdustatechangecompleteresponse::AutonomousDUStateChangeCompleteResponse;
 pub use autonomoustransfercomplete::AutonomousTransferComplete;
@@ -66,6 +69,7 @@ pub use dustatechangecompleteresponse::DUStateChangeCompleteResponse;
 pub use factoryreset::FactoryReset;
 pub use factoryresetresponse::FactoryResetResponse;
 pub use fault::{Fault, FaultDetail, FaultStruct};
+pub use getallqueuedtransfersresponse::GetAllQueuedTransfersResponse;
 pub use headerelement::HeaderElement;
 pub use holdrequests::HoldRequests;
 pub use id::ID;
@@ -133,170 +137,6 @@ pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32
         .and_hms_opt(hour, min, sec)
         .unwrap_or(NaiveDateTime::default())
         .and_utc()
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct AllQueuedTransfers {
-    command_key: String,
-    state: String,
-    is_download: u8,
-    file_type: String,
-    file_size: u32,
-    target_filename: String,
-}
-
-impl AllQueuedTransfers {
-    pub fn new(
-        command_key: String,
-        state: String,
-        is_download: u8,
-        file_type: String,
-        file_size: u32,
-        target_filename: String,
-    ) -> Self {
-        AllQueuedTransfers {
-            command_key: command_key,
-            state: state,
-            is_download: is_download,
-            file_type: file_type,
-            file_size: file_size,
-            target_filename: target_filename,
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for AllQueuedTransfers {
-    fn arbitrary(g: &mut Gen) -> Self {
-        AllQueuedTransfers::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u8::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.command_key.clone(),
-                self.state.clone(),
-                self.is_download.clone(),
-                self.file_type.clone(),
-                self.file_size.clone(),
-                self.target_filename.clone(),
-            )
-                .shrink()
-                .map(|(c, s, id, ft, fs, tf)| AllQueuedTransfers {
-                    command_key: c,
-                    state: s,
-                    is_download: id,
-                    file_type: ft,
-                    file_size: fs,
-                    target_filename: tf,
-                }),
-        )
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct GetAllQueuedTransfersResponse {
-    transfer_list: Vec<AllQueuedTransfers>,
-}
-
-impl GetAllQueuedTransfersResponse {
-    pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
-        GetAllQueuedTransfersResponse {
-            transfer_list: transfer_list,
-        }
-    }
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        writer.write(XmlEvent::start_element(
-            &cwmp_prefix(has_cwmp, "GetAllQueuedTransfersResponse")[..],
-        ))?;
-
-        let ss = format!(
-            "cwmp::AllQueuedTransferStruct[{}]",
-            self.transfer_list.len()
-        );
-
-        writer
-            .write(XmlEvent::start_element("TransferList").attr("SOAP-ENC:arrayType", &ss[..]))?;
-
-        for t in self.transfer_list.iter() {
-            writer.write(XmlEvent::start_element("AllQueuedTransferStruct"))?;
-            write_simple(writer, "CommandKey", &t.command_key)?;
-            write_simple(writer, "State", &t.state)?;
-            write_simple(writer, "IsDownload", &t.is_download.to_string())?;
-            write_simple(writer, "FileType", &t.file_type)?;
-            write_simple(writer, "FileSize", &t.file_size.to_string())?;
-            write_simple(writer, "TargetFileName", &t.target_filename)?;
-            writer.write(XmlEvent::end_element())?;
-        }
-
-        writer.write(XmlEvent::end_element())?;
-        writer.write(XmlEvent::end_element())?;
-        Ok(())
-    }
-    fn start_handler(
-        &mut self,
-        path: &[&str],
-        _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
-    ) {
-        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        match &path_pattern[..] {
-            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] => {
-                self.transfer_list.push(AllQueuedTransfers::new(
-                    String::from(""),
-                    String::from(""),
-                    0,
-                    String::from(""),
-                    0,
-                    String::from(""),
-                ))
-            }
-            _ => {}
-        }
-    }
-    fn characters(&mut self, path: &[&str], characters: &String) {
-        match *path {
-            ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] => {
-                if let Some(last) = self.transfer_list.last_mut() {
-                    match key {
-                        "CommandKey" => last.command_key = characters.to_string(),
-                        "State" => last.state = characters.to_string(),
-                        "IsDownload" => last.is_download = parse_to_int(characters, 0),
-                        "FileType" => last.file_type = characters.to_string(),
-                        "FileSize" => last.file_size = parse_to_int(characters, 0),
-                        "TargetFileName" => last.target_filename = characters.to_string(),
-                        _ => {}
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for GetAllQueuedTransfersResponse {
-    fn arbitrary(g: &mut Gen) -> Self {
-        GetAllQueuedTransfersResponse::new(Vec::<AllQueuedTransfers>::arbitrary(g))
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            self.transfer_list
-                .clone()
-                .shrink()
-                .map(|tl| GetAllQueuedTransfersResponse { transfer_list: tl }),
-        )
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
