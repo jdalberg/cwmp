@@ -13,9 +13,7 @@ pub struct GetAllQueuedTransfersResponse {
 
 impl GetAllQueuedTransfersResponse {
     pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
-        GetAllQueuedTransfersResponse {
-            transfer_list,
-        }
+        GetAllQueuedTransfersResponse { transfer_list }
     }
     pub fn generate<W: Write>(
         &self,
@@ -56,7 +54,9 @@ impl GetAllQueuedTransfersResponse {
         _attributes: &Vec<xml::attribute::OwnedAttribute>,
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] = &path_pattern[..] {
+        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] =
+            &path_pattern[..]
+        {
             self.transfer_list.push(AllQueuedTransfers::new(
                 String::from(""),
                 String::from(""),
@@ -68,7 +68,9 @@ impl GetAllQueuedTransfersResponse {
         }
     }
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] = *path {
+        if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] =
+            *path
+        {
             if let Some(last) = self.transfer_list.last_mut() {
                 match key {
                     "CommandKey" => last.command_key = characters.to_string(),

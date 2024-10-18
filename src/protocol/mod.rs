@@ -35,6 +35,7 @@ mod dustatechangecompleteresponse;
 mod factoryreset;
 mod factoryresetresponse;
 mod fault;
+mod getallqueuedtransfers;
 mod getallqueuedtransfersresponse;
 mod headerelement;
 mod holdrequests;
@@ -42,6 +43,7 @@ mod id;
 mod installop;
 mod nomorerequests;
 mod opresult;
+mod optionstruct;
 mod sessiontimeout;
 mod supportedcwmpversions;
 mod uninstallop;
@@ -69,6 +71,7 @@ pub use dustatechangecompleteresponse::DUStateChangeCompleteResponse;
 pub use factoryreset::FactoryReset;
 pub use factoryresetresponse::FactoryResetResponse;
 pub use fault::{Fault, FaultDetail, FaultStruct};
+pub use getallqueuedtransfers::GetAllQueuedTransfers;
 pub use getallqueuedtransfersresponse::GetAllQueuedTransfersResponse;
 pub use headerelement::HeaderElement;
 pub use holdrequests::HoldRequests;
@@ -76,6 +79,7 @@ pub use id::ID;
 pub use installop::InstallOp;
 pub use nomorerequests::NoMoreRequests;
 pub use opresult::OpResult;
+pub use optionstruct::OptionStruct;
 pub use sessiontimeout::SessionTimeout;
 pub use supportedcwmpversions::SupportedCWMPVersions;
 pub use uninstallop::UninstallOp;
@@ -141,89 +145,6 @@ pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32
         .and_hms_opt(hour, min, sec)
         .unwrap_or(NaiveDateTime::default())
         .and_utc()
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct GetAllQueuedTransfers;
-
-impl GetAllQueuedTransfers {
-    pub fn generate<W: Write>(
-        &self,
-        writer: &mut xml::EventWriter<W>,
-        has_cwmp: bool,
-    ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "GetAllQueuedTransfers")[..])?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct OptionStruct {
-    option_name: String,
-    voucher_sn: String,
-    state: u8,
-    mode: String,
-    start_date: Option<DateTime<Utc>>,
-    expiration_date: Option<DateTime<Utc>>,
-    is_transferable: u8,
-}
-
-impl OptionStruct {
-    pub fn new(
-        option_name: String,
-        voucher_sn: String,
-        state: u8,
-        mode: String,
-        start_date: DateTime<Utc>,
-        expiration_date: DateTime<Utc>,
-        is_transferable: u8,
-    ) -> Self {
-        OptionStruct {
-            option_name,
-            voucher_sn,
-            state,
-            mode,
-            start_date: Some(start_date),
-            expiration_date: Some(expiration_date),
-            is_transferable,
-        }
-    }
-}
-
-#[cfg(test)]
-impl Arbitrary for OptionStruct {
-    fn arbitrary(g: &mut Gen) -> Self {
-        OptionStruct::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u8::arbitrary(g),
-            String::arbitrary(g),
-            gen_utc_date(2014, 11, 28, 12, 0, 9),
-            gen_utc_date(2014, 11, 29, 12, 0, 9),
-            u8::arbitrary(g),
-        )
-    }
-    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (
-                self.option_name.clone(),
-                self.voucher_sn.clone(),
-                self.state.clone(),
-                self.mode.clone(),
-                self.is_transferable.clone(),
-            )
-                .shrink()
-                .map(|(on, vsn, s, m, i)| OptionStruct {
-                    option_name: on,
-                    voucher_sn: vsn,
-                    state: s,
-                    mode: m,
-                    is_transferable: i,
-                    start_date: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
-                    expiration_date: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
-                }),
-        )
-    }
 }
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
@@ -3719,7 +3640,7 @@ impl Envelope {
 
     // TODO: todo!("// match the ones who actually need and end_handler, and call their respective end_handler");
     fn end_handler(&mut self, path: &Vec<String>, _name: &xml::name::OwnedName) {
-        let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
+        let _path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         {}
     }
 
@@ -3752,12 +3673,12 @@ impl Envelope {
                     }
                     Some(HeaderElement::SupportedCWMPVersions(data)) => {
                         if header_element == &"SupportedCWMPVersions" {
-                            data.value = characters.to_string()
+                            data.value = characters.to_string();
                         }
                     }
                     Some(HeaderElement::UseCWMPVersion(data)) => {
                         if header_element == &"UseCWMPVersion" {
-                            data.value = characters.to_string()
+                            data.value = characters.to_string();
                         }
                     }
                     _ => {} // should never happen
@@ -3767,103 +3688,103 @@ impl Envelope {
                 let last = self.body.last_mut();
                 match last {
                     Some(BodyElement::AddObjectResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::AddObject(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::AutonomousDUStateChangeComplete(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::AutonomousTransferComplete(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::CancelTransfer(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::ChangeDUState(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::DeleteObjectResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::DeleteObject(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::DownloadResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::Download(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::DUStateChangeComplete(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::Fault(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetOptionsResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetOptions(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterAttributesResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterNamesResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterNames(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterValues(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetParameterValuesResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetQueuedTransfersResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::GetRPCMethodsResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::InformResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::Inform(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::KickedResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::Kicked(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::Reboot(e)) => e.characters(&path_pattern[2..], characters),
                     Some(BodyElement::RequestDownload(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::ScheduleDownload(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::ScheduleInform(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::SetParameterAttributes(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::SetParameterValuesResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::SetParameterValues(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::SetVouchers(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::TransferComplete(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::UploadResponse(e)) => {
-                        e.characters(&path_pattern[2..], characters)
+                        e.characters(&path_pattern[2..], characters);
                     }
                     Some(BodyElement::Upload(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
