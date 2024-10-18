@@ -9,7 +9,7 @@ pub struct UninstallOp {
 }
 
 impl UninstallOp {
-    pub fn new(url: String, uuid: String, execution_env_ref: String) -> Self {
+    #[must_use] pub fn new(url: String, uuid: String, execution_env_ref: String) -> Self {
         UninstallOp {
             url,
             uuid,

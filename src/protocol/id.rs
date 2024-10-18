@@ -13,7 +13,7 @@ pub struct ID {
 }
 
 impl ID {
-    pub fn new(must_understand: bool, id: String) -> Self {
+    #[must_use] pub fn new(must_understand: bool, id: String) -> Self {
         ID {
             must_understand,
             id,

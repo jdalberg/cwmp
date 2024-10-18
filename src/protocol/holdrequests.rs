@@ -13,7 +13,7 @@ pub struct HoldRequests {
 }
 
 impl HoldRequests {
-    pub fn new(must_understand: bool, hold: bool) -> Self {
+    #[must_use] pub fn new(must_understand: bool, hold: bool) -> Self {
         HoldRequests {
             must_understand,
             hold,

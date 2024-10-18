@@ -13,7 +13,7 @@ pub struct FaultStruct {
 }
 
 impl FaultStruct {
-    pub fn new(code: u32, string: String) -> Self {
+    #[must_use] pub fn new(code: u32, string: String) -> Self {
         FaultStruct { code, string }
     }
     pub fn set_code(&mut self, code: u32) {
@@ -45,7 +45,7 @@ pub struct FaultDetail {
 }
 
 impl FaultDetail {
-    pub fn new(code: u32, string: String) -> Self {
+    #[must_use] pub fn new(code: u32, string: String) -> Self {
         FaultDetail { code, string }
     }
 }
@@ -72,7 +72,7 @@ pub struct Fault {
 }
 
 impl Fault {
-    pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
+    #[must_use] pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
         Fault {
             faultcode,
             faultstring,

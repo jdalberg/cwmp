@@ -25,7 +25,7 @@ pub struct AutonomousTransferComplete {
 }
 
 impl AutonomousTransferComplete {
-    pub fn new(
+    #[must_use] pub fn new(
         announce_url: String,
         transfer_url: String,
         is_download: u8,
@@ -80,20 +80,20 @@ impl AutonomousTransferComplete {
     pub fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["AutonomousTransferComplete", "AnnounceURL"] => {
-                self.announce_url = characters.to_string()
+                self.announce_url = characters.to_string();
             }
             ["AutonomousTransferComplete", "TransferURL"] => {
-                self.transfer_url = characters.to_string()
+                self.transfer_url = characters.to_string();
             }
             ["AutonomousTransferComplete", "IsDownload"] => {
-                self.is_download = parse_to_int(characters, 0)
+                self.is_download = parse_to_int(characters, 0);
             }
             ["AutonomousTransferComplete", "TargetFileName"] => {
-                self.target_filename = characters.to_string()
+                self.target_filename = characters.to_string();
             }
             ["AutonomousTransferComplete", "FileType"] => self.file_type = characters.to_string(),
             ["AutonomousTransferComplete", "FileSize"] => {
-                self.file_size = parse_to_int(characters, 0)
+                self.file_size = parse_to_int(characters, 0);
             }
             ["AutonomousTransferComplete", "StartTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) }
@@ -102,10 +102,10 @@ impl AutonomousTransferComplete {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) }
             }
             ["AutonomousTransferComplete", "FaultStruct", "FaultCode"] => {
-                self.fault.set_code(parse_to_int(characters, 0))
+                self.fault.set_code(parse_to_int(characters, 0));
             }
             ["AutonomousTransferComplete", "FaultStruct", "FaultString"] => {
-                self.fault.set_string(characters)
+                self.fault.set_string(characters);
             }
             _ => {}
         }

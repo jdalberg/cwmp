@@ -14,7 +14,7 @@ pub struct DUStateChangeComplete {
 }
 
 impl DUStateChangeComplete {
-    pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
+    #[must_use] pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
         DUStateChangeComplete {
             command_key,
             results,
@@ -37,7 +37,7 @@ impl DUStateChangeComplete {
 
         writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for r in self.results.iter() {
+        for r in &self.results {
             writer.write(XmlEvent::start_element("OpResultStruct"))?;
             write_simple(writer, "UUID", &r.uuid)?;
             write_simple(writer, "DeploymentUnitRef", &r.deployment_unit_ref)?;
@@ -70,7 +70,7 @@ impl DUStateChangeComplete {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["DUStateChangeComplete", "Results", "OpResultStruct"] = &path_pattern[..] {
-            self.results.push(OpResult::default())
+            self.results.push(OpResult::default());
         }
     }
 
@@ -86,7 +86,7 @@ impl DUStateChangeComplete {
                         "CurrentState" => e.current_state = characters.to_string(),
                         "Resolved" => e.resolved = parse_to_int(characters, 0),
                         "ExecutionUnitRefList" => {
-                            e.execution_unit_ref_list = characters.to_string()
+                            e.execution_unit_ref_list = characters.to_string();
                         }
                         "StartTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.start_time = Some(dt) },
                         "CompleteTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.complete_time = Some(dt) },

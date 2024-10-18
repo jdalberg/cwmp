@@ -13,7 +13,7 @@ pub struct UseCWMPVersion {
 }
 
 impl UseCWMPVersion {
-    pub fn new(must_understand: bool, value: String) -> Self {
+    #[must_use] pub fn new(must_understand: bool, value: String) -> Self {
         UseCWMPVersion {
             must_understand,
             value,

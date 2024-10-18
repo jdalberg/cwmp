@@ -22,7 +22,7 @@ pub struct AutonOpResult {
 }
 
 impl AutonOpResult {
-    pub fn new(
+    #[must_use] pub fn new(
         uuid: String,
         deployment_unit_ref: String,
         version: String,

@@ -12,7 +12,7 @@ pub struct AllQueuedTransfers {
 }
 
 impl AllQueuedTransfers {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         state: String,
         is_download: u8,

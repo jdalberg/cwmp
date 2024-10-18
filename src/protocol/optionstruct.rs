@@ -17,7 +17,7 @@ pub struct OptionStruct {
 }
 
 impl OptionStruct {
-    pub fn new(
+    #[must_use] pub fn new(
         option_name: String,
         voucher_sn: String,
         state: u8,

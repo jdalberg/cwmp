@@ -153,7 +153,7 @@ pub struct GetOptionsResponse {
 }
 
 impl GetOptionsResponse {
-    pub fn new(option_list: Vec<OptionStruct>) -> Self {
+    #[must_use] pub fn new(option_list: Vec<OptionStruct>) -> Self {
         GetOptionsResponse { option_list }
     }
     pub fn generate<W: Write>(
@@ -171,7 +171,7 @@ impl GetOptionsResponse {
 
         writer.write(XmlEvent::start_element("OptionList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for o in self.option_list.iter() {
+        for o in &self.option_list {
             writer.write(XmlEvent::start_element("OptionStruct"))?;
             write_simple(writer, "OptionName", &o.option_name)?;
             write_simple(writer, "VoucherSN", &o.voucher_sn)?;
@@ -213,12 +213,12 @@ impl GetOptionsResponse {
                     "Mode" => last.mode = characters.to_string(),
                     "StartDate" => {
                         if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                            last.start_date = Some(dt)
+                            last.start_date = Some(dt);
                         }
                     }
                     "ExpirationDate" => {
                         if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                            last.expiration_date = Some(dt)
+                            last.expiration_date = Some(dt);
                         }
                     }
                     "IsTransferable" => last.is_transferable = parse_to_int(characters, 0),
@@ -250,7 +250,7 @@ pub struct GetOptions {
 }
 
 impl GetOptions {
-    pub fn new(option_name: String) -> Self {
+    #[must_use] pub fn new(option_name: String) -> Self {
         GetOptions { option_name }
     }
     pub fn generate<W: Write>(
@@ -267,7 +267,7 @@ impl GetOptions {
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         if let ["GetOptions", "OptionName"] = *path {
-            self.option_name = characters.to_string()
+            self.option_name = characters.to_string();
         }
     }
 }
@@ -293,7 +293,7 @@ pub struct GetParameterAttributes {
 }
 
 impl GetParameterAttributes {
-    pub fn new(parameternames: Vec<String>) -> Self {
+    #[must_use] pub fn new(parameternames: Vec<String>) -> Self {
         GetParameterAttributes { parameternames }
     }
     pub fn generate<W: Write>(
@@ -305,7 +305,7 @@ impl GetParameterAttributes {
             &cwmp_prefix(has_cwmp, "GetParameterAttributes")[..],
         ))?;
         writer.write(XmlEvent::start_element("ParameterNames"))?;
-        for p in self.parameternames.iter() {
+        for p in &self.parameternames {
             write_simple(writer, "string", p)?;
         }
         writer.write(XmlEvent::end_element())?;
@@ -320,7 +320,7 @@ impl GetParameterAttributes {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetParameterAttributes", "ParameterNames", "string"] = &path_pattern[..] {
-            self.parameternames.push(String::from(""));
+            self.parameternames.push(String::new());
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -354,7 +354,7 @@ pub struct ParameterAttribute {
     accesslist: Vec<String>,
 }
 impl ParameterAttribute {
-    pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
+    #[must_use] pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
         ParameterAttribute {
             name,
             notification,
@@ -395,7 +395,7 @@ pub struct GetParameterAttributesResponse {
 }
 
 impl GetParameterAttributesResponse {
-    pub fn new(parameters: Vec<ParameterAttribute>) -> Self {
+    #[must_use] pub fn new(parameters: Vec<ParameterAttribute>) -> Self {
         GetParameterAttributesResponse { parameters }
     }
     pub fn generate<W: Write>(
@@ -416,7 +416,7 @@ impl GetParameterAttributesResponse {
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for p in self.parameters.iter() {
+        for p in &self.parameters {
             writer.write(XmlEvent::start_element("ParameterAttributeStruct"))?;
             write_simple(writer, "Name", &p.name)?;
             write_simple(writer, "Notification", &p.notification)?;
@@ -425,7 +425,7 @@ impl GetParameterAttributesResponse {
                 XmlEvent::start_element("AccessList").attr("SOAP-ENC:arrayType", &als[..]),
             )?;
 
-            for a in p.accesslist.iter() {
+            for a in &p.accesslist {
                 write_simple(writer, "string", a)?;
             }
 
@@ -450,7 +450,7 @@ impl GetParameterAttributesResponse {
             }
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.accesslist.push(String::from(""));
+                    e.accesslist.push(String::new());
                 }
             }
             _ => {}
@@ -502,7 +502,7 @@ pub struct ParameterInfoStruct {
 }
 
 impl ParameterInfoStruct {
-    pub fn new(name: String, writable: u8) -> Self {
+    #[must_use] pub fn new(name: String, writable: u8) -> Self {
         ParameterInfoStruct { name, writable }
     }
 }
@@ -530,7 +530,7 @@ pub struct GetParameterNamesResponse {
 }
 
 impl GetParameterNamesResponse {
-    pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
+    #[must_use] pub fn new(parameter_list: Vec<ParameterInfoStruct>) -> Self {
         GetParameterNamesResponse { parameter_list }
     }
     fn start_handler(
@@ -543,7 +543,7 @@ impl GetParameterNamesResponse {
         if let ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct"] =
             &path_pattern[..]
         {
-            self.parameter_list.push(ParameterInfoStruct::default())
+            self.parameter_list.push(ParameterInfoStruct::default());
         }
     }
     pub fn generate<W: Write>(
@@ -562,7 +562,7 @@ impl GetParameterNamesResponse {
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for p in self.parameter_list.iter() {
+        for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("ParameterInfoStruct"))?;
             write_simple(writer, "Name", &p.name)?;
             write_simple(writer, "Writable", &p.writable.to_string())?;
@@ -611,7 +611,7 @@ pub struct GetParameterNames {
     next_level: u32,
 }
 impl GetParameterNames {
-    pub fn new(parameter_path: String, next_level: u32) -> Self {
+    #[must_use] pub fn new(parameter_path: String, next_level: u32) -> Self {
         GetParameterNames {
             parameter_path,
             next_level,
@@ -664,7 +664,7 @@ pub struct ParameterValue {
 }
 
 impl ParameterValue {
-    pub fn new(name: String, param_type: String, value: String) -> Self {
+    #[must_use] pub fn new(name: String, param_type: String, value: String) -> Self {
         ParameterValue {
             name,
             r#type: param_type,
@@ -701,7 +701,7 @@ pub struct GetParameterValues {
 }
 
 impl GetParameterValues {
-    pub fn new(parameternames: Vec<String>) -> Self {
+    #[must_use] pub fn new(parameternames: Vec<String>) -> Self {
         GetParameterValues { parameternames }
     }
     pub fn generate<W: Write>(
@@ -713,7 +713,7 @@ impl GetParameterValues {
             &cwmp_prefix(has_cwmp, "GetParameterValues")[..],
         ))?;
         writer.write(XmlEvent::start_element("ParameterNames"))?;
-        for p in self.parameternames.iter() {
+        for p in &self.parameternames {
             write_simple(writer, "string", p)?;
         }
         writer.write(XmlEvent::end_element())?;
@@ -728,7 +728,7 @@ impl GetParameterValues {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetParameterValues", "ParameterNames", "string"] = &path_pattern[..] {
-            self.parameternames.push(String::from(""));
+            self.parameternames.push(String::new());
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -761,7 +761,7 @@ pub struct GetParameterValuesResponse {
 }
 
 impl GetParameterValuesResponse {
-    pub fn new(parameters: Vec<ParameterValue>) -> Self {
+    #[must_use] pub fn new(parameters: Vec<ParameterValue>) -> Self {
         GetParameterValuesResponse { parameters }
     }
     pub fn generate<W: Write>(
@@ -782,7 +782,7 @@ impl GetParameterValuesResponse {
                 .attr("SOAP-ENC:arrayType", &ss[..]),
         )?;
 
-        for p in self.parameters.iter() {
+        for p in &self.parameters {
             writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
             write_simple(writer, "Name", &p.name)?;
             writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
@@ -854,7 +854,7 @@ pub struct QueuedTransferStruct {
 }
 
 impl QueuedTransferStruct {
-    pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
+    #[must_use] pub fn new(command_key: Option<String>, state: Option<String>) -> Self {
         QueuedTransferStruct { command_key, state }
     }
 }
@@ -885,7 +885,7 @@ pub struct GetQueuedTransfersResponse {
 }
 
 impl GetQueuedTransfersResponse {
-    pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
+    #[must_use] pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
         GetQueuedTransfersResponse { transfer_list }
     }
     pub fn generate<W: Write>(
@@ -904,7 +904,7 @@ impl GetQueuedTransfersResponse {
         writer
             .write(XmlEvent::start_element("TransferList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for p in self.transfer_list.iter() {
+        for p in &self.transfer_list {
             writer.write(XmlEvent::start_element("QueuedTransferStruct"))?;
             if let Some(ck) = &p.command_key {
                 write_simple(writer, "CommandKey", ck)?;
@@ -927,16 +927,16 @@ impl GetQueuedTransfersResponse {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct"] => {
-                self.transfer_list.push(QueuedTransferStruct::default())
+                self.transfer_list.push(QueuedTransferStruct::default());
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "CommandKey"] => {
                 if let Some(l) = self.transfer_list.last_mut() {
-                    l.command_key = Some("".to_string());
+                    l.command_key = Some(String::new());
                 }
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "State"] => {
                 if let Some(l) = self.transfer_list.last_mut() {
-                    l.state = Some("".to_string());
+                    l.state = Some(String::new());
                 }
             }
             _ => {}
@@ -990,7 +990,7 @@ pub struct GetRPCMethodsResponse {
 }
 
 impl GetRPCMethodsResponse {
-    pub fn new(method_list: Vec<String>) -> Self {
+    #[must_use] pub fn new(method_list: Vec<String>) -> Self {
         GetRPCMethodsResponse { method_list }
     }
     pub fn generate<W: Write>(
@@ -1005,7 +1005,7 @@ impl GetRPCMethodsResponse {
 
         writer.write(XmlEvent::start_element("MethodList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for p in self.method_list.iter() {
+        for p in &self.method_list {
             write_simple(writer, "string", p)?;
         }
         writer.write(XmlEvent::end_element())?;
@@ -1020,14 +1020,14 @@ impl GetRPCMethodsResponse {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetRPCMethodsResponse", "MethodList", "string"] = &path_pattern[..] {
-            self.method_list.push(String::from(""));
+            self.method_list.push(String::new());
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         if let ["GetRPCMethodsResponse", "MethodList", "string"] = *path {
             let last = self.method_list.last_mut();
             if let Some(l) = last {
-                *l = characters.to_string()
+                *l = characters.to_string();
             }
         }
     }
@@ -1068,7 +1068,7 @@ pub struct InformResponse {
 }
 
 impl InformResponse {
-    pub fn new(max_envelopes: u16) -> Self {
+    #[must_use] pub fn new(max_envelopes: u16) -> Self {
         InformResponse { max_envelopes }
     }
     pub fn generate<W: Write>(
@@ -1113,7 +1113,7 @@ pub struct DeviceId {
     serial_number: String,
 }
 impl DeviceId {
-    pub fn new(
+    #[must_use] pub fn new(
         manufacturer: String,
         oui: String,
         product_class: String,
@@ -1164,7 +1164,7 @@ pub struct EventStruct {
 }
 
 impl EventStruct {
-    pub fn new(event_code: String, command_key: String) -> Self {
+    #[must_use] pub fn new(event_code: String, command_key: String) -> Self {
         EventStruct {
             event_code,
             command_key,
@@ -1200,7 +1200,7 @@ pub struct Inform {
 }
 
 impl Inform {
-    pub fn new(
+    #[must_use] pub fn new(
         device_id: DeviceId,
         event: Vec<EventStruct>,
         max_envelopes: u32,
@@ -1236,7 +1236,7 @@ impl Inform {
 
         writer.write(XmlEvent::start_element("Event").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for e in self.event.iter() {
+        for e in &self.event {
             writer.write(XmlEvent::start_element("EventStruct"))?;
             write_simple(writer, "EventCode", &e.event_code)?;
             write_simple(writer, "CommandKey", &e.command_key)?;
@@ -1255,7 +1255,7 @@ impl Inform {
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pls[..]))?;
 
-        for p in self.parameter_list.iter() {
+        for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
             write_simple(writer, "Name", &p.name)?;
             writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
@@ -1280,7 +1280,7 @@ impl Inform {
         match &path_pattern[..] {
             ["Inform", "Event", "EventStruct"] => self.event.push(EventStruct::default()),
             ["Inform", "ParameterList", "ParameterValueStruct"] => {
-                self.parameter_list.push(ParameterValue::default())
+                self.parameter_list.push(ParameterValue::default());
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
@@ -1294,14 +1294,14 @@ impl Inform {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["Inform", "DeviceId", "Manufacturer"] => {
-                self.device_id.manufacturer = characters.to_string()
+                self.device_id.manufacturer = characters.to_string();
             }
             ["Inform", "DeviceId", "OUI"] => self.device_id.oui = characters.to_string(),
             ["Inform", "DeviceId", "ProductClass"] => {
-                self.device_id.product_class = characters.to_string()
+                self.device_id.product_class = characters.to_string();
             }
             ["Inform", "DeviceId", "SerialNumber"] => {
-                self.device_id.serial_number = characters.to_string()
+                self.device_id.serial_number = characters.to_string();
             }
             ["Inform", "Event", "EventStruct", key] => {
                 if let Some(e) = self.event.last_mut() {
@@ -1316,7 +1316,7 @@ impl Inform {
             ["Inform", "RetryCount"] => self.retry_count = parse_to_int(characters, 0),
             ["Inform", "CurrentTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.current_time = Some(dt)
+                    self.current_time = Some(dt);
                 }
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
@@ -1374,7 +1374,7 @@ pub struct KickedResponse {
 }
 
 impl KickedResponse {
-    pub fn new(next_url: String) -> Self {
+    #[must_use] pub fn new(next_url: String) -> Self {
         KickedResponse { next_url }
     }
     pub fn generate<W: Write>(
@@ -1420,7 +1420,7 @@ pub struct Kicked {
 }
 
 impl Kicked {
-    pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
+    #[must_use] pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
         Kicked {
             command,
             referer,
@@ -1511,7 +1511,7 @@ pub struct Reboot {
 }
 
 impl Reboot {
-    pub fn new(command_key: String) -> Self {
+    #[must_use] pub fn new(command_key: String) -> Self {
         Reboot { command_key }
     }
     pub fn generate<W: Write>(
@@ -1555,7 +1555,7 @@ pub struct ArgStruct {
 }
 
 impl ArgStruct {
-    pub fn new(name: String, value: String) -> Self {
+    #[must_use] pub fn new(name: String, value: String) -> Self {
         ArgStruct { name, value }
     }
 }
@@ -1581,7 +1581,7 @@ pub struct RequestDownload {
 }
 
 impl RequestDownload {
-    pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
+    #[must_use] pub fn new(file_type: String, file_type_arg: Vec<ArgStruct>) -> Self {
         RequestDownload {
             file_type,
             file_type_arg,
@@ -1600,7 +1600,7 @@ impl RequestDownload {
         writer
             .write(XmlEvent::start_element("FileTypeArg").attr("SOAP-ENC:arrayType", &argss[..]))?;
 
-        for a in self.file_type_arg.iter() {
+        for a in &self.file_type_arg {
             writer.write(XmlEvent::start_element("ArgStruct"))?;
             write_simple(writer, "Name", &a.name)?;
             write_simple(writer, "Value", &a.value)?;
@@ -1620,7 +1620,7 @@ impl RequestDownload {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["RequestDownload", "FileTypeArg", "ArgStruct"] = &path_pattern[..] {
-            self.file_type_arg.push(ArgStruct::default())
+            self.file_type_arg.push(ArgStruct::default());
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -1703,7 +1703,7 @@ pub struct TimeWindow {
     max_retries: i32,
 }
 impl TimeWindow {
-    pub fn new(
+    #[must_use] pub fn new(
         window_start: u32,
         window_end: u32,
         window_mode: String,
@@ -1765,7 +1765,7 @@ pub struct ScheduleDownload {
 }
 
 impl ScheduleDownload {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         file_type: String,
         url: String,
@@ -1794,7 +1794,7 @@ impl ScheduleDownload {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["ScheduleDownload", "TimeWindowList", "TimeWindowStruct"] = &path_pattern[..] {
-            self.timewindow_list.push(TimeWindow::default())
+            self.timewindow_list.push(TimeWindow::default());
         }
     }
     pub fn generate<W: Write>(
@@ -1816,7 +1816,7 @@ impl ScheduleDownload {
         writer
             .write(XmlEvent::start_element("TimeWindowList").attr("SOAP-ENC:arrayType", &ts[..]))?;
 
-        for t in self.timewindow_list.iter() {
+        for t in &self.timewindow_list {
             writer.write(XmlEvent::start_element("TimeWindowStruct"))?;
             write_simple(writer, "WindowStart", &t.window_start.to_string())?;
             write_simple(writer, "WindowEnd", &t.window_end.to_string())?;
@@ -1934,7 +1934,7 @@ pub struct ScheduleInform {
 }
 
 impl ScheduleInform {
-    pub fn new(delay_seconds: u32, command_key: String) -> Self {
+    #[must_use] pub fn new(delay_seconds: u32, command_key: String) -> Self {
         ScheduleInform {
             delay_seconds,
             command_key,
@@ -2010,7 +2010,7 @@ pub struct SetParameterAttributesStruct {
 }
 
 impl SetParameterAttributesStruct {
-    pub fn new(
+    #[must_use] pub fn new(
         name: String,
         notification_change: u8,
         notification: u8,
@@ -2064,7 +2064,7 @@ pub struct SetParameterAttributes {
     parameter_list: Vec<SetParameterAttributesStruct>,
 }
 impl SetParameterAttributes {
-    pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
+    #[must_use] pub fn new(parameter_list: Vec<SetParameterAttributesStruct>) -> Self {
         SetParameterAttributes { parameter_list }
     }
     fn start_handler(
@@ -2080,7 +2080,7 @@ impl SetParameterAttributes {
                 .push(SetParameterAttributesStruct::default()),
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
-                    p.access_list.push(String::from(""));
+                    p.access_list.push(String::new());
                 }
             }
             _ => {}
@@ -2102,7 +2102,7 @@ impl SetParameterAttributes {
         writer
             .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pas[..]))?;
 
-        for p in self.parameter_list.iter() {
+        for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("SetParameterAttributesStruct"))?;
             write_simple(writer, "Name", &p.name)?;
             write_simple(
@@ -2117,7 +2117,7 @@ impl SetParameterAttributes {
                 &p.access_list_change.to_string(),
             )?;
             writer.write(XmlEvent::start_element("AccessList"))?;
-            for al in p.access_list.iter() {
+            for al in &p.access_list {
                 write_simple(writer, "string", al)?;
             }
             writer.write(XmlEvent::end_element())?; // AccessList
@@ -2176,7 +2176,7 @@ pub struct SetParameterValuesResponse {
 }
 
 impl SetParameterValuesResponse {
-    pub fn new(status: u32) -> Self {
+    #[must_use] pub fn new(status: u32) -> Self {
         SetParameterValuesResponse { status }
     }
     pub fn generate<W: Write>(
@@ -2193,7 +2193,7 @@ impl SetParameterValuesResponse {
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
         if let ["SetParameterValuesResponse", "Status"] = *path {
-            self.status = parse_to_int(characters, 0)
+            self.status = parse_to_int(characters, 0);
         }
     }
 }
@@ -2220,7 +2220,7 @@ pub struct SetParameterValues {
 }
 
 impl SetParameterValues {
-    pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
+    #[must_use] pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
         SetParameterValues {
             parameter_list,
             parameter_key,
@@ -2247,7 +2247,7 @@ impl SetParameterValues {
                 XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pvs[..]),
             )?;
 
-            for p in self.parameter_list.iter() {
+            for p in &self.parameter_list {
                 writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
                 write_simple(writer, "Name", &p.name)?;
                 writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
@@ -2272,10 +2272,10 @@ impl SetParameterValues {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["SetParameterValues", "ParameterKey"] => {
-                self.parameter_key = Some(String::from(""));
+                self.parameter_key = Some(String::new());
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct"] => {
-                self.parameter_list.push(ParameterValue::default())
+                self.parameter_list.push(ParameterValue::default());
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", "Value"] => {
                 // use the type attribute
@@ -2289,7 +2289,7 @@ impl SetParameterValues {
     fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["SetParameterValues", "ParameterKey"] => {
-                self.parameter_key = Some(characters.to_string())
+                self.parameter_key = Some(characters.to_string());
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
                 if let Some(p) = self.parameter_list.last_mut() {
@@ -2345,7 +2345,7 @@ pub struct SetVouchers {
 }
 
 impl SetVouchers {
-    pub fn new(voucher_list: Vec<String>) -> Self {
+    #[must_use] pub fn new(voucher_list: Vec<String>) -> Self {
         SetVouchers { voucher_list }
     }
     pub fn generate<W: Write>(
@@ -2361,7 +2361,7 @@ impl SetVouchers {
         writer
             .write(XmlEvent::start_element("VoucherList").attr("SOAP-ENC:arrayType", &vls[..]))?;
 
-        for v in self.voucher_list.iter() {
+        for v in &self.voucher_list {
             write_simple(writer, "base64", v)?;
         }
         writer.write(XmlEvent::end_element())?; // VoucherList
@@ -2376,7 +2376,7 @@ impl SetVouchers {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["SetVouchers", "VoucherList", "base64"] = &path_pattern[..] {
-            self.voucher_list.push(String::from(""))
+            self.voucher_list.push(String::new());
         }
     }
     fn characters(&mut self, path: &[&str], characters: &String) {
@@ -2429,7 +2429,7 @@ pub struct TransferComplete {
 }
 
 impl TransferComplete {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         fault: FaultStruct,
         start_time: Option<DateTime<Utc>>,
@@ -2467,16 +2467,16 @@ impl TransferComplete {
             ["TransferComplete", "CommandKey"] => self.command_key = characters.to_string(),
             ["TransferComplete", "StartTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.start_time = Some(dt)
+                    self.start_time = Some(dt);
                 }
             }
             ["TransferComplete", "CompleteTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.complete_time = Some(dt)
+                    self.complete_time = Some(dt);
                 }
             }
             ["TransferComplete", "FaultStruct", "FaultCode"] => {
-                self.fault.set_code(parse_to_int(characters, 0))
+                self.fault.set_code(parse_to_int(characters, 0));
             }
             ["TransferComplete", "FaultStruct", "FaultString"] => self.fault.set_string(characters),
 
@@ -2517,7 +2517,7 @@ pub struct UploadResponse {
 }
 
 impl UploadResponse {
-    pub fn new(
+    #[must_use] pub fn new(
         status: u8,
         start_time: Option<DateTime<Utc>>,
         complete_time: Option<DateTime<Utc>>,
@@ -2551,12 +2551,12 @@ impl UploadResponse {
             ["UploadResponse", "Status"] => self.status = parse_to_int(characters, 0),
             ["UploadResponse", "StartTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.start_time = Some(dt)
+                    self.start_time = Some(dt);
                 }
             }
             ["UploadResponse", "CompleteTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
-                    self.complete_time = Some(dt)
+                    self.complete_time = Some(dt);
                 }
             }
             _ => {}
@@ -2593,7 +2593,7 @@ pub struct Upload {
 }
 
 impl Upload {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         file_type: String,
         url: String,
@@ -2969,7 +2969,7 @@ pub struct CwmpVersion {
 }
 
 impl CwmpVersion {
-    pub fn new(major: u8, minor: u8) -> Self {
+    #[must_use] pub fn new(major: u8, minor: u8) -> Self {
         CwmpVersion { major, minor }
     }
 }
@@ -3065,7 +3065,7 @@ impl fmt::Debug for GenerateError {
 }
 
 impl Envelope {
-    pub fn new(
+    #[must_use] pub fn new(
         cwmp_version: Option<CwmpVersion>,
         header: Vec<HeaderElement>,
         body: Vec<BodyElement>,
@@ -3076,13 +3076,13 @@ impl Envelope {
             body,
         }
     }
-    pub fn cwmp_version(self) -> Option<CwmpVersion> {
+    #[must_use] pub fn cwmp_version(self) -> Option<CwmpVersion> {
         self.cwmp_version
     }
-    pub fn header(self) -> Vec<HeaderElement> {
+    #[must_use] pub fn header(self) -> Vec<HeaderElement> {
         self.header
     }
-    pub fn body(self) -> Vec<BodyElement> {
+    #[must_use] pub fn body(self) -> Vec<BodyElement> {
         self.body
     }
     pub fn generate(&self) -> Result<String, GenerateError> {
@@ -3113,23 +3113,23 @@ impl Envelope {
         let start_header = XmlEvent::start_element("SOAP-ENV:Header");
         writer.write(start_header)?;
 
-        for he in self.header.iter() {
+        for he in &self.header {
             match he {
                 HeaderElement::ID(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 HeaderElement::HoldRequests(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 HeaderElement::NoMoreRequests(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 HeaderElement::SessionTimeout(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 HeaderElement::SupportedCWMPVersions(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 HeaderElement::UseCWMPVersion(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
             };
         }
@@ -3141,160 +3141,160 @@ impl Envelope {
         let body_start = XmlEvent::start_element("SOAP-ENV:Body");
         writer.write(body_start)?;
 
-        for be in self.body.iter() {
+        for be in &self.body {
             match be {
                 BodyElement::AddObject(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::AddObjectResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::AutonomousDUStateChangeComplete(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::AutonomousDUStateChangeCompleteResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::AutonomousTransferComplete(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::AutonomousTransferCompleteResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::CancelTransferResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::CancelTransfer(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ChangeDUStateResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ChangeDUState(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::DeleteObjectResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::DeleteObject(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::DownloadResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Download(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::DUStateChangeCompleteResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::DUStateChangeComplete(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::FactoryResetResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::FactoryReset(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Fault(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::GetAllQueuedTransfersResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetAllQueuedTransfers(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetOptionsResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetOptions(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterAttributes(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterAttributesResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterNamesResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterNames(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterValues(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetParameterValuesResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetQueuedTransfersResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetQueuedTransfers(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetRPCMethodsResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::GetRPCMethods(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::InformResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Inform(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::KickedResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Kicked(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::RebootResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Reboot(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::RequestDownloadResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::RequestDownload(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ScheduleDownloadResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ScheduleDownload(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ScheduleInformResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::ScheduleInform(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetParameterAttributesResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetParameterAttributes(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetParameterValuesResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetParameterValues(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetVouchersResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::SetVouchers(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::TransferCompleteResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::TransferComplete(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
                 BodyElement::Upload(e) => e.generate(&mut writer, self.cwmp_version.is_some())?,
                 BodyElement::UploadResponse(e) => {
-                    e.generate(&mut writer, self.cwmp_version.is_some())?
+                    e.generate(&mut writer, self.cwmp_version.is_some())?;
                 }
             }
         }
@@ -3343,40 +3343,40 @@ impl Envelope {
                 match *header_element {
                     "ID" => self.header.push(HeaderElement::ID(ID {
                         must_understand,
-                        id: String::from(""),
+                        id: String::new(),
                     })),
                     "NoMoreRequests" => {
                         self.header
                             .push(HeaderElement::NoMoreRequests(NoMoreRequests::new(
                                 must_understand,
                                 0,
-                            )))
+                            )));
                     }
                     "HoldRequests" => {
                         self.header
                             .push(HeaderElement::HoldRequests(HoldRequests::new(
                                 must_understand,
                                 false,
-                            )))
+                            )));
                     }
                     "SessionTimeout" => {
                         self.header
                             .push(HeaderElement::SessionTimeout(SessionTimeout::new(
                                 must_understand,
                                 0,
-                            )))
+                            )));
                     }
                     "SupportedCWMPVersions" => {
                         self.header.push(HeaderElement::SupportedCWMPVersions(
-                            SupportedCWMPVersions::new(must_understand, String::from("")),
-                        ))
+                            SupportedCWMPVersions::new(must_understand, String::new()),
+                        ));
                     }
                     "UseCWMPVersion" => {
                         self.header
                             .push(HeaderElement::UseCWMPVersion(UseCWMPVersion::new(
                                 must_understand,
-                                String::from(""),
-                            )))
+                                String::new(),
+                            )));
                     }
                     _ => {}
                 }
@@ -3396,23 +3396,23 @@ impl Envelope {
                             self.body
                                 .push(BodyElement::AutonomousDUStateChangeCompleteResponse(
                                     AutonomousDUStateChangeCompleteResponse {},
-                                ))
+                                ));
                         }
                         "AutonomousDUStateChangeComplete" => {
                             self.body.push(BodyElement::AutonomousDUStateChangeComplete(
                                 AutonomousDUStateChangeComplete::default(),
-                            ))
+                            ));
                         }
                         "AutonomousTransferCompleteResponse" => {
                             self.body
                                 .push(BodyElement::AutonomousTransferCompleteResponse(
                                     AutonomousTransferCompleteResponse {},
-                                ))
+                                ));
                         }
                         "AutonomousTransferComplete" => {
                             self.body.push(BodyElement::AutonomousTransferComplete(
                                 AutonomousTransferComplete::default(),
-                            ))
+                            ));
                         }
                         "CancelTransferResponse" => self.body.push(
                             BodyElement::CancelTransferResponse(CancelTransferResponse {}),
@@ -3439,7 +3439,7 @@ impl Envelope {
                         "DUStateChangeCompleteResponse" => {
                             self.body.push(BodyElement::DUStateChangeCompleteResponse(
                                 DUStateChangeCompleteResponse {},
-                            ))
+                            ));
                         }
                         "DUStateChangeComplete" => self.body.push(
                             BodyElement::DUStateChangeComplete(DUStateChangeComplete::default()),
@@ -3448,13 +3448,13 @@ impl Envelope {
                             .body
                             .push(BodyElement::FactoryResetResponse(FactoryResetResponse {})),
                         "FactoryReset" => {
-                            self.body.push(BodyElement::FactoryReset(FactoryReset {}))
+                            self.body.push(BodyElement::FactoryReset(FactoryReset {}));
                         }
                         "Fault" => self.body.push(BodyElement::Fault(Fault::default())),
                         "GetAllQueuedTransfersResponse" => {
                             self.body.push(BodyElement::GetAllQueuedTransfersResponse(
                                 GetAllQueuedTransfersResponse::default(),
-                            ))
+                            ));
                         }
                         "GetAllQueuedTransfers" => self
                             .body
@@ -3469,12 +3469,12 @@ impl Envelope {
                         "GetParameterAttributesResponse" => {
                             self.body.push(BodyElement::GetParameterAttributesResponse(
                                 GetParameterAttributesResponse::default(),
-                            ))
+                            ));
                         }
                         "GetParameterNamesResponse" => {
                             self.body.push(BodyElement::GetParameterNamesResponse(
                                 GetParameterNamesResponse::default(),
-                            ))
+                            ));
                         }
                         "GetParameterNames" => self
                             .body
@@ -3485,12 +3485,12 @@ impl Envelope {
                         "GetParameterValuesResponse" => {
                             self.body.push(BodyElement::GetParameterValuesResponse(
                                 GetParameterValuesResponse::default(),
-                            ))
+                            ));
                         }
                         "GetQueuedTransfersResponse" => {
                             self.body.push(BodyElement::GetQueuedTransfersResponse(
                                 GetQueuedTransfersResponse::default(),
-                            ))
+                            ));
                         }
                         "GetQueuedTransfers" => self
                             .body
@@ -3499,7 +3499,7 @@ impl Envelope {
                             BodyElement::GetRPCMethodsResponse(GetRPCMethodsResponse::default()),
                         ),
                         "GetRPCMethods" => {
-                            self.body.push(BodyElement::GetRPCMethods(GetRPCMethods {}))
+                            self.body.push(BodyElement::GetRPCMethods(GetRPCMethods {}));
                         }
                         "InformResponse" => self
                             .body
@@ -3534,7 +3534,7 @@ impl Envelope {
                         "SetParameterAttributesResponse" => {
                             self.body.push(BodyElement::SetParameterAttributesResponse(
                                 SetParameterAttributesResponse {},
-                            ))
+                            ));
                         }
                         "SetParameterAttributes" => self.body.push(
                             BodyElement::SetParameterAttributes(SetParameterAttributes::default()),
@@ -3542,7 +3542,7 @@ impl Envelope {
                         "SetParameterValuesResponse" => {
                             self.body.push(BodyElement::SetParameterValuesResponse(
                                 SetParameterValuesResponse::default(),
-                            ))
+                            ));
                         }
                         "SetParameterValues" => self.body.push(BodyElement::SetParameterValues(
                             SetParameterValues::default(),
@@ -3569,58 +3569,58 @@ impl Envelope {
                 let last = self.body.last_mut();
                 match last {
                     Some(BodyElement::AutonomousDUStateChangeComplete(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetParameterAttributesResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetParameterAttributes(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetParameterValuesResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::ChangeDUState(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::DUStateChangeComplete(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetAllQueuedTransfersResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetOptionsResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetParameterNamesResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetParameterValues(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetQueuedTransfersResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::GetRPCMethodsResponse(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::Inform(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::RequestDownload(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::ScheduleDownload(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::SetParameterAttributes(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::SetParameterValues(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(BodyElement::SetVouchers(e)) => {
-                        e.start_handler(&path_pattern[2..], name, attributes)
+                        e.start_handler(&path_pattern[2..], name, attributes);
                     }
                     Some(_unhandled) => { // the ones who dont need a start_handler, ie GetParameterValues aso
                     }
@@ -3653,7 +3653,7 @@ impl Envelope {
                 match last {
                     Some(HeaderElement::ID(data)) => {
                         if header_element == &"ID" {
-                            data.id = characters.to_string()
+                            data.id = characters.to_string();
                         }
                     }
                     Some(HeaderElement::NoMoreRequests(data)) => {
@@ -3788,7 +3788,7 @@ impl Envelope {
                     }
                     Some(BodyElement::Upload(e)) => e.characters(&path_pattern[2..], characters),
                     Some(unhandled) => {
-                        println!("characters for {:?} is so far unhandled", unhandled);
+                        println!("characters for {unhandled:?} is so far unhandled");
                     }
                     None => {
                         warn!(
@@ -3815,13 +3815,13 @@ fn extract_attribute(
         .find(|&x| x.name.local_name == attrib_name);
     match f {
         Some(e) => e.value.to_string(),
-        None => String::from(""),
+        None => String::new(),
     }
 }
 
 fn cwmp_prefix(envelope_has_cwmp_version: bool, postfix: &str) -> String {
     if envelope_has_cwmp_version {
-        format!("cwmp:{}", postfix)
+        format!("cwmp:{postfix}")
     } else {
         postfix.to_string()
     }
@@ -3830,7 +3830,7 @@ fn cwmp_prefix(envelope_has_cwmp_version: bool, postfix: &str) -> String {
 // parses urns like "urn:dslforum-org:cwmp-1-0" into
 // CwmpVersion, i.e. (1,0) in this example
 fn cwmp_urn_to_version(urn: &str) -> CwmpVersion {
-    let mut version_string: Vec<&str> = urn.split("-").collect();
+    let mut version_string: Vec<&str> = urn.split('-').collect();
     let mi = if let Some(mi_s) = version_string.pop() {
         parse_to_int(&mi_s.to_string(), 0)
     } else {

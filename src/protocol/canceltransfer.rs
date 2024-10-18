@@ -12,7 +12,7 @@ pub struct CancelTransfer {
 }
 
 impl CancelTransfer {
-    pub fn new(command_key: String) -> Self {
+    #[must_use] pub fn new(command_key: String) -> Self {
         CancelTransfer { command_key }
     }
 

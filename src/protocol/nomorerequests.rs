@@ -13,7 +13,7 @@ pub struct NoMoreRequests {
 }
 
 impl NoMoreRequests {
-    pub fn new(must_understand: bool, value: u8) -> Self {
+    #[must_use] pub fn new(must_understand: bool, value: u8) -> Self {
         NoMoreRequests {
             must_understand,
             value,

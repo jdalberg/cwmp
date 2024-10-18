@@ -13,7 +13,7 @@ pub struct DeleteObject {
 }
 
 impl DeleteObject {
-    pub fn new(object_name: String, parameter_key: String) -> Self {
+    #[must_use] pub fn new(object_name: String, parameter_key: String) -> Self {
         DeleteObject {
             object_name,
             parameter_key,

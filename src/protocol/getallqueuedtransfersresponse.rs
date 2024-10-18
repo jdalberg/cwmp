@@ -12,7 +12,7 @@ pub struct GetAllQueuedTransfersResponse {
 }
 
 impl GetAllQueuedTransfersResponse {
-    pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
+    #[must_use] pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
         GetAllQueuedTransfersResponse { transfer_list }
     }
     pub fn generate<W: Write>(
@@ -32,7 +32,7 @@ impl GetAllQueuedTransfersResponse {
         writer
             .write(XmlEvent::start_element("TransferList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for t in self.transfer_list.iter() {
+        for t in &self.transfer_list {
             writer.write(XmlEvent::start_element("AllQueuedTransferStruct"))?;
             write_simple(writer, "CommandKey", &t.command_key)?;
             write_simple(writer, "State", &t.state)?;
@@ -58,13 +58,13 @@ impl GetAllQueuedTransfersResponse {
             &path_pattern[..]
         {
             self.transfer_list.push(AllQueuedTransfers::new(
-                String::from(""),
-                String::from(""),
+                String::new(),
+                String::new(),
                 0,
-                String::from(""),
+                String::new(),
                 0,
-                String::from(""),
-            ))
+                String::new(),
+            ));
         }
     }
     pub fn characters(&mut self, path: &[&str], characters: &String) {

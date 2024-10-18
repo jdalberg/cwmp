@@ -13,7 +13,7 @@ pub struct AutonomousDUStateChangeComplete {
 }
 
 impl AutonomousDUStateChangeComplete {
-    pub fn new(results: Vec<AutonOpResult>) -> Self {
+    #[must_use] pub fn new(results: Vec<AutonOpResult>) -> Self {
         AutonomousDUStateChangeComplete { results }
     }
     pub fn generate<W: Write>(
@@ -34,7 +34,7 @@ impl AutonomousDUStateChangeComplete {
 
         writer.write(XmlEvent::start_element("Results").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
-        for r in self.results.iter() {
+        for r in &self.results {
             writer.write(XmlEvent::start_element("AutonOpResultStruct"))?;
 
             write_simple(writer, "UUID", &r.uuid)?;
@@ -87,7 +87,7 @@ impl AutonomousDUStateChangeComplete {
                     "CurrentState" => e.current_state = characters.to_string(),
                     "Resolved" => e.resolved = characters.to_string(),
                     "ExecutionUnitRefList" => {
-                        e.execution_unit_ref_list = characters.to_string()
+                        e.execution_unit_ref_list = characters.to_string();
                     }
                     "StartTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.start_time = Some(dt) },
                     "CompleteTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.complete_time = Some(dt) },

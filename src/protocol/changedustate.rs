@@ -15,7 +15,7 @@ pub struct ChangeDUState {
 }
 
 impl ChangeDUState {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         install_operations: Vec<InstallOp>,
         uninstall_operations: Vec<UninstallOp>,
@@ -40,7 +40,7 @@ impl ChangeDUState {
         write_simple(writer, "CommandKey", &self.command_key)?;
         writer.write(XmlEvent::start_element("Operations"))?;
 
-        for io in self.install_operations.iter() {
+        for io in &self.install_operations {
             writer.write(XmlEvent::start_element("InstallOpStruct"))?;
             write_simple(writer, "URL", &io.url)?;
             write_simple(writer, "UUID", &io.uuid)?;
@@ -49,14 +49,14 @@ impl ChangeDUState {
             write_simple(writer, "ExecutionEnvRef", &io.execution_env_ref)?;
             writer.write(XmlEvent::end_element())?;
         }
-        for uio in self.uninstall_operations.iter() {
+        for uio in &self.uninstall_operations {
             writer.write(XmlEvent::start_element("UninstallOpStruct"))?;
             write_simple(writer, "URL", &uio.url)?;
             write_simple(writer, "UUID", &uio.uuid)?;
             write_simple(writer, "ExecutionEnvRef", &uio.execution_env_ref)?;
             writer.write(XmlEvent::end_element())?;
         }
-        for uo in self.update_operations.iter() {
+        for uo in &self.update_operations {
             writer.write(XmlEvent::start_element("UpdateOpStruct"))?;
             write_simple(writer, "URL", &uo.url)?;
             write_simple(writer, "UUID", &uo.uuid)?;
@@ -82,24 +82,24 @@ impl ChangeDUState {
         match &path_pattern[..] {
             ["ChangeDUState", "Operations", "InstallOpStruct"] => {
                 self.install_operations.push(InstallOp::new(
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                ))
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                ));
             }
             ["ChangeDUState", "Operations", "UninstallOpStruct"] => self.uninstall_operations.push(
-                UninstallOp::new(String::from(""), String::from(""), String::from("")),
+                UninstallOp::new(String::new(), String::new(), String::new()),
             ),
             ["ChangeDUState", "Operations", "UpdateOpStruct"] => {
                 self.update_operations.push(UpdateOp::new(
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                    String::from(""),
-                ))
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                ));
             }
             _ => {}
         }

@@ -20,7 +20,7 @@ pub struct OpResult {
 }
 
 impl OpResult {
-    pub fn new(
+    #[must_use] pub fn new(
         uuid: String,
         deployment_unit_ref: String,
         version: String,

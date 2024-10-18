@@ -21,7 +21,7 @@ pub struct Download {
 }
 
 impl Download {
-    pub fn new(
+    #[must_use] pub fn new(
         command_key: String,
         file_type: String,
         url: String,

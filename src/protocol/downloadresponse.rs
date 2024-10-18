@@ -17,7 +17,7 @@ pub struct DownloadResponse {
 }
 
 impl DownloadResponse {
-    pub fn new(status: String, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
+    #[must_use] pub fn new(status: String, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
         DownloadResponse {
             status,
             start_time: Some(start_time),

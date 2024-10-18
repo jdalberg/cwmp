@@ -11,7 +11,7 @@ pub struct InstallOp {
 }
 
 impl InstallOp {
-    pub fn new(
+    #[must_use] pub fn new(
         url: String,
         uuid: String,
         username: String,

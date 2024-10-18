@@ -13,7 +13,7 @@ pub struct AddObject {
 }
 
 impl AddObject {
-    pub fn new(object_name: String, parameter_key: String) -> Self {
+    #[must_use] pub fn new(object_name: String, parameter_key: String) -> Self {
         AddObject {
             object_name,
             parameter_key,

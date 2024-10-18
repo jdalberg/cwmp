@@ -13,7 +13,7 @@ pub struct SessionTimeout {
 }
 
 impl SessionTimeout {
-    pub fn new(must_understand: bool, timeout: u32) -> Self {
+    #[must_use] pub fn new(must_understand: bool, timeout: u32) -> Self {
         SessionTimeout {
             must_understand,
             timeout,

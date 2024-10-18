@@ -12,7 +12,7 @@ pub struct DeleteObjectResponse {
 }
 
 impl DeleteObjectResponse {
-    pub fn new(status: String) -> Self {
+    #[must_use] pub fn new(status: String) -> Self {
         DeleteObjectResponse { status }
     }
     pub fn generate<W: Write>(
