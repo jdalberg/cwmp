@@ -15,6 +15,11 @@ impl GetRPCMethodsResponse {
     pub fn new(method_list: Vec<String>) -> Self {
         GetRPCMethodsResponse { method_list }
     }
+
+    /// Generate XML for `GetRPCMethodsResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

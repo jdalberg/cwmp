@@ -23,6 +23,11 @@ impl Kicked {
             next,
         }
     }
+
+    /// Generate XML for `Kicked`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

@@ -17,6 +17,10 @@ impl GetOptionsResponse {
     pub fn new(option_list: Vec<OptionStruct>) -> Self {
         GetOptionsResponse { option_list }
     }
+    /// Generate XML for `GetOptionsResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

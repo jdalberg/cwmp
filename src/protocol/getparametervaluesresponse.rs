@@ -15,6 +15,11 @@ impl GetParameterValuesResponse {
     pub fn new(parameters: Vec<ParameterValue>) -> Self {
         GetParameterValuesResponse { parameters }
     }
+
+    /// Generate XML for `GetParameterValuesResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

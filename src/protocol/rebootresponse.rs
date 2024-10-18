@@ -6,6 +6,10 @@ use super::{cwmp_prefix, write_empty_tag, GenerateError};
 pub struct RebootResponse {}
 
 impl RebootResponse {
+    /// Generate XML for `RebootResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

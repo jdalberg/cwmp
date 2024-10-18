@@ -16,6 +16,11 @@ impl GetQueuedTransfersResponse {
     pub fn new(transfer_list: Vec<QueuedTransferStruct>) -> Self {
         GetQueuedTransfersResponse { transfer_list }
     }
+
+    /// Generate XML for `GetQueuedTransfersResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

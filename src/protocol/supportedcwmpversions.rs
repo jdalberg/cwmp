@@ -13,12 +13,18 @@ pub struct SupportedCWMPVersions {
 }
 
 impl SupportedCWMPVersions {
-    #[must_use] pub fn new(must_understand: bool, value: String) -> Self {
+    #[must_use]
+    pub fn new(must_understand: bool, value: String) -> Self {
         SupportedCWMPVersions {
             must_understand,
             value,
         }
     }
+
+    /// Generate XML for `TransferComplete`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

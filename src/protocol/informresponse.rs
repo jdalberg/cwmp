@@ -16,6 +16,11 @@ impl InformResponse {
     pub fn new(max_envelopes: u16) -> Self {
         InformResponse { max_envelopes }
     }
+
+    /// Generate XML for `InformResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

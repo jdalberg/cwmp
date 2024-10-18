@@ -20,7 +20,9 @@ pub struct OpResult {
 }
 
 impl OpResult {
-    #[must_use] pub fn new(
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
         uuid: String,
         deployment_unit_ref: String,
         version: String,

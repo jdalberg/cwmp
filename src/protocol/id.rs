@@ -13,12 +13,18 @@ pub struct ID {
 }
 
 impl ID {
-    #[must_use] pub fn new(must_understand: bool, id: String) -> Self {
+    #[must_use]
+    pub fn new(must_understand: bool, id: String) -> Self {
         ID {
             must_understand,
             id,
         }
     }
+
+    /// Generate XML for `ID`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

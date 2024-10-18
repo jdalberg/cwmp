@@ -13,12 +13,18 @@ pub struct NoMoreRequests {
 }
 
 impl NoMoreRequests {
-    #[must_use] pub fn new(must_understand: bool, value: u8) -> Self {
+    #[must_use]
+    pub fn new(must_understand: bool, value: u8) -> Self {
         NoMoreRequests {
             must_understand,
             value,
         }
     }
+
+    /// Generate XML for `NoMoreRequests`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

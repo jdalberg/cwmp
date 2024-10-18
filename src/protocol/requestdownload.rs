@@ -19,6 +19,11 @@ impl RequestDownload {
             file_type_arg,
         }
     }
+
+    /// Generate XML for `RequestDownload`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -48,7 +53,7 @@ impl RequestDownload {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["RequestDownload", "FileTypeArg", "ArgStruct"] = &path_pattern[..] {

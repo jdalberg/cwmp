@@ -13,12 +13,18 @@ pub struct HoldRequests {
 }
 
 impl HoldRequests {
-    #[must_use] pub fn new(must_understand: bool, hold: bool) -> Self {
+    #[must_use]
+    pub fn new(must_understand: bool, hold: bool) -> Self {
         HoldRequests {
             must_understand,
             hold,
         }
     }
+
+    /// Generate XML for `HoldRequests`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

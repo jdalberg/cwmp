@@ -3,10 +3,10 @@ use std::io::Write;
 use super::{cwmp_prefix, write_empty_tag, GenerateError};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct GetRPCMethods {}
+pub struct SetVouchersResponse {}
 
-impl GetRPCMethods {
-    /// Generate XML for `GetRPCMethods`
+impl SetVouchersResponse {
+    /// Generate XML for `SetVouchersResponse`
     ///     
     /// # Errors
     ///     Any errors encountered while writing to `writer` will be returned.
@@ -15,7 +15,7 @@ impl GetRPCMethods {
         writer: &mut xml::EventWriter<W>,
         has_cwmp: bool,
     ) -> Result<(), GenerateError> {
-        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "GetRPCMethods")[..])?;
+        write_empty_tag(writer, &cwmp_prefix(has_cwmp, "SetVouchersResponse")[..])?;
         Ok(())
     }
 }

@@ -16,6 +16,11 @@ impl Reboot {
     pub fn new(command_key: String) -> Self {
         Reboot { command_key }
     }
+
+    /// Generate XML for `Reboot`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

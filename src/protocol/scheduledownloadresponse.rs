@@ -6,6 +6,10 @@ use super::{cwmp_prefix, write_empty_tag, GenerateError};
 pub struct ScheduleDownloadResponse {}
 
 impl ScheduleDownloadResponse {
+    /// Generate XML for `ScheduleDownloadResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

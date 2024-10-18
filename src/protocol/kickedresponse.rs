@@ -16,6 +16,11 @@ impl KickedResponse {
     pub fn new(next_url: String) -> Self {
         KickedResponse { next_url }
     }
+
+    /// Generate XML for `NoMoreRequests`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
