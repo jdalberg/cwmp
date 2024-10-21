@@ -6,10 +6,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let e: Envelope = Envelope::new(
         Some(CwmpVersion::new(1, 0)),
         vec![HeaderElement::ID(ID::new(true, "1234".to_string()))],
-        vec![BodyElement::AddObject(AddObject::new(
-            "foo".to_string(),
-            "key".to_string(),
-        ))],
+        vec![BodyElement::AddObject(AddObject::new("foo", "key"))],
     );
     c.bench_function("generate add_object", |b| {
         b.iter(|| generate(black_box(&e)))

@@ -1,29 +1,26 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UpdateOp {
-    pub url: String,
-    pub uuid: String,
-    pub username: String,
-    pub password: String,
-    pub version: String,
+    pub url: XmlSafeString,
+    pub uuid: XmlSafeString,
+    pub username: XmlSafeString,
+    pub password: XmlSafeString,
+    pub version: XmlSafeString,
 }
 
 impl UpdateOp {
-    #[must_use] pub fn new(
-        url: String,
-        uuid: String,
-        username: String,
-        password: String,
-        version: String,
-    ) -> Self {
-        UpdateOp {
-            url,
-            uuid,
-            username,
-            password,
-            version,
+    #[must_use]
+    pub fn new(url: &str, uuid: &str, username: &str, password: &str, version: &str) -> Self {
+        Self {
+            url: url.into(),
+            uuid: uuid.into(),
+            username: username.into(),
+            password: password.into(),
+            version: version.into(),
         }
     }
 }
@@ -31,13 +28,13 @@ impl UpdateOp {
 #[cfg(test)]
 impl Arbitrary for UpdateOp {
     fn arbitrary(g: &mut Gen) -> Self {
-        UpdateOp::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            url: XmlSafeString::arbitrary(g),
+            uuid: XmlSafeString::arbitrary(g),
+            username: XmlSafeString::arbitrary(g),
+            password: XmlSafeString::arbitrary(g),
+            version: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -71,6 +71,7 @@ pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> 
     envelope.generate()
 }
 
+
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
@@ -83,41 +84,28 @@ mod tests {
     use super::*;
     use protocol::Envelope;
     extern crate quickcheck;
-
-    fn contains_control_characters(s: &str) -> bool {
-        s.chars().any(|c| c.is_control())
-    }
-    fn sanitize_xml(s: &str) -> String {
-        s.chars().filter(|&c| !c.is_control() && c != '\u{FFFF}' && c != '\u{FFFE}' && c != '\0').collect()
-    }
-
+    
     #[quickcheck]
     fn gen_and_parse(e: Envelope) -> bool {
         match generate(&e) {
-            
-            Ok(mut xml) => {
-                // Sanitize the XML before parsing
-                xml = sanitize_xml(&xml);
-                if contains_control_characters(&xml) {
-                    println!("Generated XML contains control characters: {:?}", xml);
-                    return false;
-                }
+            Ok(xml) => {
+                // Check that the generated XML does not contain any control characters
                 // We generate the XML and then parse it back into a struct
                 match parse(&xml) {
                     Ok(r) => if r == e {
                         true
                     } else {
-                        println!("NOT EQUAL: {:?} != {:?}", r, e);
+                        println!("gen_and_parse NOT EQUAL: {:?} != {:?}", r, e);
                         false
                     },
                     Err(e) => {
-                        println!("ERROR DURING PARSE: {:?}", e);
+                        println!("gen_and_parseERROR DURING PARSE: {:?}", e);
                         false
                     }
                 }
             },
             Err(e) => {
-                println!("ERROR DURING GENERATE: {:?}", e);
+                println!("gen_and_parse ERROR DURING GENERATE: {:?}", e);
                 false
             }
         }
@@ -136,14 +124,14 @@ mod tests {
                         gen_utc_date(2014, 11, 28, 12, 0, 9),
                         0,
                         vec![
-                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceSummary"),String::from("xsd:string"),String::from("InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.SpecVersion"),String::from("xsd:string"),String::from("1.0")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.HardwareVersion"),String::from("xsd:string"),String::from("HW1.0")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.SoftwareVersion"),String::from("xsd:string"),String::from("V1.00(beta)")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.DeviceInfo.ProvisioningCode"),String::from("xsd:string"),String::from("")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.ManagementServer.ConnectionRequestURL"),String::from("xsd:string"),String::from("http://2.2.2.2:7676/CWMP/ConnectionRequest")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.ManagementServer.ParameterKey"),String::from("xsd:string"),String::from("")),
-                            ParameterValue::new(String::from("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress"),String::from("xsd:string"),String::from("2.2.2.2")),
+                            ParameterValue::new("InternetGatewayDevice.DeviceSummary","xsd:string","InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, EthernetWAN:1, ADSLWAN:1, IPPing:1, DSLDiagnostics:1, Time:1), VoiceService:1.0[1](Endpoint:1, SIPEndpoint:1)"),
+                            ParameterValue::new("InternetGatewayDevice.DeviceInfo.SpecVersion","xsd:string","1.0"),
+                            ParameterValue::new("InternetGatewayDevice.DeviceInfo.HardwareVersion","xsd:string","HW1.0"),
+                            ParameterValue::new("InternetGatewayDevice.DeviceInfo.SoftwareVersion","xsd:string","V1.00(beta)"),
+                            ParameterValue::new("InternetGatewayDevice.DeviceInfo.ProvisioningCode","xsd:string",""),
+                            ParameterValue::new("InternetGatewayDevice.ManagementServer.ConnectionRequestURL","xsd:string","http://2.2.2.2:7676/CWMP/ConnectionRequest"),
+                            ParameterValue::new("InternetGatewayDevice.ManagementServer.ParameterKey","xsd:string",""),
+                            ParameterValue::new("InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress","xsd:string","2.2.2.2"),
                         ],
         
                     )

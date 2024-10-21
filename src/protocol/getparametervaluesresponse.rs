@@ -40,9 +40,9 @@ impl GetParameterValuesResponse {
 
         for p in &self.parameters {
             writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
-            writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
-            writer.write(&p.value[..])?;
+            write_simple(writer, "Name", p.name.0.as_ref())?;
+            writer.write(XmlEvent::start_element("Value").attr("xsi:type", p.r#type.0.as_ref()))?;
+            writer.write(p.value.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
 
             writer.write(XmlEvent::end_element())?;
@@ -71,16 +71,16 @@ impl GetParameterValuesResponse {
             _ => {}
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Name"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.name = characters.to_string();
+                    e.name = characters.into();
                 }
             }
             ["GetParameterValuesResponse", "ParameterList", "ParameterValueStruct", "Value"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.value = characters.to_string();
+                    e.value = characters.into();
                 }
             }
             _ => {}

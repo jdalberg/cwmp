@@ -1,12 +1,14 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct TimeWindow {
     pub window_start: u32,
     pub window_end: u32,
-    pub window_mode: String,
-    pub user_message: String,
+    pub window_mode: XmlSafeString,
+    pub user_message: XmlSafeString,
     pub max_retries: i32,
 }
 impl TimeWindow {
@@ -14,15 +16,15 @@ impl TimeWindow {
     pub fn new(
         window_start: u32,
         window_end: u32,
-        window_mode: String,
-        user_message: String,
+        window_mode: &str,
+        user_message: &str,
         max_retries: i32,
     ) -> Self {
         TimeWindow {
             window_start,
             window_end,
-            window_mode,
-            user_message,
+            window_mode: window_mode.into(),
+            user_message: user_message.into(),
             max_retries,
         }
     }
@@ -31,13 +33,13 @@ impl TimeWindow {
 #[cfg(test)]
 impl Arbitrary for TimeWindow {
     fn arbitrary(g: &mut Gen) -> Self {
-        TimeWindow::new(
-            u32::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            i32::arbitrary(g),
-        )
+        Self {
+            window_start: u32::arbitrary(g),
+            window_end: u32::arbitrary(g),
+            window_mode: XmlSafeString::arbitrary(g),
+            user_message: XmlSafeString::arbitrary(g),
+            max_retries: i32::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

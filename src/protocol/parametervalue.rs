@@ -1,20 +1,22 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ParameterValue {
-    pub name: String,
-    pub r#type: String,
-    pub value: String,
+    pub name: XmlSafeString,
+    pub r#type: XmlSafeString,
+    pub value: XmlSafeString,
 }
 
 impl ParameterValue {
     #[must_use]
-    pub fn new(name: String, param_type: String, value: String) -> Self {
+    pub fn new(name: &str, param_type: &str, value: &str) -> Self {
         ParameterValue {
-            name,
-            r#type: param_type,
-            value,
+            name: name.into(),
+            r#type: param_type.into(),
+            value: value.into(),
         }
     }
 }
@@ -22,11 +24,11 @@ impl ParameterValue {
 #[cfg(test)]
 impl Arbitrary for ParameterValue {
     fn arbitrary(g: &mut Gen) -> Self {
-        ParameterValue::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            name: XmlSafeString::arbitrary(g),
+            r#type: XmlSafeString::arbitrary(g),
+            value: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

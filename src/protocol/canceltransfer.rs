@@ -4,17 +4,19 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct CancelTransfer {
-    pub command_key: String,
+    pub command_key: XmlSafeString,
 }
 
 impl CancelTransfer {
     #[must_use]
-    pub fn new(command_key: String) -> Self {
-        CancelTransfer { command_key }
+    pub fn new(command_key: &str) -> Self {
+        CancelTransfer {
+            command_key: command_key.into(),
+        }
     }
 
     /// Generate XML for `CancelTransfer`
@@ -29,15 +31,15 @@ impl CancelTransfer {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "CancelTransfer")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
 
         Ok(())
     }
 
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["CancelTransfer", "CommandKey"] = *path {
-            self.command_key = characters.to_string();
+            self.command_key = characters.into();
         }
     }
 }
@@ -45,7 +47,9 @@ impl CancelTransfer {
 #[cfg(test)]
 impl Arbitrary for CancelTransfer {
     fn arbitrary(g: &mut Gen) -> Self {
-        CancelTransfer::new(String::arbitrary(g))
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

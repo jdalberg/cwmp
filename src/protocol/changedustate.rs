@@ -4,11 +4,13 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError, InstallOp, UninstallOp, UpdateOp};
+use super::{
+    cwmp_prefix, write_simple, GenerateError, InstallOp, UninstallOp, UpdateOp, XmlSafeString,
+};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ChangeDUState {
-    pub command_key: String,
+    pub command_key: XmlSafeString,
     pub install_operations: Vec<InstallOp>,
     pub uninstall_operations: Vec<UninstallOp>,
     pub update_operations: Vec<UpdateOp>,
@@ -17,13 +19,13 @@ pub struct ChangeDUState {
 impl ChangeDUState {
     #[must_use]
     pub fn new(
-        command_key: String,
+        command_key: &str,
         install_operations: Vec<InstallOp>,
         uninstall_operations: Vec<UninstallOp>,
         update_operations: Vec<UpdateOp>,
     ) -> Self {
         ChangeDUState {
-            command_key,
+            command_key: command_key.into(),
             install_operations,
             uninstall_operations,
             update_operations,
@@ -42,32 +44,32 @@ impl ChangeDUState {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "ChangeDUState")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
         writer.write(XmlEvent::start_element("Operations"))?;
 
         for io in &self.install_operations {
             writer.write(XmlEvent::start_element("InstallOpStruct"))?;
-            write_simple(writer, "URL", &io.url)?;
-            write_simple(writer, "UUID", &io.uuid)?;
-            write_simple(writer, "Username", &io.username)?;
-            write_simple(writer, "Password", &io.password)?;
-            write_simple(writer, "ExecutionEnvRef", &io.execution_env_ref)?;
+            write_simple(writer, "URL", io.url.0.as_ref())?;
+            write_simple(writer, "UUID", io.uuid.0.as_ref())?;
+            write_simple(writer, "Username", io.username.0.as_ref())?;
+            write_simple(writer, "Password", io.password.0.as_ref())?;
+            write_simple(writer, "ExecutionEnvRef", io.execution_env_ref.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
         }
         for uio in &self.uninstall_operations {
             writer.write(XmlEvent::start_element("UninstallOpStruct"))?;
-            write_simple(writer, "URL", &uio.url)?;
-            write_simple(writer, "UUID", &uio.uuid)?;
-            write_simple(writer, "ExecutionEnvRef", &uio.execution_env_ref)?;
+            write_simple(writer, "URL", uio.url.0.as_ref())?;
+            write_simple(writer, "UUID", uio.uuid.0.as_ref())?;
+            write_simple(writer, "ExecutionEnvRef", uio.execution_env_ref.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
         }
         for uo in &self.update_operations {
             writer.write(XmlEvent::start_element("UpdateOpStruct"))?;
-            write_simple(writer, "URL", &uo.url)?;
-            write_simple(writer, "UUID", &uo.uuid)?;
-            write_simple(writer, "Username", &uo.username)?;
-            write_simple(writer, "Password", &uo.password)?;
-            write_simple(writer, "Version", &uo.version)?;
+            write_simple(writer, "URL", uo.url.0.as_ref())?;
+            write_simple(writer, "UUID", uo.uuid.0.as_ref())?;
+            write_simple(writer, "Username", uo.username.0.as_ref())?;
+            write_simple(writer, "Password", uo.password.0.as_ref())?;
+            write_simple(writer, "Version", uo.version.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
         }
 
@@ -86,42 +88,32 @@ impl ChangeDUState {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["ChangeDUState", "Operations", "InstallOpStruct"] => {
-                self.install_operations.push(InstallOp::new(
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                ));
+                self.install_operations
+                    .push(InstallOp::new("", "", "", "", ""));
             }
-            ["ChangeDUState", "Operations", "UninstallOpStruct"] => self.uninstall_operations.push(
-                UninstallOp::new(String::new(), String::new(), String::new()),
-            ),
+            ["ChangeDUState", "Operations", "UninstallOpStruct"] => {
+                self.uninstall_operations.push(UninstallOp::new("", "", ""))
+            }
             ["ChangeDUState", "Operations", "UpdateOpStruct"] => {
-                self.update_operations.push(UpdateOp::new(
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                    String::new(),
-                ));
+                self.update_operations
+                    .push(UpdateOp::new("", "", "", "", ""));
             }
             _ => {}
         }
     }
 
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
-            ["ChangeDUState", "CommandKey"] => self.command_key = characters.to_string(),
+            ["ChangeDUState", "CommandKey"] => self.command_key = characters.into(),
             ["ChangeDUState", "Operations", "InstallOpStruct", key] => {
                 let last = self.install_operations.last_mut();
                 if let Some(e) = last {
                     match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "Username" => e.username = characters.to_string(),
-                        "Password" => e.password = characters.to_string(),
-                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        "URL" => e.url = characters.into(),
+                        "UUID" => e.uuid = characters.into(),
+                        "Username" => e.username = characters.into(),
+                        "Password" => e.password = characters.into(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.into(),
                         _ => {}
                     }
                 }
@@ -130,9 +122,9 @@ impl ChangeDUState {
                 let last = self.uninstall_operations.last_mut();
                 if let Some(e) = last {
                     match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        "URL" => e.url = characters.into(),
+                        "UUID" => e.uuid = characters.into(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.into(),
                         _ => {}
                     }
                 }
@@ -141,11 +133,11 @@ impl ChangeDUState {
                 let last = self.update_operations.last_mut();
                 if let Some(e) = last {
                     match key {
-                        "URL" => e.url = characters.to_string(),
-                        "UUID" => e.uuid = characters.to_string(),
-                        "Username" => e.username = characters.to_string(),
-                        "Password" => e.password = characters.to_string(),
-                        "Version" => e.version = characters.to_string(),
+                        "URL" => e.url = characters.into(),
+                        "UUID" => e.uuid = characters.into(),
+                        "Username" => e.username = characters.into(),
+                        "Password" => e.password = characters.into(),
+                        "Version" => e.version = characters.into(),
                         _ => {}
                     }
                 }
@@ -158,12 +150,12 @@ impl ChangeDUState {
 #[cfg(test)]
 impl Arbitrary for ChangeDUState {
     fn arbitrary(g: &mut Gen) -> Self {
-        ChangeDUState::new(
-            String::arbitrary(g),
-            Vec::<InstallOp>::arbitrary(g),
-            Vec::<UninstallOp>::arbitrary(g),
-            Vec::<UpdateOp>::arbitrary(g),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            install_operations: Vec::<InstallOp>::arbitrary(g),
+            uninstall_operations: Vec::<UninstallOp>::arbitrary(g),
+            update_operations: Vec::<UpdateOp>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

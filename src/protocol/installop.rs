@@ -1,29 +1,32 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct InstallOp {
-    pub url: String,
-    pub uuid: String,
-    pub username: String,
-    pub password: String,
-    pub execution_env_ref: String,
+    pub url: XmlSafeString,
+    pub uuid: XmlSafeString,
+    pub username: XmlSafeString,
+    pub password: XmlSafeString,
+    pub execution_env_ref: XmlSafeString,
 }
 
 impl InstallOp {
-    #[must_use] pub fn new(
-        url: String,
-        uuid: String,
-        username: String,
-        password: String,
-        execution_env_ref: String,
+    #[must_use]
+    pub fn new(
+        url: &str,
+        uuid: &str,
+        username: &str,
+        password: &str,
+        execution_env_ref: &str,
     ) -> Self {
         InstallOp {
-            url,
-            uuid,
-            username,
-            password,
-            execution_env_ref,
+            url: url.into(),
+            uuid: uuid.into(),
+            username: username.into(),
+            password: password.into(),
+            execution_env_ref: execution_env_ref.into(),
         }
     }
 }
@@ -31,13 +34,13 @@ impl InstallOp {
 #[cfg(test)]
 impl Arbitrary for InstallOp {
     fn arbitrary(g: &mut Gen) -> Self {
-        InstallOp::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            url: XmlSafeString::arbitrary(g),
+            uuid: XmlSafeString::arbitrary(g),
+            username: XmlSafeString::arbitrary(g),
+            password: XmlSafeString::arbitrary(g),
+            execution_env_ref: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -1,19 +1,21 @@
 use std::io::Write;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetRPCMethodsResponse {
-    pub method_list: Vec<String>,
+    pub method_list: Vec<XmlSafeString>,
 }
 
 impl GetRPCMethodsResponse {
     #[must_use]
-    pub fn new(method_list: Vec<String>) -> Self {
-        GetRPCMethodsResponse { method_list }
+    pub fn new(method_list: &[&str]) -> Self {
+        GetRPCMethodsResponse {
+            method_list: super::convert_to_xml_safe_strings(method_list),
+        }
     }
 
     /// Generate XML for `GetRPCMethodsResponse`
@@ -33,7 +35,7 @@ impl GetRPCMethodsResponse {
         writer.write(XmlEvent::start_element("MethodList").attr("SOAP-ENC:arrayType", &ss[..]))?;
 
         for p in &self.method_list {
-            write_simple(writer, "string", p)?;
+            write_simple(writer, "string", p.0.as_ref())?;
         }
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::end_element())?;
@@ -47,14 +49,14 @@ impl GetRPCMethodsResponse {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetRPCMethodsResponse", "MethodList", "string"] = &path_pattern[..] {
-            self.method_list.push(String::new());
+            self.method_list.push(XmlSafeString::new());
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetRPCMethodsResponse", "MethodList", "string"] = *path {
             let last = self.method_list.last_mut();
             if let Some(l) = last {
-                *l = characters.to_string();
+                *l = characters.into();
             }
         }
     }
@@ -63,7 +65,9 @@ impl GetRPCMethodsResponse {
 #[cfg(test)]
 impl Arbitrary for GetRPCMethodsResponse {
     fn arbitrary(g: &mut Gen) -> Self {
-        GetRPCMethodsResponse::new(Vec::<String>::arbitrary(g))
+        Self {
+            method_list: Vec::<XmlSafeString>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -50,7 +50,7 @@ impl GetParameterNamesResponse {
 
         for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("ParameterInfoStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
+            write_simple(writer, "Name", p.name.0.as_ref())?;
             write_simple(writer, "Writable", &p.writable.to_string())?;
             writer.write(XmlEvent::end_element())?;
         }
@@ -59,11 +59,11 @@ impl GetParameterNamesResponse {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Name"] => {
                 if let Some(e) = self.parameter_list.last_mut() {
-                    e.name = characters.to_string();
+                    e.name = characters.into();
                 }
             }
             ["GetParameterNamesResponse", "ParameterList", "ParameterInfoStruct", "Writable"] => {

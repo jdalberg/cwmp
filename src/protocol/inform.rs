@@ -87,9 +87,9 @@ impl Inform {
 
         for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
-            writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
-            writer.write(&p.value[..])?;
+            write_simple(writer, "Name", p.name.0.as_ref())?;
+            writer.write(XmlEvent::start_element("Value").attr("xsi:type", p.r#type.0.as_ref()))?;
+            writer.write(p.value.0.as_ref())?;
             writer.write(XmlEvent::end_element())?; // Value
             writer.write(XmlEvent::end_element())?; // ParameterValueStruct
         }
@@ -121,7 +121,7 @@ impl Inform {
             _ => {}
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["Inform", "DeviceId", "Manufacturer"] => {
                 self.device_id.manufacturer = characters.to_string();
@@ -151,12 +151,12 @@ impl Inform {
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Name"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
-                    p.name = characters.to_string();
+                    p.name = characters.into();
                 }
             }
             ["Inform", "ParameterList", "ParameterValueStruct", "Value"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
-                    p.value = characters.to_string();
+                    p.value = characters.into();
                 }
             }
             _ => {}

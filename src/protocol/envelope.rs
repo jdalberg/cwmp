@@ -280,6 +280,7 @@ impl Envelope {
         let end_event: XmlEvent = XmlEvent::end_element().into();
         writer.write(end_event)?;
 
+        // Excape invalid XML characters and return the XML
         Ok(String::from_utf8(writer.into_inner())?)
     }
 

@@ -4,32 +4,38 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError};
+use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError, XmlSafeString};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FaultStruct {
     pub code: u32,
-    pub string: String,
+    pub string: XmlSafeString,
 }
 
 impl FaultStruct {
     #[must_use]
-    pub fn new(code: u32, string: String) -> Self {
-        FaultStruct { code, string }
+    pub fn new(code: u32, string: &str) -> Self {
+        FaultStruct {
+            code,
+            string: string.into(),
+        }
     }
     pub fn set_code(&mut self, code: u32) {
         self.code = code;
     }
     pub fn set_string(&mut self, string: &str) {
-        self.string = string.to_string();
+        self.string = string.into();
     }
 }
 
 #[cfg(test)]
 impl Arbitrary for FaultStruct {
     fn arbitrary(g: &mut Gen) -> Self {
-        FaultStruct::new(u32::arbitrary(g), String::arbitrary(g))
+        FaultStruct {
+            code: u32::arbitrary(g),
+            string: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -44,20 +50,26 @@ impl Arbitrary for FaultStruct {
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FaultDetail {
     pub code: u32,
-    pub string: String,
+    pub string: XmlSafeString,
 }
 
 impl FaultDetail {
     #[must_use]
-    pub fn new(code: u32, string: String) -> Self {
-        FaultDetail { code, string }
+    pub fn new(code: u32, string: &str) -> Self {
+        FaultDetail {
+            code,
+            string: string.into(),
+        }
     }
 }
 
 #[cfg(test)]
 impl Arbitrary for FaultDetail {
     fn arbitrary(g: &mut Gen) -> Self {
-        FaultDetail::new(u32::arbitrary(g), String::arbitrary(g))
+        Self {
+            code: u32::arbitrary(g),
+            string: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -70,17 +82,17 @@ impl Arbitrary for FaultDetail {
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Fault {
-    pub faultcode: String,
-    pub faultstring: String,
+    pub faultcode: XmlSafeString,
+    pub faultstring: XmlSafeString,
     pub detail: FaultDetail,
 }
 
 impl Fault {
     #[must_use]
-    pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
+    pub fn new(faultcode: &str, faultstring: &str, code: u32, string: &str) -> Self {
         Fault {
-            faultcode,
-            faultstring,
+            faultcode: faultcode.into(),
+            faultstring: faultstring.into(),
             detail: FaultDetail::new(code, string),
         }
     }
@@ -94,30 +106,30 @@ impl Fault {
         has_cwmp: bool,
     ) -> Result<(), GenerateError> {
         writer.write(XmlEvent::start_element("SOAP-ENV:Fault"))?;
-        write_simple(writer, "faultcode", &self.faultcode)?;
-        write_simple(writer, "faultstring", &self.faultstring)?;
+        write_simple(writer, "faultcode", self.faultcode.0.as_ref())?;
+        write_simple(writer, "faultstring", self.faultstring.0.as_ref())?;
         writer.write(XmlEvent::start_element("detail"))?;
         writer.write(XmlEvent::start_element(&cwmp_prefix(has_cwmp, "Fault")[..]))?;
         write_simple(writer, "FaultCode", &self.detail.code.to_string())?;
-        write_simple(writer, "FaultString", &self.detail.string.to_string())?;
+        write_simple(writer, "FaultString", self.detail.string.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["Fault", "faultcode"] => {
-                self.faultcode = characters.to_string();
+                self.faultcode = characters.into();
             }
             ["Fault", "faultstring"] => {
-                self.faultstring = characters.to_string();
+                self.faultstring = characters.into();
             }
             ["Fault", "detail", "Fault", "FaultCode"] => {
                 self.detail.code = parse_to_int(characters, 0);
             }
             ["Fault", "detail", "Fault", "FaultString"] => {
-                self.detail.string = characters.to_string();
+                self.detail.string = characters.into();
             }
             _ => {}
         }
@@ -127,12 +139,14 @@ impl Fault {
 #[cfg(test)]
 impl Arbitrary for Fault {
     fn arbitrary(g: &mut Gen) -> Fault {
-        Fault::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            faultcode: XmlSafeString::arbitrary(g),
+            faultstring: XmlSafeString::arbitrary(g),
+            detail: FaultDetail {
+                code: u32::arbitrary(g),
+                string: XmlSafeString::arbitrary(g),
+            },
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

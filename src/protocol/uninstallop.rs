@@ -1,19 +1,22 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct UninstallOp {
-    pub url: String,
-    pub uuid: String,
-    pub execution_env_ref: String,
+    pub url: XmlSafeString,
+    pub uuid: XmlSafeString,
+    pub execution_env_ref: XmlSafeString,
 }
 
 impl UninstallOp {
-    #[must_use] pub fn new(url: String, uuid: String, execution_env_ref: String) -> Self {
-        UninstallOp {
-            url,
-            uuid,
-            execution_env_ref,
+    #[must_use]
+    pub fn new(url: &str, uuid: &str, execution_env_ref: &str) -> Self {
+        Self {
+            url: url.into(),
+            uuid: uuid.into(),
+            execution_env_ref: execution_env_ref.into(),
         }
     }
 }
@@ -21,11 +24,11 @@ impl UninstallOp {
 #[cfg(test)]
 impl Arbitrary for UninstallOp {
     fn arbitrary(g: &mut Gen) -> Self {
-        UninstallOp::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            url: XmlSafeString::arbitrary(g),
+            uuid: XmlSafeString::arbitrary(g),
+            execution_env_ref: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

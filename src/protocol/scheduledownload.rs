@@ -2,19 +2,19 @@ use std::io::Write;
 
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError, TimeWindow};
+use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError, TimeWindow, XmlSafeString};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ScheduleDownload {
-    pub command_key: String,
-    pub file_type: String,
-    pub url: String,
-    pub username: String,
-    pub password: String,
+    pub command_key: XmlSafeString,
+    pub file_type: XmlSafeString,
+    pub url: XmlSafeString,
+    pub username: XmlSafeString,
+    pub password: XmlSafeString,
     pub file_size: u32,
-    pub target_filename: String,
+    pub target_filename: XmlSafeString,
     pub timewindow_list: Vec<TimeWindow>,
 }
 
@@ -22,23 +22,23 @@ impl ScheduleDownload {
     #[allow(clippy::too_many_arguments)]
     #[must_use]
     pub fn new(
-        command_key: String,
-        file_type: String,
-        url: String,
-        username: String,
-        password: String,
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
         file_size: u32,
-        target_filename: String,
+        target_filename: &str,
         timewindow_list: Vec<TimeWindow>,
     ) -> Self {
-        ScheduleDownload {
-            command_key,
-            file_type,
-            url,
-            username,
-            password,
+        Self {
+            command_key: command_key.into(),
+            file_type: file_type.into(),
+            url: url.into(),
+            username: username.into(),
+            password: password.into(),
             file_size,
-            target_filename,
+            target_filename: target_filename.into(),
             timewindow_list,
         }
     }
@@ -66,13 +66,13 @@ impl ScheduleDownload {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "ScheduleDownload")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
-        write_simple(writer, "FileType", &self.file_type)?;
-        write_simple(writer, "URL", &self.url)?;
-        write_simple(writer, "Username", &self.username)?;
-        write_simple(writer, "Password", &self.password)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
+        write_simple(writer, "FileType", self.file_type.0.as_ref())?;
+        write_simple(writer, "URL", self.url.0.as_ref())?;
+        write_simple(writer, "Username", self.username.0.as_ref())?;
+        write_simple(writer, "Password", self.password.0.as_ref())?;
         write_simple(writer, "FileSize", &self.file_size.to_string())?;
-        write_simple(writer, "TargetFileName", &self.target_filename)?;
+        write_simple(writer, "TargetFileName", self.target_filename.0.as_ref())?;
         let ts = format!("cwmp:TimeWindowStruct[{}]", self.timewindow_list.len());
         writer
             .write(XmlEvent::start_element("TimeWindowList").attr("SOAP-ENC:arrayType", &ts[..]))?;
@@ -81,8 +81,8 @@ impl ScheduleDownload {
             writer.write(XmlEvent::start_element("TimeWindowStruct"))?;
             write_simple(writer, "WindowStart", &t.window_start.to_string())?;
             write_simple(writer, "WindowEnd", &t.window_end.to_string())?;
-            write_simple(writer, "WindowMode", &t.window_mode)?;
-            write_simple(writer, "UserMessage", &t.user_message)?;
+            write_simple(writer, "WindowMode", t.window_mode.0.as_ref())?;
+            write_simple(writer, "UserMessage", t.user_message.0.as_ref())?;
             write_simple(writer, "MaxRetries", &t.max_retries.to_string())?;
             writer.write(XmlEvent::end_element())?;
         }
@@ -92,36 +92,36 @@ impl ScheduleDownload {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["ScheduleDownload", "CommandKey"] => {
-                self.command_key = characters.to_string();
+                self.command_key = characters.into();
             }
             ["ScheduleDownload", "FileType"] => {
-                self.file_type = characters.to_string();
+                self.file_type = characters.into();
             }
             ["ScheduleDownload", "URL"] => {
-                self.url = characters.to_string();
+                self.url = characters.into();
             }
             ["ScheduleDownload", "Username"] => {
-                self.username = characters.to_string();
+                self.username = characters.into();
             }
             ["ScheduleDownload", "Password"] => {
-                self.password = characters.to_string();
+                self.password = characters.into();
             }
             ["ScheduleDownload", "FileSize"] => {
                 self.file_size = parse_to_int(characters, 0);
             }
             ["ScheduleDownload", "TargetFileName"] => {
-                self.target_filename = characters.to_string();
+                self.target_filename = characters.into();
             }
             ["ScheduleDownload", "TimeWindowList", "TimeWindowStruct", key] => {
                 if let Some(e) = self.timewindow_list.last_mut() {
                     match key {
                         "WindowStart" => e.window_start = parse_to_int(characters, 0),
                         "WindowEnd" => e.window_end = parse_to_int(characters, 0),
-                        "WindowMode" => e.window_mode = characters.to_string(),
-                        "UserMessage" => e.user_message = characters.to_string(),
+                        "WindowMode" => e.window_mode = characters.into(),
+                        "UserMessage" => e.user_message = characters.into(),
                         "MaxRetries" => e.max_retries = parse_to_int(characters, 0),
                         _ => {}
                     }
@@ -136,16 +136,16 @@ impl ScheduleDownload {
 #[cfg(test)]
 impl Arbitrary for ScheduleDownload {
     fn arbitrary(g: &mut Gen) -> Self {
-        ScheduleDownload::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-            Vec::<TimeWindow>::arbitrary(g),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            file_type: XmlSafeString::arbitrary(g),
+            url: XmlSafeString::arbitrary(g),
+            username: XmlSafeString::arbitrary(g),
+            password: XmlSafeString::arbitrary(g),
+            file_size: u32::arbitrary(g),
+            target_filename: XmlSafeString::arbitrary(g),
+            timewindow_list: Vec::<TimeWindow>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -8,6 +8,10 @@ extern crate quickcheck;
 use chrono::{DateTime, Utc};
 #[cfg(test)]
 use chrono::{NaiveDate, NaiveDateTime};
+#[cfg(test)]
+use quickcheck::{Arbitrary, Gen};
+#[cfg(test)]
+use rand::Rng;
 
 mod addobject;
 mod addobjectresponse;
@@ -209,7 +213,7 @@ fn write_fault_struct<W: Write>(
 ) -> Result<(), GenerateError> {
     writer.write(XmlEvent::start_element("FaultStruct"))?;
     write_simple(writer, "FaultCode", &fault.code.to_string())?;
-    write_simple(writer, "FaultString", &fault.string)?;
+    write_simple(writer, "FaultString", fault.string.0.as_ref())?;
     writer.write(XmlEvent::end_element())?;
     Ok(())
 }
@@ -231,6 +235,56 @@ pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32
         .and_hms_opt(hour, min, sec)
         .unwrap_or(NaiveDateTime::default())
         .and_utc()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct XmlSafeString(pub String);
+
+impl From<&str> for XmlSafeString {
+    fn from(s: &str) -> Self {
+        XmlSafeString(s.to_string())
+    }
+}
+
+impl XmlSafeString {
+    pub fn new() -> XmlSafeString {
+        XmlSafeString(String::new())
+    }
+}
+
+pub fn convert_to_xml_safe_strings(input: &[&str]) -> Vec<XmlSafeString> {
+    input
+        .iter()
+        .map(|&s| XmlSafeString(s.to_string())) // Convert &str to XmlSafeString
+        .collect() // Collect into Vec<XmlSafeString>
+}
+
+#[cfg(test)]
+fn is_valid_xml_char(c: &char) -> bool {
+    match c {
+        '\u{0009}' | '\u{000A}' | '\u{000D}' => true, // Allow \t, \n, \r
+        '\u{0020}'..='\u{D7FF}' | '\u{E000}'..='\u{FFFD}' => true, // Valid ranges
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+impl Arbitrary for XmlSafeString {
+    fn arbitrary(g: &mut Gen) -> XmlSafeString {
+        let size = g.size(); // Control the size of the string
+        let mut rng = rand::thread_rng();
+
+        // Generate valid XML characters only
+        let s: String = (0..size)
+            .map(|_| {
+                let c = rng.gen_range(0x20u32..=0xD7FF); // Use inclusive range
+                std::char::from_u32(c).unwrap_or(' ')
+            })
+            .filter(is_valid_xml_char) // Exclude invalid XML chars
+            .collect();
+
+        XmlSafeString(s)
+    }
 }
 
 pub enum GenerateError {
@@ -267,13 +321,16 @@ impl fmt::Debug for GenerateError {
 }
 
 // private functions
-fn extract_attribute(attributes: &[xml::attribute::OwnedAttribute], attrib_name: &str) -> String {
+fn extract_attribute(
+    attributes: &[xml::attribute::OwnedAttribute],
+    attrib_name: &str,
+) -> XmlSafeString {
     let f = attributes
         .iter()
         .find(|&x| x.name.local_name == attrib_name);
     match f {
-        Some(e) => e.value.to_string(),
-        None => String::new(),
+        Some(e) => XmlSafeString::from(e.value.as_ref()),
+        None => XmlSafeString::new(),
     }
 }
 

@@ -50,9 +50,11 @@ impl SetParameterValues {
 
             for p in &self.parameter_list {
                 writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
-                write_simple(writer, "Name", &p.name)?;
-                writer.write(XmlEvent::start_element("Value").attr("xsi:type", &p.r#type[..]))?;
-                writer.write(&p.value[..])?;
+                write_simple(writer, "Name", p.name.0.as_ref())?;
+                writer.write(
+                    XmlEvent::start_element("Value").attr("xsi:type", p.r#type.0.as_ref()),
+                )?;
+                writer.write(p.value.0.as_ref())?;
                 writer.write(XmlEvent::end_element())?; // Value
                 writer.write(XmlEvent::end_element())?;
             }
@@ -84,7 +86,7 @@ impl SetParameterValues {
             _ => {}
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["SetParameterValues", "ParameterKey"] => {
                 self.parameter_key = Some(characters.to_string());
@@ -92,8 +94,8 @@ impl SetParameterValues {
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
                 if let Some(p) = self.parameter_list.last_mut() {
                     match key {
-                        "Name" => p.name = characters.to_string(),
-                        "Value" => p.value = characters.to_string(),
+                        "Name" => p.name = characters.into(),
+                        "Value" => p.value = characters.into(),
                         _ => {}
                     }
                 }

@@ -5,19 +5,21 @@ use chrono::{DateTime, Utc};
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, parse_to_int, write_fault, write_simple, GenerateError, OpResult};
+use super::{
+    cwmp_prefix, parse_to_int, write_fault, write_simple, GenerateError, OpResult, XmlSafeString,
+};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DUStateChangeComplete {
-    pub command_key: String,
+    pub command_key: XmlSafeString,
     pub results: Vec<OpResult>,
 }
 
 impl DUStateChangeComplete {
     #[must_use]
-    pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
+    pub fn new(command_key: &str, results: Vec<OpResult>) -> Self {
         DUStateChangeComplete {
-            command_key,
+            command_key: command_key.into(),
             results,
         }
     }
@@ -34,7 +36,7 @@ impl DUStateChangeComplete {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "DUStateChangeComplete")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
         let ss = if has_cwmp {
             format!("cwmp:OpResultStruct[{}]", self.results.len())
         } else {
@@ -80,9 +82,9 @@ impl DUStateChangeComplete {
         }
     }
 
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
-            ["DUStateChangeComplete", "CommandKey"] => self.command_key = characters.to_string(),
+            ["DUStateChangeComplete", "CommandKey"] => self.command_key = characters.into(),
             ["DUStateChangeComplete", "Results", "OpResultStruct", key] => {
                 if let Some(e) = self.results.last_mut() {
                     match key {
@@ -126,7 +128,10 @@ impl DUStateChangeComplete {
 #[cfg(test)]
 impl Arbitrary for DUStateChangeComplete {
     fn arbitrary(g: &mut Gen) -> Self {
-        DUStateChangeComplete::new(String::arbitrary(g), Vec::<OpResult>::arbitrary(g))
+        DUStateChangeComplete::new(
+            XmlSafeString::arbitrary(g).0.as_ref(),
+            Vec::<OpResult>::arbitrary(g),
+        )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -46,7 +46,7 @@ impl AutonOpResult {
             execution_unit_ref_list: execution_unit_ref_list.to_string(),
             start_time: Some(start_time),
             complete_time: Some(complete_time),
-            fault: FaultStruct::new(fault_code, fault_string.to_string()),
+            fault: FaultStruct::new(fault_code, fault_string),
             operation_performed: operation_performed.to_string(),
         }
     }

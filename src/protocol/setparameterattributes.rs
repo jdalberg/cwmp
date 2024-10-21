@@ -4,7 +4,7 @@ use xml::writer::XmlEvent;
 
 use super::{
     cwmp_prefix, parse_to_int, setparameterattributesstruct::SetParameterAttributesStruct,
-    write_simple, GenerateError,
+    write_simple, GenerateError, XmlSafeString,
 };
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
@@ -30,7 +30,7 @@ impl SetParameterAttributes {
                 .push(SetParameterAttributesStruct::default()),
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
-                    p.access_list.push(String::new());
+                    p.access_list.push(XmlSafeString::new());
                 }
             }
             _ => {}
@@ -59,7 +59,7 @@ impl SetParameterAttributes {
 
         for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("SetParameterAttributesStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
+            write_simple(writer, "Name", p.name.0.as_ref())?;
             write_simple(
                 writer,
                 "NotificationChange",
@@ -73,7 +73,7 @@ impl SetParameterAttributes {
             )?;
             writer.write(XmlEvent::start_element("AccessList"))?;
             for al in &p.access_list {
-                write_simple(writer, "string", al)?;
+                write_simple(writer, "string", al.0.as_ref())?;
             }
             writer.write(XmlEvent::end_element())?; // AccessList
             writer.write(XmlEvent::end_element())?; // SetParameterAttributesStruct
@@ -84,19 +84,19 @@ impl SetParameterAttributes {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", "AccessList", "string"] => {
                 if let Some(p) = self.parameter_list.last_mut() {
                     if let Some(a) = p.access_list.last_mut() {
-                        *a = characters.to_string();
+                        *a = characters.into();
                     }
                 }
             }
             ["SetParameterAttributes", "ParameterList", "SetParameterAttributesStruct", key] => {
                 if let Some(e) = self.parameter_list.last_mut() {
                     match key {
-                        "Name" => e.name = characters.to_string(),
+                        "Name" => e.name = characters.into(),
                         "NotificationChange" => e.notification_change = parse_to_int(characters, 0),
                         "Notification" => e.notification = parse_to_int(characters, 0),
                         "AccessListChange" => e.access_list_change = parse_to_int(characters, 0),

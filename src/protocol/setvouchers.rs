@@ -2,19 +2,21 @@ use std::io::Write;
 
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{convert_to_xml_safe_strings, cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetVouchers {
-    pub voucher_list: Vec<String>,
+    pub voucher_list: Vec<XmlSafeString>,
 }
 
 impl SetVouchers {
     #[must_use]
-    pub fn new(voucher_list: Vec<String>) -> Self {
-        SetVouchers { voucher_list }
+    pub fn new(voucher_list: &[&str]) -> Self {
+        SetVouchers {
+            voucher_list: convert_to_xml_safe_strings(voucher_list),
+        }
     }
 
     /// Generate XML for `SetVouchers`
@@ -35,7 +37,7 @@ impl SetVouchers {
             .write(XmlEvent::start_element("VoucherList").attr("SOAP-ENC:arrayType", &vls[..]))?;
 
         for v in &self.voucher_list {
-            write_simple(writer, "base64", v)?;
+            write_simple(writer, "base64", v.0.as_ref())?;
         }
         writer.write(XmlEvent::end_element())?; // VoucherList
         writer.write(XmlEvent::end_element())?;
@@ -49,13 +51,13 @@ impl SetVouchers {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["SetVouchers", "VoucherList", "base64"] = &path_pattern[..] {
-            self.voucher_list.push(String::new());
+            self.voucher_list.push(XmlSafeString::new());
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["SetVouchers", "VoucherList", "base64"] = *path {
             if let Some(v) = self.voucher_list.last_mut() {
-                *v = characters.to_string();
+                *v = characters.into();
             }
         }
     }
@@ -64,7 +66,9 @@ impl SetVouchers {
 #[cfg(test)]
 impl Arbitrary for SetVouchers {
     fn arbitrary(g: &mut Gen) -> Self {
-        SetVouchers::new(Vec::<String>::arbitrary(g))
+        Self {
+            voucher_list: Vec::<XmlSafeString>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

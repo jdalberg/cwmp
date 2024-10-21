@@ -7,20 +7,20 @@ use xml::writer::XmlEvent;
 
 #[cfg(test)]
 use super::gen_utc_date;
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DownloadResponse {
-    pub status: String,
+    pub status: XmlSafeString,
     pub start_time: Option<DateTime<Utc>>,
     pub complete_time: Option<DateTime<Utc>>,
 }
 
 impl DownloadResponse {
     #[must_use]
-    pub fn new(status: String, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
+    pub fn new(status: &str, start_time: DateTime<Utc>, complete_time: DateTime<Utc>) -> Self {
         DownloadResponse {
-            status,
+            status: status.into(),
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
@@ -38,7 +38,7 @@ impl DownloadResponse {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "DownloadResponse")[..],
         ))?;
-        write_simple(writer, "Status", &self.status)?;
+        write_simple(writer, "Status", self.status.0.as_ref())?;
         match self.start_time {
             None => {}
             Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
@@ -51,10 +51,10 @@ impl DownloadResponse {
 
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["DownloadResponse", "Status"] => {
-                self.status = characters.to_string();
+                self.status = characters.into();
             }
             ["DownloadResponse", "StartTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
@@ -76,8 +76,11 @@ impl Arbitrary for DownloadResponse {
     fn arbitrary(g: &mut Gen) -> Self {
         let bogus_st = gen_utc_date(2014, 11, 28, 12, 0, 9);
         let bogus_ct = gen_utc_date(2014, 11, 28, 12, 0, 9);
-
-        DownloadResponse::new(String::arbitrary(g), bogus_st, bogus_ct)
+        Self {
+            status: XmlSafeString::arbitrary(g),
+            start_time: Some(bogus_st),
+            complete_time: Some(bogus_ct),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(self.status.clone().shrink().map(|s| DownloadResponse {

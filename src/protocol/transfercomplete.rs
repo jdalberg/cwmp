@@ -7,13 +7,14 @@ use xml::writer::XmlEvent;
 use super::gen_utc_date;
 use super::{
     cwmp_prefix, parse_to_int, write_fault_struct, write_simple, FaultStruct, GenerateError,
+    XmlSafeString,
 };
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct TransferComplete {
-    pub command_key: String,
+    pub command_key: XmlSafeString,
     pub fault: FaultStruct,
     pub start_time: Option<DateTime<Utc>>,
     pub complete_time: Option<DateTime<Utc>>,
@@ -28,7 +29,7 @@ impl TransferComplete {
         complete_time: Option<DateTime<Utc>>,
     ) -> Self {
         TransferComplete {
-            command_key: command_key.to_string(),
+            command_key: command_key.into(),
             fault,
             start_time,
             complete_time,
@@ -47,7 +48,7 @@ impl TransferComplete {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "TransferComplete")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
         write_fault_struct(writer, &self.fault)?;
         if let Some(dt) = self.start_time {
             write_simple(writer, "StartTime", &dt.to_rfc3339())?;
@@ -59,9 +60,9 @@ impl TransferComplete {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
-            ["TransferComplete", "CommandKey"] => self.command_key = characters.to_string(),
+            ["TransferComplete", "CommandKey"] => self.command_key = characters.into(),
             ["TransferComplete", "StartTime"] => {
                 if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
                     self.start_time = Some(dt);

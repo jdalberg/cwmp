@@ -1,5 +1,5 @@
-use super::QueuedTransferStruct;
 use super::{write_simple, GenerateError};
+use super::{QueuedTransferStruct, XmlSafeString};
 use std::io::Write;
 
 #[cfg(test)]
@@ -40,10 +40,10 @@ impl GetQueuedTransfersResponse {
         for p in &self.transfer_list {
             writer.write(XmlEvent::start_element("QueuedTransferStruct"))?;
             if let Some(ck) = &p.command_key {
-                write_simple(writer, "CommandKey", ck)?;
+                write_simple(writer, "CommandKey", ck.0.as_ref())?;
             }
             if let Some(s) = &p.state {
-                write_simple(writer, "State", s)?;
+                write_simple(writer, "State", s.0.as_ref())?;
             }
             writer.write(XmlEvent::end_element())?;
         }
@@ -64,23 +64,23 @@ impl GetQueuedTransfersResponse {
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "CommandKey"] => {
                 if let Some(l) = self.transfer_list.last_mut() {
-                    l.command_key = Some(String::new());
+                    l.command_key = Some(XmlSafeString::new());
                 }
             }
             ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", "State"] => {
                 if let Some(l) = self.transfer_list.last_mut() {
-                    l.state = Some(String::new());
+                    l.state = Some(XmlSafeString::new());
                 }
             }
             _ => {}
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetQueuedTransfersResponse", "TransferList", "QueuedTransferStruct", key] = *path {
             if let Some(e) = self.transfer_list.last_mut() {
                 match key {
-                    "CommandKey" => e.command_key = Some(characters.to_string()),
-                    "State" => e.state = Some(characters.to_string()),
+                    "CommandKey" => e.command_key = Some(characters.into()),
+                    "State" => e.state = Some(characters.into()),
                     _ => {}
                 }
             }
