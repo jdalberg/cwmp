@@ -13,12 +13,18 @@ pub struct AddObjectResponse {
 }
 
 impl AddObjectResponse {
-    #[must_use] pub fn new(instance_number: u32, status: String) -> Self {
+    #[must_use]
+    pub fn new(instance_number: u32, status: String) -> Self {
         AddObjectResponse {
             instance_number,
             status,
         }
     }
+
+    /// Generate XML for `AddObjectResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -42,7 +48,9 @@ impl AddObjectResponse {
     pub fn characters(&mut self, path: &[&str], characters: &String) {
         match *path {
             ["AddObjectResponse", "InstanceNumber"] => {
-                self.instance_number = characters.parse().unwrap();
+                if let Ok(instance) = characters.parse() {
+                    self.instance_number = instance;
+                }
             }
             ["AddObjectResponse", "Status"] => {
                 self.status = characters.to_string();

@@ -6,6 +6,10 @@ use super::{cwmp_prefix, write_empty_tag, GenerateError};
 pub struct GetAllQueuedTransfers;
 
 impl GetAllQueuedTransfers {
+    /// Generate XML for `GetAllQueuedTransfers`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

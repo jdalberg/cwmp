@@ -13,9 +13,14 @@ pub struct AutonomousDUStateChangeComplete {
 }
 
 impl AutonomousDUStateChangeComplete {
-    #[must_use] pub fn new(results: Vec<AutonOpResult>) -> Self {
+    #[must_use]
+    pub fn new(results: Vec<AutonOpResult>) -> Self {
         AutonomousDUStateChangeComplete { results }
     }
+    /// Generate XML for `AutonomousDUStateChangeComplete`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -69,10 +74,12 @@ impl AutonomousDUStateChangeComplete {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
-        if let ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct"] = &path_pattern[..] {
+        if let ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct"] =
+            &path_pattern[..]
+        {
             self.results.push(AutonOpResult::default());
         }
     }
@@ -80,29 +87,45 @@ impl AutonomousDUStateChangeComplete {
         match *path {
             ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct", key] => {
                 let last = self.results.last_mut();
-                if let Some(e) = last { match key {
-                    "UUID" => e.uuid = characters.to_string(),
-                    "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
-                    "Version" => e.version = characters.to_string(),
-                    "CurrentState" => e.current_state = characters.to_string(),
-                    "Resolved" => e.resolved = characters.to_string(),
-                    "ExecutionUnitRefList" => {
-                        e.execution_unit_ref_list = characters.to_string();
+                if let Some(e) = last {
+                    match key {
+                        "UUID" => e.uuid = characters.to_string(),
+                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
+                        "Version" => e.version = characters.to_string(),
+                        "CurrentState" => e.current_state = characters.to_string(),
+                        "Resolved" => e.resolved = characters.to_string(),
+                        "ExecutionUnitRefList" => {
+                            e.execution_unit_ref_list = characters.to_string();
+                        }
+                        "StartTime" => {
+                            if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                                e.start_time = Some(dt);
+                            }
+                        }
+                        "CompleteTime" => {
+                            if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                                e.complete_time = Some(dt);
+                            }
+                        }
+                        "OperationPerformed" => e.operation_performed = characters.to_string(),
+                        _ => {}
                     }
-                    "StartTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.start_time = Some(dt) },
-                    "CompleteTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.complete_time = Some(dt) },
-                    "OperationPerformed" => e.operation_performed = characters.to_string(),
-                    _ => {}
-                } }
+                }
             }
             ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct", "Fault", "FaultStruct", key] =>
             {
                 let last = self.results.last_mut();
-                if let Some(e) = last { match key {
-                    "FaultCode" => if let Ok(parsed) = characters.parse::<u32>() { e.fault.set_code(parsed) },
-                    "FaultString" => e.fault.set_string(&characters[..]),
-                    _ => {}
-                } }
+                if let Some(e) = last {
+                    match key {
+                        "FaultCode" => {
+                            if let Ok(parsed) = characters.parse::<u32>() {
+                                e.fault.set_code(parsed);
+                            }
+                        }
+                        "FaultString" => e.fault.set_string(&characters[..]),
+                        _ => {}
+                    }
+                }
             }
             _ => {}
         }

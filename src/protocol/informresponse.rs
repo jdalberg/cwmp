@@ -33,7 +33,7 @@ impl InformResponse {
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["InformResponse", "MaxEnvelopes"] = *path {
             self.max_envelopes = parse_to_int(characters, 1);
         }

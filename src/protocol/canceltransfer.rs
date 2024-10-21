@@ -12,10 +12,15 @@ pub struct CancelTransfer {
 }
 
 impl CancelTransfer {
-    #[must_use] pub fn new(command_key: String) -> Self {
+    #[must_use]
+    pub fn new(command_key: String) -> Self {
         CancelTransfer { command_key }
     }
 
+    /// Generate XML for `CancelTransfer`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -31,7 +36,9 @@ impl CancelTransfer {
     }
 
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["CancelTransfer", "CommandKey"] = *path { self.command_key = characters.to_string() }
+        if let ["CancelTransfer", "CommandKey"] = *path {
+            self.command_key = characters.to_string();
+        }
     }
 }
 

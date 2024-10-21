@@ -62,7 +62,7 @@ impl GetParameterAttributesResponse {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {

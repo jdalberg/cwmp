@@ -22,18 +22,20 @@ pub struct AutonOpResult {
 }
 
 impl AutonOpResult {
-    #[must_use] pub fn new(
-        uuid: String,
-        deployment_unit_ref: String,
-        version: String,
-        current_state: String,
-        resolved: String,
-        execution_unit_ref_list: String,
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        uuid: &str,
+        deployment_unit_ref: &str,
+        version: &str,
+        current_state: &str,
+        resolved: &str,
+        execution_unit_ref_list: &str,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
         fault_code: u32,
-        fault_string: String,
-        operation_performed: String,
+        fault_string: &str,
+        operation_performed: &str,
     ) -> Self {
         AutonOpResult {
             uuid: uuid.to_string(),
@@ -44,7 +46,7 @@ impl AutonOpResult {
             execution_unit_ref_list: execution_unit_ref_list.to_string(),
             start_time: Some(start_time),
             complete_time: Some(complete_time),
-            fault: FaultStruct::new(fault_code, fault_string),
+            fault: FaultStruct::new(fault_code, fault_string.to_string()),
             operation_performed: operation_performed.to_string(),
         }
     }
@@ -57,17 +59,17 @@ impl Arbitrary for AutonOpResult {
         let bogus_ct = gen_utc_date(2014, 11, 28, 12, 0, 9);
 
         AutonOpResult::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
             bogus_st,
             bogus_ct,
             u32::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
         )
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {

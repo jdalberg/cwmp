@@ -6,6 +6,7 @@ use xml::writer::XmlEvent;
 
 use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FaultStruct {
     pub code: u32,
@@ -13,7 +14,8 @@ pub struct FaultStruct {
 }
 
 impl FaultStruct {
-    #[must_use] pub fn new(code: u32, string: String) -> Self {
+    #[must_use]
+    pub fn new(code: u32, string: String) -> Self {
         FaultStruct { code, string }
     }
     pub fn set_code(&mut self, code: u32) {
@@ -38,6 +40,7 @@ impl Arbitrary for FaultStruct {
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct FaultDetail {
     pub code: u32,
@@ -45,7 +48,8 @@ pub struct FaultDetail {
 }
 
 impl FaultDetail {
-    #[must_use] pub fn new(code: u32, string: String) -> Self {
+    #[must_use]
+    pub fn new(code: u32, string: String) -> Self {
         FaultDetail { code, string }
     }
 }
@@ -72,13 +76,18 @@ pub struct Fault {
 }
 
 impl Fault {
-    #[must_use] pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
+    #[must_use]
+    pub fn new(faultcode: String, faultstring: String, code: u32, string: String) -> Self {
         Fault {
             faultcode,
             faultstring,
             detail: FaultDetail::new(code, string),
         }
     }
+    /// Generate XML for `Fault`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

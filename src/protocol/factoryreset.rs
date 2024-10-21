@@ -6,6 +6,10 @@ use super::{cwmp_prefix, write_empty_tag, GenerateError};
 pub struct FactoryReset;
 
 impl FactoryReset {
+    /// Generate XML for `FactoryReset`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

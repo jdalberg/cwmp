@@ -13,12 +13,17 @@ pub struct DeleteObject {
 }
 
 impl DeleteObject {
-    #[must_use] pub fn new(object_name: String, parameter_key: String) -> Self {
+    #[must_use]
+    pub fn new(object_name: String, parameter_key: String) -> Self {
         DeleteObject {
             object_name,
             parameter_key,
         }
     }
+    /// Generate XML for `DeleteObject`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

@@ -6,6 +6,10 @@ use super::{cwmp_prefix, write_empty_tag, GenerateError};
 pub struct AutonomousDUStateChangeCompleteResponse;
 
 impl AutonomousDUStateChangeCompleteResponse {
+    /// Generate XML for `AutonomousDUStateChangeCompleteResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

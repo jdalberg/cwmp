@@ -15,7 +15,8 @@ pub struct ChangeDUState {
 }
 
 impl ChangeDUState {
-    #[must_use] pub fn new(
+    #[must_use]
+    pub fn new(
         command_key: String,
         install_operations: Vec<InstallOp>,
         uninstall_operations: Vec<UninstallOp>,
@@ -29,6 +30,10 @@ impl ChangeDUState {
         }
     }
 
+    /// Generate XML for `ChangeDUState`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -76,7 +81,7 @@ impl ChangeDUState {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
@@ -110,34 +115,40 @@ impl ChangeDUState {
             ["ChangeDUState", "CommandKey"] => self.command_key = characters.to_string(),
             ["ChangeDUState", "Operations", "InstallOpStruct", key] => {
                 let last = self.install_operations.last_mut();
-                if let Some(e) = last { match key {
-                    "URL" => e.url = characters.to_string(),
-                    "UUID" => e.uuid = characters.to_string(),
-                    "Username" => e.username = characters.to_string(),
-                    "Password" => e.password = characters.to_string(),
-                    "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
-                    _ => {}
-                } }
+                if let Some(e) = last {
+                    match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "Username" => e.username = characters.to_string(),
+                        "Password" => e.password = characters.to_string(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        _ => {}
+                    }
+                }
             }
             ["ChangeDUState", "Operations", "UninstallOpStruct", key] => {
                 let last = self.uninstall_operations.last_mut();
-                if let Some(e) = last { match key {
-                    "URL" => e.url = characters.to_string(),
-                    "UUID" => e.uuid = characters.to_string(),
-                    "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
-                    _ => {}
-                } }
+                if let Some(e) = last {
+                    match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "ExecutionEnvRef" => e.execution_env_ref = characters.to_string(),
+                        _ => {}
+                    }
+                }
             }
             ["ChangeDUState", "Operations", "UpdateOpStruct", key] => {
                 let last = self.update_operations.last_mut();
-                if let Some(e) = last { match key {
-                    "URL" => e.url = characters.to_string(),
-                    "UUID" => e.uuid = characters.to_string(),
-                    "Username" => e.username = characters.to_string(),
-                    "Password" => e.password = characters.to_string(),
-                    "Version" => e.version = characters.to_string(),
-                    _ => {}
-                } }
+                if let Some(e) = last {
+                    match key {
+                        "URL" => e.url = characters.to_string(),
+                        "UUID" => e.uuid = characters.to_string(),
+                        "Username" => e.username = characters.to_string(),
+                        "Password" => e.password = characters.to_string(),
+                        "Version" => e.version = characters.to_string(),
+                        _ => {}
+                    }
+                }
             }
             _ => {}
         }

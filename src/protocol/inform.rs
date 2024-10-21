@@ -104,7 +104,7 @@ impl Inform {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        attributes: &Vec<xml::attribute::OwnedAttribute>,
+        attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {

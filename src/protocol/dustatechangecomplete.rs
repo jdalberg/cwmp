@@ -14,12 +14,18 @@ pub struct DUStateChangeComplete {
 }
 
 impl DUStateChangeComplete {
-    #[must_use] pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
+    #[must_use]
+    pub fn new(command_key: String, results: Vec<OpResult>) -> Self {
         DUStateChangeComplete {
             command_key,
             results,
         }
     }
+
+    /// Generate XML for `DUStateChangeComplete`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -66,7 +72,7 @@ impl DUStateChangeComplete {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["DUStateChangeComplete", "Results", "OpResultStruct"] = &path_pattern[..] {
@@ -88,8 +94,16 @@ impl DUStateChangeComplete {
                         "ExecutionUnitRefList" => {
                             e.execution_unit_ref_list = characters.to_string();
                         }
-                        "StartTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.start_time = Some(dt) },
-                        "CompleteTime" => if let Ok(dt) = characters.parse::<DateTime<Utc>>() { e.complete_time = Some(dt) },
+                        "StartTime" => {
+                            if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                                e.start_time = Some(dt);
+                            }
+                        }
+                        "CompleteTime" => {
+                            if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                                e.complete_time = Some(dt);
+                            }
+                        }
                         _ => {}
                     }
                 }

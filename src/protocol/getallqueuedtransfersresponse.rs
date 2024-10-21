@@ -12,9 +12,14 @@ pub struct GetAllQueuedTransfersResponse {
 }
 
 impl GetAllQueuedTransfersResponse {
-    #[must_use] pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
+    #[must_use]
+    pub fn new(transfer_list: Vec<AllQueuedTransfers>) -> Self {
         GetAllQueuedTransfersResponse { transfer_list }
     }
+    /// Generate XML for `GetAllQueuedTransfersResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -51,7 +56,7 @@ impl GetAllQueuedTransfersResponse {
         &mut self,
         path: &[&str],
         _name: &xml::name::OwnedName,
-        _attributes: &Vec<xml::attribute::OwnedAttribute>,
+        _attributes: &[xml::attribute::OwnedAttribute],
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] =

@@ -12,9 +12,14 @@ pub struct DeleteObjectResponse {
 }
 
 impl DeleteObjectResponse {
-    #[must_use] pub fn new(status: String) -> Self {
+    #[must_use]
+    pub fn new(status: String) -> Self {
         DeleteObjectResponse { status }
     }
+    /// Generate XML for `DeleteObjectResponse`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -29,7 +34,9 @@ impl DeleteObjectResponse {
         Ok(())
     }
     pub fn characters(&mut self, path: &[&str], characters: &String) {
-        if let ["DeleteObjectResponse", "Status"] = *path { self.status = characters.to_string() }
+        if let ["DeleteObjectResponse", "Status"] = *path {
+            self.status = characters.to_string();
+        }
     }
 }
 

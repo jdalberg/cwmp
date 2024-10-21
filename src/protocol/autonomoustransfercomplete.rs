@@ -25,30 +25,36 @@ pub struct AutonomousTransferComplete {
 }
 
 impl AutonomousTransferComplete {
-    #[must_use] pub fn new(
-        announce_url: String,
-        transfer_url: String,
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        announce_url: &str,
+        transfer_url: &str,
         is_download: u8,
-        file_type: String,
+        file_type: &str,
         file_size: u32,
-        target_filename: String,
+        target_filename: &str,
         fault: FaultStruct,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
     ) -> Self {
         AutonomousTransferComplete {
-            announce_url,
-            transfer_url,
+            announce_url: announce_url.to_string(),
+            transfer_url: transfer_url.to_string(),
             is_download,
-            file_type,
+            file_type: file_type.to_string(),
             file_size,
-            target_filename,
+            target_filename: target_filename.to_string(),
             fault,
             start_time: Some(start_time),
             complete_time: Some(complete_time),
         }
     }
 
+    /// Generate XML for `AutonomousTransferComplete`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -96,10 +102,14 @@ impl AutonomousTransferComplete {
                 self.file_size = parse_to_int(characters, 0);
             }
             ["AutonomousTransferComplete", "StartTime"] => {
-                if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.start_time = Some(dt) }
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.start_time = Some(dt);
+                }
             }
             ["AutonomousTransferComplete", "CompleteTime"] => {
-                if let Ok(dt) = characters.parse::<DateTime<Utc>>() { self.complete_time = Some(dt) }
+                if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
+                    self.complete_time = Some(dt);
+                }
             }
             ["AutonomousTransferComplete", "FaultStruct", "FaultCode"] => {
                 self.fault.set_code(parse_to_int(characters, 0));
@@ -118,12 +128,12 @@ impl Arbitrary for AutonomousTransferComplete {
         // times are not arbitrary due to qc
         // tuple (used in shrink) limitations
         AutonomousTransferComplete::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
+            &String::arbitrary(g),
+            &String::arbitrary(g),
             u8::arbitrary(g),
-            String::arbitrary(g),
+            &String::arbitrary(g),
             u32::arbitrary(g),
-            String::arbitrary(g),
+            &String::arbitrary(g),
             FaultStruct::arbitrary(g),
             gen_utc_date(2014, 11, 28, 12, 0, 9),
             gen_utc_date(2014, 11, 29, 12, 0, 9),

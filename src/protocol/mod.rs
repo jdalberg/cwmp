@@ -329,7 +329,7 @@ impl State {
     pub fn start_handler(
         &mut self,
         name: &xml::name::OwnedName,
-        attributes: &Vec<xml::attribute::OwnedAttribute>,
+        attributes: &[xml::attribute::OwnedAttribute],
         namespace: &xml::namespace::Namespace,
     ) {
         // push a copy of the name into the current path

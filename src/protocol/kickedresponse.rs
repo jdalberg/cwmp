@@ -17,7 +17,7 @@ impl KickedResponse {
         KickedResponse { next_url }
     }
 
-    /// Generate XML for `NoMoreRequests`
+    /// Generate XML for `KickedResponse`
     ///     
     /// # Errors
     ///     Any errors encountered while writing to `writer` will be returned.

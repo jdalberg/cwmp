@@ -8,7 +8,7 @@ use super::{
     CancelTransferResponse, ChangeDUState, ChangeDUStateResponse, CwmpVersion,
     DUStateChangeComplete, DUStateChangeCompleteResponse, DeleteObject, DeleteObjectResponse,
     Download, DownloadResponse, FactoryReset, FactoryResetResponse, Fault, GenerateError,
-    GetAllQueuedTransfers, GetAllQueuedTransfersResponse, GetOptionsResponse,
+    GetAllQueuedTransfers, GetAllQueuedTransfersResponse, GetOptions, GetOptionsResponse,
     GetParameterAttributes, GetParameterAttributesResponse, GetParameterNames,
     GetParameterNamesResponse, GetParameterValues, GetParameterValuesResponse, GetQueuedTransfers,
     GetQueuedTransfersResponse, GetRPCMethods, GetRPCMethodsResponse, HeaderElement, HoldRequests,
@@ -53,6 +53,12 @@ impl Envelope {
     pub fn body(self) -> Vec<BodyElement> {
         self.body
     }
+
+    /// Generate XML for `Envelope`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
+    #[allow(clippy::too_many_lines)]
     pub fn generate(&self) -> Result<String, GenerateError> {
         let mut writer = EmitterConfig::new()
             .perform_indent(true)
@@ -276,11 +282,13 @@ impl Envelope {
 
         Ok(String::from_utf8(writer.into_inner())?)
     }
+
+    #[allow(clippy::too_many_lines)]
     pub fn start_handler(
         &mut self,
-        path: &Vec<String>,
+        path: &[String],
         name: &xml::name::OwnedName,
-        attributes: &Vec<xml::attribute::OwnedAttribute>,
+        attributes: &[xml::attribute::OwnedAttribute],
         namespace: &xml::namespace::Namespace,
     ) {
         // match out all the elements in path. If the path goes into body,
@@ -430,7 +438,9 @@ impl Envelope {
                         "GetOptionsResponse" => self.body.push(BodyElement::GetOptionsResponse(
                             GetOptionsResponse::default(),
                         )),
-                        "GetOptions" => self.body.push(BodyElement::GetOptions(Default::default())),
+                        "GetOptions" => self
+                            .body
+                            .push(BodyElement::GetOptions(GetOptions::default())),
                         "GetParameterAttributes" => self.body.push(
                             BodyElement::GetParameterAttributes(GetParameterAttributes::default()),
                         ),
@@ -607,11 +617,12 @@ impl Envelope {
     }
 
     // TODO: todo!("// match the ones who actually need and end_handler, and call their respective end_handler");
-    pub fn end_handler(&mut self, path: &Vec<String>, _name: &xml::name::OwnedName) {
+    pub fn end_handler(&mut self, path: &[String], _name: &xml::name::OwnedName) {
         let _path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         {}
     }
 
+    #[allow(clippy::too_many_lines)]
     pub fn characters(&mut self, path: &[String], characters: &String) {
         // println!("Path: {:?} Chars: {}", path, characters);
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();

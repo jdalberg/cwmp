@@ -21,7 +21,9 @@ pub struct Download {
 }
 
 impl Download {
-    #[must_use] pub fn new(
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
         command_key: String,
         file_type: String,
         url: String,
@@ -46,6 +48,10 @@ impl Download {
             failure_url,
         }
     }
+    /// Generate XML for `Download`
+    ///     
+    /// # Errors
+    ///     Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
