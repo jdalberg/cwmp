@@ -48,7 +48,7 @@ impl Arbitrary for UseCWMPVersion {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.must_understand.clone(), self.value.clone())
+            (self.must_understand, self.value.clone())
                 .shrink()
                 .map(|(m, v)| UseCWMPVersion {
                     must_understand: m,

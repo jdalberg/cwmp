@@ -47,7 +47,7 @@ impl Arbitrary for SessionTimeout {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.must_understand.clone(), self.timeout.clone())
+            (self.must_understand, self.timeout)
                 .shrink()
                 .map(|(m, t)| SessionTimeout {
                     must_understand: m,

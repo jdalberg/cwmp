@@ -1,26 +1,23 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeviceId {
-    pub manufacturer: String,
-    pub oui: String,
-    pub product_class: String,
-    pub serial_number: String,
+    pub manufacturer: XmlSafeString,
+    pub oui: XmlSafeString,
+    pub product_class: XmlSafeString,
+    pub serial_number: XmlSafeString,
 }
 impl DeviceId {
     #[must_use]
-    pub fn new(
-        manufacturer: String,
-        oui: String,
-        product_class: String,
-        serial_number: String,
-    ) -> Self {
+    pub fn new(manufacturer: &str, oui: &str, product_class: &str, serial_number: &str) -> Self {
         DeviceId {
-            manufacturer,
-            oui,
-            product_class,
-            serial_number,
+            manufacturer: manufacturer.into(),
+            oui: oui.into(),
+            product_class: product_class.into(),
+            serial_number: serial_number.into(),
         }
     }
 }
@@ -28,12 +25,12 @@ impl DeviceId {
 #[cfg(test)]
 impl Arbitrary for DeviceId {
     fn arbitrary(g: &mut Gen) -> Self {
-        DeviceId::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            manufacturer: XmlSafeString::arbitrary(g),
+            oui: XmlSafeString::arbitrary(g),
+            product_class: XmlSafeString::arbitrary(g),
+            serial_number: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

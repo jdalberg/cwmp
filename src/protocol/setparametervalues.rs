@@ -2,22 +2,24 @@ use std::io::Write;
 
 use xml::writer::XmlEvent;
 
-use super::{extract_attribute, write_empty_tag, write_simple, GenerateError, ParameterValue};
+use super::{
+    extract_attribute, write_empty_tag, write_simple, GenerateError, ParameterValue, XmlSafeString,
+};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct SetParameterValues {
     pub parameter_list: Vec<ParameterValue>,
-    pub parameter_key: Option<String>,
+    pub parameter_key: Option<XmlSafeString>,
 }
 
 impl SetParameterValues {
     #[must_use]
-    pub fn new(parameter_key: Option<String>, parameter_list: Vec<ParameterValue>) -> Self {
-        SetParameterValues {
-            parameter_list,
-            parameter_key,
+    pub fn new(parameter_key: Option<&str>, parameter_list: &[&ParameterValue]) -> Self {
+        Self {
+            parameter_list: parameter_list.iter().cloned().cloned().collect(),
+            parameter_key: parameter_key.map(XmlSafeString::from),
         }
     }
 
@@ -39,7 +41,7 @@ impl SetParameterValues {
         };
 
         if let Some(pk) = &self.parameter_key {
-            write_simple(writer, "ParameterKey", pk)?;
+            write_simple(writer, "ParameterKey", pk.0.as_ref())?;
         }
         if self.parameter_list.is_empty() {
             write_empty_tag(writer, "ParameterList")?;
@@ -72,7 +74,7 @@ impl SetParameterValues {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
             ["SetParameterValues", "ParameterKey"] => {
-                self.parameter_key = Some(String::new());
+                self.parameter_key = Some(XmlSafeString::new());
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct"] => {
                 self.parameter_list.push(ParameterValue::default());
@@ -89,7 +91,7 @@ impl SetParameterValues {
     pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["SetParameterValues", "ParameterKey"] => {
-                self.parameter_key = Some(characters.to_string());
+                self.parameter_key = Some(characters.into());
             }
             ["SetParameterValues", "ParameterList", "ParameterValueStruct", key] => {
                 if let Some(p) = self.parameter_list.last_mut() {
@@ -108,10 +110,10 @@ impl SetParameterValues {
 #[cfg(test)]
 impl Arbitrary for SetParameterValues {
     fn arbitrary(g: &mut Gen) -> Self {
-        SetParameterValues::new(
-            Option::<String>::arbitrary(g),
-            Vec::<ParameterValue>::arbitrary(g),
-        )
+        Self {
+            parameter_list: Vec::<ParameterValue>::arbitrary(g),
+            parameter_key: Option::<XmlSafeString>::arbitrary(g).map(XmlSafeString::from),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

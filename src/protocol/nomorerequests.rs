@@ -48,7 +48,7 @@ impl Arbitrary for NoMoreRequests {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.must_understand.clone(), self.value.clone())
+            (self.must_understand, self.value)
                 .shrink()
                 .map(|(m, v)| NoMoreRequests {
                     must_understand: m,

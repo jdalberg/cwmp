@@ -1,32 +1,35 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::XmlSafeString;
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AllQueuedTransfers {
-    pub command_key: String,
-    pub state: String,
+    pub command_key: XmlSafeString,
+    pub state: XmlSafeString,
     pub is_download: u8,
-    pub file_type: String,
+    pub file_type: XmlSafeString,
     pub file_size: u32,
-    pub target_filename: String,
+    pub target_filename: XmlSafeString,
 }
 
 impl AllQueuedTransfers {
-    #[must_use] pub fn new(
-        command_key: String,
-        state: String,
+    #[must_use]
+    pub fn new(
+        command_key: &str,
+        state: &str,
         is_download: u8,
-        file_type: String,
+        file_type: &str,
         file_size: u32,
-        target_filename: String,
+        target_filename: &str,
     ) -> Self {
         AllQueuedTransfers {
-            command_key,
-            state,
+            command_key: command_key.into(),
+            state: state.into(),
             is_download,
-            file_type,
+            file_type: file_type.into(),
             file_size,
-            target_filename,
+            target_filename: target_filename.into(),
         }
     }
 }
@@ -34,23 +37,23 @@ impl AllQueuedTransfers {
 #[cfg(test)]
 impl Arbitrary for AllQueuedTransfers {
     fn arbitrary(g: &mut Gen) -> Self {
-        AllQueuedTransfers::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u8::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            state: XmlSafeString::arbitrary(g),
+            is_download: u8::arbitrary(g),
+            file_type: XmlSafeString::arbitrary(g),
+            file_size: u32::arbitrary(g),
+            target_filename: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (
                 self.command_key.clone(),
                 self.state.clone(),
-                self.is_download.clone(),
+                self.is_download,
                 self.file_type.clone(),
-                self.file_size.clone(),
+                self.file_size,
                 self.target_filename.clone(),
             )
                 .shrink()

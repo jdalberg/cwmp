@@ -85,27 +85,111 @@ mod tests {
     use protocol::Envelope;
     extern crate quickcheck;
     
+
+
     #[quickcheck]
-    fn gen_and_parse(e: Envelope) -> bool {
+    fn gen_and_parse_addobject(ao: AddObject) -> bool {
+        let e: Envelope = Envelope::new(
+            Some(CwmpVersion::new(1,0)), 
+            vec![HeaderElement::ID(ID::new(true,"1234"))], 
+            vec![BodyElement::AddObject(ao)]);
         match generate(&e) {
             Ok(xml) => {
-                // Check that the generated XML does not contain any control characters
-                // We generate the XML and then parse it back into a struct
                 match parse(&xml) {
-                    Ok(r) => if r == e {
-                        true
-                    } else {
-                        println!("gen_and_parse NOT EQUAL: {:?} != {:?}", r, e);
-                        false
-                    },
-                    Err(e) => {
-                        println!("gen_and_parseERROR DURING PARSE: {:?}", e);
-                        false
-                    }
-                }
+                Ok(r) => if r == e {
+                    true
+                } else {
+                    println!("gen_and_parse_addobject NOT EQUAL: {r:?} != {e:?}");
+                    false
+                },
+                Err(e) => {
+                    println!("gen_and_parse_addobject ERROR DURING PARSE: {e:?}");
+                    false
+                }}
             },
             Err(e) => {
-                println!("gen_and_parse ERROR DURING GENERATE: {:?}", e);
+                println!("gen_and_parse_addobject ERROR DURING GENERATE: {e:?}");
+                false
+            }
+        }
+    }
+
+    #[quickcheck]
+    fn gen_and_parse_addobject_response(aor: AddObjectResponse) -> bool {
+        let e: Envelope = Envelope::new(
+            Some(CwmpVersion::new(1,0)), 
+            vec![HeaderElement::ID(ID::new(true,"1234"))], 
+            vec![BodyElement::AddObjectResponse(aor)]);
+        match generate(&e) {
+            Ok(xml) => {
+                match parse(&xml) {
+                Ok(r) => if r == e {
+                    true
+                } else {
+                    println!("gen_and_parse_addobject NOT EQUAL: {r:?} != {e:?}");
+                    false
+                },
+                Err(e) => {
+                    println!("gen_and_parse_addobject ERROR DURING PARSE: {e:?}");
+                    false
+                }}
+            },
+            Err(e) => {
+                println!("gen_and_parse_addobject ERROR DURING GENERATE: {e:?}");
+                false
+            }
+        }
+    }
+
+    #[quickcheck]
+    fn gen_and_parse_autonomous_du_state_change_complete(a: AutonomousDUStateChangeComplete) -> bool {
+        let e: Envelope = Envelope::new(
+            Some(CwmpVersion::new(1,0)), 
+            vec![HeaderElement::ID(ID::new(true,"1234"))], 
+            vec![BodyElement::AutonomousDUStateChangeComplete(a)]);
+        match generate(&e) {
+            Ok(xml) => {
+                match parse(&xml) {
+                Ok(r) => if r == e {
+                    true
+                } else {
+                    println!("gen_and_parse_autonomous_du_state_change_complete NOT EQUAL: {r:?} != {e:?}");
+                    false
+                },
+                Err(e) => {
+                    println!("gen_and_parse_autonomous_du_state_change_complete ERROR DURING PARSE: {e:?}");
+                    false
+                }}
+            },
+            Err(e) => {
+                println!("gen_and_parse_autonomous_du_state_change_complete ERROR DURING GENERATE: {e:?}");
+                false
+            }
+        }
+    }
+
+    #[quickcheck]
+    fn gen_and_parse_transfercomplete(tc: TransferComplete) -> bool {
+        let e: Envelope = Envelope::new(
+            Some(CwmpVersion::new(1,0)), 
+            vec![HeaderElement::ID(ID::new(true,"1234"))], 
+            vec![BodyElement::TransferComplete(tc)]);
+        match generate(&e) {
+            Ok(xml) => {
+                match parse(&xml) {
+                Ok(r) => if r == e {
+                    true
+                } else {
+                    println!("gen_and_parse_transfercomplete NOT EQUAL: {r:?} != {e:?}");
+                    false
+                },
+                Err(e) => {
+                    println!("gen_and_parse_transfercomplete ERROR DURING PARSE: {e:?}");
+                    false
+                }}
+            },
+            Err(e) => {
+                println!("gen_and_parse_transfercomplete ERROR DURING GENERATE: {e:?}");
                 false
             }
         }
@@ -115,11 +199,11 @@ mod tests {
     fn bytes() {
         let e: Envelope = Envelope::new(
             Some(CwmpVersion::new(1,0)), 
-            vec![HeaderElement::ID(ID::new(true,String::from("1234")))], 
+            vec![HeaderElement::ID(ID::new(true,"1234"))], 
             vec![BodyElement::Inform(
                     Inform::new(
-                        DeviceId::new(String::from("MyManufacturer"), String::from("OUI"), String::from("MyProductClass"), String::from("S123456")),
-                        vec![EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
+                        DeviceId::new("MyManufacturer", "OUI", "MyProductClass", "S123456"),
+                        vec![EventStruct::new("2 PERIODIC", "")],
                         1,
                         gen_utc_date(2014, 11, 28, 12, 0, 9),
                         0,

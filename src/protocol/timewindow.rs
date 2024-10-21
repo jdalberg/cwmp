@@ -44,11 +44,11 @@ impl Arbitrary for TimeWindow {
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (
-                self.window_start.clone(),
-                self.window_end.clone(),
+                self.window_start,
+                self.window_end,
                 self.window_mode.clone(),
                 self.user_message.clone(),
-                self.max_retries.clone(),
+                self.max_retries,
             )
                 .shrink()
                 .map(|(ws, we, wm, um, mr)| TimeWindow {

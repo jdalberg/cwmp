@@ -38,10 +38,10 @@ impl GetOptionsResponse {
 
         for o in &self.option_list {
             writer.write(XmlEvent::start_element("OptionStruct"))?;
-            write_simple(writer, "OptionName", &o.option_name)?;
-            write_simple(writer, "VoucherSN", &o.voucher_sn)?;
+            write_simple(writer, "OptionName", o.option_name.0.as_ref())?;
+            write_simple(writer, "VoucherSN", o.voucher_sn.0.as_ref())?;
             write_simple(writer, "State", &o.state.to_string())?;
-            write_simple(writer, "Mode", &o.mode)?;
+            write_simple(writer, "Mode", o.mode.0.as_ref())?;
             if let Some(dt) = o.start_date {
                 write_simple(writer, "StartDate", &dt.to_rfc3339())?;
             }
@@ -68,14 +68,14 @@ impl GetOptionsResponse {
             self.option_list.push(OptionStruct::default());
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetOptionsResponse", "OptionList", "OptionStruct", key] = *path {
             if let Some(last) = self.option_list.last_mut() {
                 match key {
-                    "OptionName" => last.option_name = characters.to_string(),
-                    "VoucherSN" => last.voucher_sn = characters.to_string(),
+                    "OptionName" => last.option_name = characters.into(),
+                    "VoucherSN" => last.voucher_sn = characters.into(),
                     "State" => last.state = parse_to_int(characters, 0),
-                    "Mode" => last.mode = characters.to_string(),
+                    "Mode" => last.mode = characters.into(),
                     "StartDate" => {
                         if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
                             last.start_date = Some(dt);

@@ -4,17 +4,19 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterAttributes {
-    pub parameternames: Vec<String>,
+    pub parameternames: Vec<XmlSafeString>,
 }
 
 impl GetParameterAttributes {
     #[must_use]
-    pub fn new(parameternames: Vec<String>) -> Self {
-        GetParameterAttributes { parameternames }
+    pub fn new(parameternames: &[&str]) -> Self {
+        GetParameterAttributes {
+            parameternames: super::convert_to_xml_safe_strings(parameternames),
+        }
     }
     /// Generate XML for `GetParameterAttributes`
     ///     
@@ -30,7 +32,7 @@ impl GetParameterAttributes {
         ))?;
         writer.write(XmlEvent::start_element("ParameterNames"))?;
         for p in &self.parameternames {
-            write_simple(writer, "string", p)?;
+            write_simple(writer, "string", p.0.as_ref())?;
         }
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::end_element())?;
@@ -44,13 +46,13 @@ impl GetParameterAttributes {
     ) {
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         if let ["GetParameterAttributes", "ParameterNames", "string"] = &path_pattern[..] {
-            self.parameternames.push(String::new());
+            self.parameternames.push(XmlSafeString::new());
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetParameterAttributes", "ParameterNames", "string"] = *path {
             if let Some(l) = self.parameternames.last_mut() {
-                *l = characters.to_string();
+                *l = characters.into();
             }
         }
     }
@@ -59,7 +61,9 @@ impl GetParameterAttributes {
 #[cfg(test)]
 impl Arbitrary for GetParameterAttributes {
     fn arbitrary(g: &mut Gen) -> Self {
-        GetParameterAttributes::new(Vec::<String>::arbitrary(g))
+        Self {
+            parameternames: Vec::<XmlSafeString>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

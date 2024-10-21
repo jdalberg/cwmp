@@ -39,12 +39,12 @@ impl GetAllQueuedTransfersResponse {
 
         for t in &self.transfer_list {
             writer.write(XmlEvent::start_element("AllQueuedTransferStruct"))?;
-            write_simple(writer, "CommandKey", &t.command_key)?;
-            write_simple(writer, "State", &t.state)?;
+            write_simple(writer, "CommandKey", t.command_key.0.as_ref())?;
+            write_simple(writer, "State", t.state.0.as_ref())?;
             write_simple(writer, "IsDownload", &t.is_download.to_string())?;
-            write_simple(writer, "FileType", &t.file_type)?;
+            write_simple(writer, "FileType", t.file_type.0.as_ref())?;
             write_simple(writer, "FileSize", &t.file_size.to_string())?;
-            write_simple(writer, "TargetFileName", &t.target_filename)?;
+            write_simple(writer, "TargetFileName", t.target_filename.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
         }
 
@@ -62,28 +62,22 @@ impl GetAllQueuedTransfersResponse {
         if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct"] =
             &path_pattern[..]
         {
-            self.transfer_list.push(AllQueuedTransfers::new(
-                String::new(),
-                String::new(),
-                0,
-                String::new(),
-                0,
-                String::new(),
-            ));
+            self.transfer_list
+                .push(AllQueuedTransfers::new("", "", 0, "", 0, ""));
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetAllQueuedTransfersResponse", "TransferList", "AllQueuedTransferStruct", key] =
             *path
         {
             if let Some(last) = self.transfer_list.last_mut() {
                 match key {
-                    "CommandKey" => last.command_key = characters.to_string(),
-                    "State" => last.state = characters.to_string(),
+                    "CommandKey" => last.command_key = characters.into(),
+                    "State" => last.state = characters.into(),
                     "IsDownload" => last.is_download = parse_to_int(characters, 0),
-                    "FileType" => last.file_type = characters.to_string(),
+                    "FileType" => last.file_type = characters.into(),
                     "FileSize" => last.file_size = parse_to_int(characters, 0),
-                    "TargetFileName" => last.target_filename = characters.to_string(),
+                    "TargetFileName" => last.target_filename = characters.into(),
                     _ => {}
                 }
             }
@@ -94,7 +88,9 @@ impl GetAllQueuedTransfersResponse {
 #[cfg(test)]
 impl Arbitrary for GetAllQueuedTransfersResponse {
     fn arbitrary(g: &mut Gen) -> Self {
-        GetAllQueuedTransfersResponse::new(Vec::<AllQueuedTransfers>::arbitrary(g))
+        Self {
+            transfer_list: Vec::<AllQueuedTransfers>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

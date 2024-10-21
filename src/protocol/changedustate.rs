@@ -92,7 +92,7 @@ impl ChangeDUState {
                     .push(InstallOp::new("", "", "", "", ""));
             }
             ["ChangeDUState", "Operations", "UninstallOpStruct"] => {
-                self.uninstall_operations.push(UninstallOp::new("", "", ""))
+                self.uninstall_operations.push(UninstallOp::new("", "", ""));
             }
             ["ChangeDUState", "Operations", "UpdateOpStruct"] => {
                 self.update_operations

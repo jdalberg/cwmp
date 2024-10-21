@@ -1,4 +1,4 @@
-use super::{write_simple, GenerateError, ParameterAttribute};
+use super::{write_simple, GenerateError, ParameterAttribute, XmlSafeString};
 use std::io::Write;
 
 #[cfg(test)]
@@ -39,15 +39,13 @@ impl GetParameterAttributesResponse {
 
         for p in &self.parameters {
             writer.write(XmlEvent::start_element("ParameterAttributeStruct"))?;
-            write_simple(writer, "Name", &p.name)?;
-            write_simple(writer, "Notification", &p.notification)?;
+            write_simple(writer, "Name", p.name.0.as_ref())?;
+            write_simple(writer, "Notification", p.notification.0.as_ref())?;
             let als = format!("xsd:string[{}]", p.accesslist.len());
-            writer.write(
-                XmlEvent::start_element("AccessList").attr("SOAP-ENC:arrayType", &als[..]),
-            )?;
+            writer.write(XmlEvent::start_element("AccessList").attr("SOAP-ENC:arrayType", &als))?;
 
             for a in &p.accesslist {
-                write_simple(writer, "string", a)?;
+                write_simple(writer, "string", a.0.as_ref())?;
             }
 
             writer.write(XmlEvent::end_element())?;
@@ -71,28 +69,28 @@ impl GetParameterAttributesResponse {
             }
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.accesslist.push(String::new());
+                    e.accesslist.push(XmlSafeString::new());
                 }
             }
             _ => {}
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Name"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.name = characters.to_string();
+                    e.name = characters.into();
                 }
             }
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "Notification"] => {
                 if let Some(e) = self.parameters.last_mut() {
-                    e.notification = characters.to_string();
+                    e.notification = characters.into();
                 }
             }
             ["GetParameterAttributesResponse", "ParameterList", "ParameterAttributeStruct", "AccessList", "string"] => {
                 if let Some(e) = self.parameters.last_mut() {
                     if let Some(last) = e.accesslist.last_mut() {
-                        *last = characters.to_string();
+                        *last = characters.into();
                     }
                 }
             }
@@ -104,7 +102,9 @@ impl GetParameterAttributesResponse {
 #[cfg(test)]
 impl Arbitrary for GetParameterAttributesResponse {
     fn arbitrary(g: &mut Gen) -> Self {
-        GetParameterAttributesResponse::new(Vec::<ParameterAttribute>::arbitrary(g))
+        Self {
+            parameters: Vec::<ParameterAttribute>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

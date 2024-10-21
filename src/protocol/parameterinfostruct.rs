@@ -26,7 +26,7 @@ impl Arbitrary for ParameterInfoStruct {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.name.clone(), self.writable.clone())
+            (self.name.clone(), self.writable)
                 .shrink()
                 .map(|(n, w)| ParameterInfoStruct {
                     name: n,

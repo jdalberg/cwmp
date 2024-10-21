@@ -4,17 +4,19 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetOptions {
-    pub option_name: String,
+    pub option_name: XmlSafeString,
 }
 
 impl GetOptions {
     #[must_use]
-    pub fn new(option_name: String) -> Self {
-        GetOptions { option_name }
+    pub fn new(option_name: &str) -> Self {
+        GetOptions {
+            option_name: option_name.into(),
+        }
     }
     /// Generate XML for `GetParameterAttributes`
     ///     
@@ -28,13 +30,13 @@ impl GetOptions {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "GetOptions")[..],
         ))?;
-        write_simple(writer, "OptionName", &self.option_name)?;
+        write_simple(writer, "OptionName", self.option_name.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["GetOptions", "OptionName"] = *path {
-            self.option_name = characters.to_string();
+            self.option_name = characters.into();
         }
     }
 }
@@ -42,7 +44,9 @@ impl GetOptions {
 #[cfg(test)]
 impl Arbitrary for GetOptions {
     fn arbitrary(g: &mut Gen) -> Self {
-        GetOptions::new(String::arbitrary(g))
+        Self {
+            option_name: XmlSafeString::arbitrary(g).into(),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -318,10 +318,9 @@ impl Envelope {
                     true
                 };
                 match *header_element {
-                    "ID" => self.header.push(HeaderElement::ID(ID {
-                        must_understand,
-                        id: String::new(),
-                    })),
+                    "ID" => self
+                        .header
+                        .push(HeaderElement::ID(ID::new(must_understand, ""))),
                     "NoMoreRequests" => {
                         self.header
                             .push(HeaderElement::NoMoreRequests(NoMoreRequests::new(
@@ -345,7 +344,7 @@ impl Envelope {
                     }
                     "SupportedCWMPVersions" => {
                         self.header.push(HeaderElement::SupportedCWMPVersions(
-                            SupportedCWMPVersions::new(must_understand, String::new()),
+                            SupportedCWMPVersions::new(must_understand, ""),
                         ));
                     }
                     "UseCWMPVersion" => {
@@ -624,7 +623,7 @@ impl Envelope {
     }
 
     #[allow(clippy::too_many_lines)]
-    pub fn characters(&mut self, path: &[String], characters: &String) {
+    pub fn characters(&mut self, path: &[String], characters: &str) {
         // println!("Path: {:?} Chars: {}", path, characters);
         let path_pattern: Vec<&str> = path.iter().map(AsRef::as_ref).collect();
         match &path_pattern[..] {
@@ -633,7 +632,7 @@ impl Envelope {
                 match last {
                     Some(HeaderElement::ID(data)) => {
                         if header_element == &"ID" {
-                            data.id = characters.to_string();
+                            data.id = characters.into();
                         }
                     }
                     Some(HeaderElement::NoMoreRequests(data)) => {
@@ -653,7 +652,7 @@ impl Envelope {
                     }
                     Some(HeaderElement::SupportedCWMPVersions(data)) => {
                         if header_element == &"SupportedCWMPVersions" {
-                            data.value = characters.to_string();
+                            data.value = characters.into();
                         }
                     }
                     Some(HeaderElement::UseCWMPVersion(data)) => {

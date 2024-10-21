@@ -1,19 +1,22 @@
 use chrono::prelude::*;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use cwmp::generate;
-use cwmp::protocol::*;
+use cwmp::protocol::{
+    BodyElement, CwmpVersion, DeviceId, Envelope, EventStruct, HeaderElement, Inform,
+    ParameterValue, ID,
+};
 
 fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
     NaiveDate::from_ymd_opt(year, mon, day)
-        .unwrap_or(NaiveDate::default())
+        .unwrap_or_default()
         .and_hms_opt(hour, min, sec)
-        .unwrap_or(NaiveDateTime::default())
+        .unwrap_or_default()
         .and_utc()
 }
 fn criterion_benchmark(c: &mut Criterion) {
-    let e: Envelope = Envelope::new(Some(CwmpVersion::new(1,0)), vec![HeaderElement::ID(ID::new(true, "1234".to_string()))],vec![BodyElement::Inform(Inform::new(
-        DeviceId::new(String::from("The Company"), String::from("AA1234"), String::from("IAD_001"), String::from("S99998888")),
-        vec![EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
+    let e: Envelope = Envelope::new(Some(CwmpVersion::new(1,0)), vec![HeaderElement::ID(ID::new(true, "1234"))],vec![BodyElement::Inform(Inform::new(
+        DeviceId::new("The Company", "AA1234", "IAD_001", "S99998888"),
+        vec![EventStruct::new("2 PERIODIC", "")],
         1,
         gen_utc_date(2014, 11, 28, 12, 0, 9),
         0,
@@ -29,7 +32,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         ],
     ))]);
     c.bench_function("generate add_object", |b| {
-        b.iter(|| generate(black_box(&e)))
+        b.iter(|| generate(black_box(&e)));
     });
 }
 

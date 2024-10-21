@@ -25,7 +25,7 @@ impl Arbitrary for CwmpVersion {
 
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.major.clone(), self.minor.clone())
+            (self.major, self.minor)
                 .shrink()
                 .map(|(ma, mi)| CwmpVersion {
                     major: ma,

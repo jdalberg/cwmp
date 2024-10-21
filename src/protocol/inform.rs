@@ -56,20 +56,32 @@ impl Inform {
             &cwmp_prefix(has_cwmp, "Inform")[..],
         ))?;
         writer.write(XmlEvent::start_element("DeviceId"))?;
-        write_simple(writer, "Manufacturer", &self.device_id.manufacturer)?;
-        write_simple(writer, "OUI", &self.device_id.oui)?;
-        write_simple(writer, "ProductClass", &self.device_id.product_class)?;
-        write_simple(writer, "SerialNumber", &self.device_id.serial_number)?;
+        write_simple(
+            writer,
+            "Manufacturer",
+            self.device_id.manufacturer.0.as_ref(),
+        )?;
+        write_simple(writer, "OUI", self.device_id.oui.0.as_ref())?;
+        write_simple(
+            writer,
+            "ProductClass",
+            self.device_id.product_class.0.as_ref(),
+        )?;
+        write_simple(
+            writer,
+            "SerialNumber",
+            self.device_id.serial_number.0.as_ref(),
+        )?;
         writer.write(XmlEvent::end_element())?;
 
         let ss = format!("cwmp:EventStruct[{}]", self.event.len());
 
-        writer.write(XmlEvent::start_element("Event").attr("SOAP-ENC:arrayType", &ss[..]))?;
+        writer.write(XmlEvent::start_element("Event").attr("SOAP-ENC:arrayType", &ss))?;
 
         for e in &self.event {
             writer.write(XmlEvent::start_element("EventStruct"))?;
-            write_simple(writer, "EventCode", &e.event_code)?;
-            write_simple(writer, "CommandKey", &e.command_key)?;
+            write_simple(writer, "EventCode", e.event_code.0.as_ref())?;
+            write_simple(writer, "CommandKey", e.command_key.0.as_ref())?;
             writer.write(XmlEvent::end_element())?;
         }
         // Event
@@ -82,8 +94,7 @@ impl Inform {
         write_simple(writer, "RetryCount", &self.retry_count.to_string())?;
 
         let pls = format!("cwmp:ParameterValueStruct[{}]", self.parameter_list.len());
-        writer
-            .write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pls[..]))?;
+        writer.write(XmlEvent::start_element("ParameterList").attr("SOAP-ENC:arrayType", &pls))?;
 
         for p in &self.parameter_list {
             writer.write(XmlEvent::start_element("ParameterValueStruct"))?;
@@ -124,20 +135,20 @@ impl Inform {
     pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["Inform", "DeviceId", "Manufacturer"] => {
-                self.device_id.manufacturer = characters.to_string();
+                self.device_id.manufacturer = characters.into();
             }
-            ["Inform", "DeviceId", "OUI"] => self.device_id.oui = characters.to_string(),
+            ["Inform", "DeviceId", "OUI"] => self.device_id.oui = characters.into(),
             ["Inform", "DeviceId", "ProductClass"] => {
-                self.device_id.product_class = characters.to_string();
+                self.device_id.product_class = characters.into();
             }
             ["Inform", "DeviceId", "SerialNumber"] => {
-                self.device_id.serial_number = characters.to_string();
+                self.device_id.serial_number = characters.into();
             }
             ["Inform", "Event", "EventStruct", key] => {
                 if let Some(e) = self.event.last_mut() {
                     match key {
-                        "EventCode" => e.event_code = characters.to_string(),
-                        "CommandKey" => e.command_key = characters.to_string(),
+                        "EventCode" => e.event_code = characters.into(),
+                        "CommandKey" => e.command_key = characters.into(),
                         _ => {}
                     }
                 }
@@ -167,22 +178,22 @@ impl Inform {
 #[cfg(test)]
 impl Arbitrary for Inform {
     fn arbitrary(g: &mut Gen) -> Self {
-        Inform::new(
-            DeviceId::arbitrary(g),
-            Vec::<EventStruct>::arbitrary(g),
-            u32::arbitrary(g),
-            gen_utc_date(2014, 11, 28, 12, 0, 9),
-            u32::arbitrary(g),
-            Vec::<ParameterValue>::arbitrary(g),
-        )
+        Self {
+            device_id: DeviceId::arbitrary(g),
+            event: Vec::<EventStruct>::arbitrary(g),
+            max_envelopes: u32::arbitrary(g),
+            current_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            retry_count: u32::arbitrary(g),
+            parameter_list: Vec::<ParameterValue>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
             (
                 self.device_id.clone(),
                 self.event.clone(),
-                self.max_envelopes.clone(),
-                self.retry_count.clone(),
+                self.max_envelopes,
+                self.retry_count,
                 self.parameter_list.clone(),
             )
                 .shrink()

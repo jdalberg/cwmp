@@ -1,19 +1,21 @@
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use super::{convert_to_xml_safe_strings, XmlSafeString};
+
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ParameterAttribute {
-    pub name: String,
-    pub notification: String,
-    pub accesslist: Vec<String>,
+    pub name: XmlSafeString,
+    pub notification: XmlSafeString,
+    pub accesslist: Vec<XmlSafeString>,
 }
 impl ParameterAttribute {
     #[must_use]
-    pub fn new(name: String, notification: String, accesslist: Vec<String>) -> Self {
+    pub fn new(name: &str, notification: &str, accesslist: &[&str]) -> Self {
         ParameterAttribute {
-            name,
-            notification,
-            accesslist,
+            name: name.into(),
+            notification: notification.into(),
+            accesslist: convert_to_xml_safe_strings(accesslist),
         }
     }
 }
@@ -21,11 +23,11 @@ impl ParameterAttribute {
 #[cfg(test)]
 impl Arbitrary for ParameterAttribute {
     fn arbitrary(g: &mut Gen) -> Self {
-        ParameterAttribute::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            Vec::<String>::arbitrary(g),
-        )
+        Self {
+            name: XmlSafeString::arbitrary(g),
+            notification: XmlSafeString::arbitrary(g),
+            accesslist: Vec::<XmlSafeString>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

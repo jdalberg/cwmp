@@ -49,7 +49,7 @@ impl Arbitrary for HoldRequests {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.must_understand.clone(), self.hold.clone())
+            (self.must_understand, self.hold)
                 .shrink()
                 .map(|(m, h)| HoldRequests {
                     must_understand: m,

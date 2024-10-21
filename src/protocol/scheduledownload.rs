@@ -155,7 +155,7 @@ impl Arbitrary for ScheduleDownload {
                 self.url.clone(),
                 self.username.clone(),
                 self.password.clone(),
-                self.file_size.clone(),
+                self.file_size,
                 self.target_filename.clone(),
                 self.timewindow_list.clone(),
             )

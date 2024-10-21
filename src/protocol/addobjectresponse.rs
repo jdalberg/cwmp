@@ -4,20 +4,20 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, GenerateError};
+use super::{cwmp_prefix, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct AddObjectResponse {
     pub instance_number: u32,
-    pub status: String,
+    pub status: XmlSafeString,
 }
 
 impl AddObjectResponse {
     #[must_use]
-    pub fn new(instance_number: u32, status: String) -> Self {
+    pub fn new(instance_number: u32, status: &str) -> Self {
         AddObjectResponse {
             instance_number,
-            status,
+            status: status.into(),
         }
     }
 
@@ -38,14 +38,14 @@ impl AddObjectResponse {
         writer.write(&self.instance_number.to_string()[..])?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("Status"))?;
-        writer.write(&self.status[..])?;
+        writer.write(self.status.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
 
         writer.write(XmlEvent::end_element())?;
 
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["AddObjectResponse", "InstanceNumber"] => {
                 if let Ok(instance) = characters.parse() {
@@ -53,7 +53,7 @@ impl AddObjectResponse {
                 }
             }
             ["AddObjectResponse", "Status"] => {
-                self.status = characters.to_string();
+                self.status = characters.into();
             }
             _ => {}
         }
@@ -63,11 +63,14 @@ impl AddObjectResponse {
 #[cfg(test)]
 impl Arbitrary for AddObjectResponse {
     fn arbitrary(g: &mut Gen) -> Self {
-        AddObjectResponse::new(u32::arbitrary(g), String::arbitrary(g))
+        Self {
+            instance_number: u32::arbitrary(g),
+            status: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.instance_number.clone(), self.status.clone())
+            (self.instance_number, self.status.clone())
                 .shrink()
                 .map(|(i, s)| AddObjectResponse {
                     instance_number: i,

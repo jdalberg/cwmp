@@ -4,34 +4,34 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, parse_to_int, GenerateError};
+use super::{cwmp_prefix, parse_to_int, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Upload {
-    pub command_key: String,
-    pub file_type: String,
-    pub url: String,
-    pub username: String,
-    pub password: String,
+    pub command_key: XmlSafeString,
+    pub file_type: XmlSafeString,
+    pub url: XmlSafeString,
+    pub username: XmlSafeString,
+    pub password: XmlSafeString,
     pub delay_seconds: u32,
 }
 
 impl Upload {
     #[must_use]
     pub fn new(
-        command_key: String,
-        file_type: String,
-        url: String,
-        username: String,
-        password: String,
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
         delay_seconds: u32,
     ) -> Self {
         Upload {
-            command_key,
-            file_type,
-            url,
-            username,
-            password,
+            command_key: command_key.into(),
+            file_type: file_type.into(),
+            url: url.into(),
+            username: username.into(),
+            password: password.into(),
             delay_seconds,
         }
     }
@@ -49,19 +49,19 @@ impl Upload {
             &cwmp_prefix(has_cwmp, "Upload")[..],
         ))?;
         writer.write(XmlEvent::start_element("CommandKey"))?;
-        writer.write(&self.command_key[..])?;
+        writer.write(self.command_key.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("FileType"))?;
-        writer.write(&self.file_type[..])?;
+        writer.write(self.file_type.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("URL"))?;
-        writer.write(&self.url[..])?;
+        writer.write(self.url.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("Username"))?;
-        writer.write(&self.username[..])?;
+        writer.write(self.username.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("Password"))?;
-        writer.write(&self.password[..])?;
+        writer.write(self.password.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         writer.write(XmlEvent::start_element("DelaySeconds"))?;
         let s: String = self.delay_seconds.to_string();
@@ -72,13 +72,13 @@ impl Upload {
         writer.write(e)?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
-            ["Upload", "CommandKey"] => self.command_key = characters.to_string(),
-            ["Upload", "FileType"] => self.file_type = characters.to_string(),
-            ["Upload", "URL"] => self.url = characters.to_string(),
-            ["Upload", "Username"] => self.username = characters.to_string(),
-            ["Upload", "Password"] => self.password = characters.to_string(),
+            ["Upload", "CommandKey"] => self.command_key = characters.into(),
+            ["Upload", "FileType"] => self.file_type = characters.into(),
+            ["Upload", "URL"] => self.url = characters.into(),
+            ["Upload", "Username"] => self.username = characters.into(),
+            ["Upload", "Password"] => self.password = characters.into(),
             ["Upload", "DelaySeconds"] => self.delay_seconds = parse_to_int(characters, 0),
             _ => {}
         }
@@ -88,14 +88,14 @@ impl Upload {
 #[cfg(test)]
 impl Arbitrary for Upload {
     fn arbitrary(g: &mut Gen) -> Self {
-        Upload::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            file_type: XmlSafeString::arbitrary(g),
+            url: XmlSafeString::arbitrary(g),
+            username: XmlSafeString::arbitrary(g),
+            password: XmlSafeString::arbitrary(g),
+            delay_seconds: u32::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -105,7 +105,7 @@ impl Arbitrary for Upload {
                 self.url.clone(),
                 self.username.clone(),
                 self.password.clone(),
-                self.delay_seconds.clone(),
+                self.delay_seconds,
             )
                 .shrink()
                 .map(|(c, f, u, un, pw, ds)| Upload {

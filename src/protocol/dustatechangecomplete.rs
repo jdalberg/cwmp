@@ -47,12 +47,20 @@ impl DUStateChangeComplete {
 
         for r in &self.results {
             writer.write(XmlEvent::start_element("OpResultStruct"))?;
-            write_simple(writer, "UUID", &r.uuid)?;
-            write_simple(writer, "DeploymentUnitRef", &r.deployment_unit_ref)?;
-            write_simple(writer, "Version", &r.version)?;
-            write_simple(writer, "CurrentState", &r.current_state)?;
+            write_simple(writer, "UUID", r.uuid.0.as_ref())?;
+            write_simple(
+                writer,
+                "DeploymentUnitRef",
+                r.deployment_unit_ref.0.as_ref(),
+            )?;
+            write_simple(writer, "Version", r.version.0.as_ref())?;
+            write_simple(writer, "CurrentState", r.current_state.0.as_ref())?;
             write_simple(writer, "Resolved", &r.resolved.to_string())?;
-            write_simple(writer, "ExecutionUnitRefList", &r.execution_unit_ref_list)?;
+            write_simple(
+                writer,
+                "ExecutionUnitRefList",
+                r.execution_unit_ref_list.0.as_ref(),
+            )?;
             match r.start_time {
                 None => {}
                 Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
@@ -88,13 +96,13 @@ impl DUStateChangeComplete {
             ["DUStateChangeComplete", "Results", "OpResultStruct", key] => {
                 if let Some(e) = self.results.last_mut() {
                     match key {
-                        "UUID" => e.uuid = characters.to_string(),
-                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
-                        "Version" => e.version = characters.to_string(),
-                        "CurrentState" => e.current_state = characters.to_string(),
+                        "UUID" => e.uuid = characters.into(),
+                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.into(),
+                        "Version" => e.version = characters.into(),
+                        "CurrentState" => e.current_state = characters.into(),
                         "Resolved" => e.resolved = parse_to_int(characters, 0),
                         "ExecutionUnitRefList" => {
-                            e.execution_unit_ref_list = characters.to_string();
+                            e.execution_unit_ref_list = characters.into();
                         }
                         "StartTime" => {
                             if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
@@ -128,10 +136,10 @@ impl DUStateChangeComplete {
 #[cfg(test)]
 impl Arbitrary for DUStateChangeComplete {
     fn arbitrary(g: &mut Gen) -> Self {
-        DUStateChangeComplete::new(
-            XmlSafeString::arbitrary(g).0.as_ref(),
-            Vec::<OpResult>::arbitrary(g),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            results: Vec::<OpResult>::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

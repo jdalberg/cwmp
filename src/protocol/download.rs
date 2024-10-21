@@ -4,48 +4,48 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError};
+use super::{cwmp_prefix, parse_to_int, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Download {
-    command_key: String,
-    file_type: String,
-    url: String,
-    username: String,
-    password: String,
+    command_key: XmlSafeString,
+    file_type: XmlSafeString,
+    url: XmlSafeString,
+    username: XmlSafeString,
+    password: XmlSafeString,
     file_size: u32,
-    target_filename: String,
+    target_filename: XmlSafeString,
     delay_seconds: u32,
-    success_url: String,
-    failure_url: String,
+    success_url: XmlSafeString,
+    failure_url: XmlSafeString,
 }
 
 impl Download {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        command_key: String,
-        file_type: String,
-        url: String,
-        username: String,
-        password: String,
+        command_key: &str,
+        file_type: &str,
+        url: &str,
+        username: &str,
+        password: &str,
         file_size: u32,
-        target_filename: String,
+        target_filename: &str,
         delay_seconds: u32,
-        success_url: String,
-        failure_url: String,
+        success_url: &str,
+        failure_url: &str,
     ) -> Self {
         Download {
-            command_key,
-            file_type,
-            url,
-            username,
-            password,
+            command_key: command_key.into(),
+            file_type: file_type.into(),
+            url: url.into(),
+            username: username.into(),
+            password: password.into(),
             file_size,
-            target_filename,
+            target_filename: target_filename.into(),
             delay_seconds,
-            success_url,
-            failure_url,
+            success_url: success_url.into(),
+            failure_url: failure_url.into(),
         }
     }
     /// Generate XML for `Download`
@@ -60,32 +60,32 @@ impl Download {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "Download")[..],
         ))?;
-        write_simple(writer, "CommandKey", &self.command_key)?;
-        write_simple(writer, "FileType", &self.file_type)?;
-        write_simple(writer, "URL", &self.url)?;
-        write_simple(writer, "Username", &self.username)?;
-        write_simple(writer, "Password", &self.password)?;
+        write_simple(writer, "CommandKey", self.command_key.0.as_ref())?;
+        write_simple(writer, "FileType", self.file_type.0.as_ref())?;
+        write_simple(writer, "URL", self.url.0.as_ref())?;
+        write_simple(writer, "Username", self.username.0.as_ref())?;
+        write_simple(writer, "Password", self.password.0.as_ref())?;
         write_simple(writer, "FileSize", &self.file_size.to_string())?;
-        write_simple(writer, "TargetFileName", &self.target_filename)?;
+        write_simple(writer, "TargetFileName", self.target_filename.0.as_ref())?;
         write_simple(writer, "DelaySeconds", &self.delay_seconds.to_string())?;
-        write_simple(writer, "SuccessURL", &self.success_url)?;
-        write_simple(writer, "FailureURL", &self.failure_url)?;
+        write_simple(writer, "SuccessURL", self.success_url.0.as_ref())?;
+        write_simple(writer, "FailureURL", self.failure_url.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
 
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
-            ["Download", "CommandKey"] => self.command_key = characters.to_string(),
-            ["Download", "FileType"] => self.file_type = characters.to_string(),
-            ["Download", "URL"] => self.url = characters.to_string(),
-            ["Download", "Username"] => self.username = characters.to_string(),
-            ["Download", "Password"] => self.password = characters.to_string(),
+            ["Download", "CommandKey"] => self.command_key = characters.into(),
+            ["Download", "FileType"] => self.file_type = characters.into(),
+            ["Download", "URL"] => self.url = characters.into(),
+            ["Download", "Username"] => self.username = characters.into(),
+            ["Download", "Password"] => self.password = characters.into(),
             ["Download", "FileSize"] => self.file_size = parse_to_int(characters, 0),
-            ["Download", "TargetFileName"] => self.target_filename = characters.to_string(),
+            ["Download", "TargetFileName"] => self.target_filename = characters.into(),
             ["Download", "DelaySeconds"] => self.delay_seconds = parse_to_int(characters, 0),
-            ["Download", "SuccessURL"] => self.success_url = characters.to_string(),
-            ["Download", "FailureURL"] => self.failure_url = characters.to_string(),
+            ["Download", "SuccessURL"] => self.success_url = characters.into(),
+            ["Download", "FailureURL"] => self.failure_url = characters.into(),
             _ => {}
         }
     }
@@ -94,18 +94,18 @@ impl Download {
 #[cfg(test)]
 impl Arbitrary for Download {
     fn arbitrary(g: &mut Gen) -> Self {
-        Download::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::from(""),
-            String::from(""),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            file_type: XmlSafeString::arbitrary(g),
+            url: XmlSafeString::arbitrary(g),
+            username: XmlSafeString::arbitrary(g),
+            password: XmlSafeString::arbitrary(g),
+            file_size: u32::arbitrary(g),
+            target_filename: XmlSafeString::arbitrary(g),
+            delay_seconds: u32::arbitrary(g),
+            success_url: XmlSafeString::arbitrary(g),
+            failure_url: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -115,9 +115,9 @@ impl Arbitrary for Download {
                 self.url.clone(),
                 self.username.clone(),
                 self.password.clone(),
-                self.file_size.clone(),
+                self.file_size,
                 self.target_filename.clone(),
-                self.delay_seconds.clone(),
+                self.delay_seconds,
             )
                 .shrink()
                 .map(|(c, ft, u, un, pw, fs, tf, ds)| Download {
@@ -129,8 +129,8 @@ impl Arbitrary for Download {
                     file_size: fs,
                     target_filename: tf,
                     delay_seconds: ds,
-                    success_url: String::from(""),
-                    failure_url: String::from(""),
+                    success_url: XmlSafeString::new(),
+                    failure_url: XmlSafeString::new(),
                 }),
         )
     }

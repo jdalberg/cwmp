@@ -4,17 +4,19 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeleteObjectResponse {
-    status: String,
+    status: XmlSafeString,
 }
 
 impl DeleteObjectResponse {
     #[must_use]
-    pub fn new(status: String) -> Self {
-        DeleteObjectResponse { status }
+    pub fn new(status: &str) -> Self {
+        DeleteObjectResponse {
+            status: status.into(),
+        }
     }
     /// Generate XML for `DeleteObjectResponse`
     ///     
@@ -28,14 +30,14 @@ impl DeleteObjectResponse {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "DeleteObjectResponse")[..],
         ))?;
-        write_simple(writer, "Status", &self.status)?;
+        write_simple(writer, "Status", self.status.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
 
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         if let ["DeleteObjectResponse", "Status"] = *path {
-            self.status = characters.to_string();
+            self.status = characters.into();
         }
     }
 }
@@ -43,7 +45,9 @@ impl DeleteObjectResponse {
 #[cfg(test)]
 impl Arbitrary for DeleteObjectResponse {
     fn arbitrary(g: &mut Gen) -> Self {
-        DeleteObjectResponse::new(String::arbitrary(g))
+        Self {
+            status: XmlSafeString::arbitrary(g).into(),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

@@ -41,21 +41,21 @@ impl Arbitrary for HeaderElement {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
-            &HeaderElement::ID(ref x) => Box::new(x.shrink().map(|s| HeaderElement::ID(s))),
-            &HeaderElement::HoldRequests(ref x) => {
-                Box::new(x.shrink().map(|s| HeaderElement::HoldRequests(s)))
+            HeaderElement::ID(x) => Box::new(x.shrink().map(HeaderElement::ID)),
+            HeaderElement::HoldRequests(x) => {
+                Box::new(x.shrink().map(HeaderElement::HoldRequests))
             }
-            &HeaderElement::SessionTimeout(ref x) => {
-                Box::new(x.shrink().map(|s| HeaderElement::SessionTimeout(s)))
+            HeaderElement::SessionTimeout(x) => {
+                Box::new(x.shrink().map(HeaderElement::SessionTimeout))
             }
-            &HeaderElement::NoMoreRequests(ref x) => {
-                Box::new(x.shrink().map(|s| HeaderElement::NoMoreRequests(s)))
+            HeaderElement::NoMoreRequests(x) => {
+                Box::new(x.shrink().map(HeaderElement::NoMoreRequests))
             }
-            &HeaderElement::SupportedCWMPVersions(ref x) => {
-                Box::new(x.shrink().map(|s| HeaderElement::SupportedCWMPVersions(s)))
+            HeaderElement::SupportedCWMPVersions(x) => {
+                Box::new(x.shrink().map(HeaderElement::SupportedCWMPVersions))
             }
-            &HeaderElement::UseCWMPVersion(ref x) => {
-                Box::new(x.shrink().map(|s| HeaderElement::UseCWMPVersion(s)))
+            HeaderElement::UseCWMPVersion(x) => {
+                Box::new(x.shrink().map(HeaderElement::UseCWMPVersion))
             }
         }
     }

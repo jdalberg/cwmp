@@ -4,23 +4,23 @@ use std::io::Write;
 use quickcheck::{Arbitrary, Gen};
 use xml::writer::XmlEvent;
 
-use super::{cwmp_prefix, write_simple, GenerateError};
+use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Kicked {
-    pub command: String,
-    pub referer: String,
-    pub arg: String,
-    pub next: String,
+    pub command: XmlSafeString,
+    pub referer: XmlSafeString,
+    pub arg: XmlSafeString,
+    pub next: XmlSafeString,
 }
 
 impl Kicked {
     #[must_use]
-    pub fn new(command: String, referer: String, arg: String, next: String) -> Self {
+    pub fn new(command: &str, referer: &str, arg: &str, next: &str) -> Self {
         Kicked {
-            command,
-            referer,
-            arg,
-            next,
+            command: command.into(),
+            referer: referer.into(),
+            arg: arg.into(),
+            next: next.into(),
         }
     }
 
@@ -36,26 +36,26 @@ impl Kicked {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "Kicked")[..],
         ))?;
-        write_simple(writer, "Command", &self.command)?;
-        write_simple(writer, "Referer", &self.referer)?;
-        write_simple(writer, "Arg", &self.arg)?;
-        write_simple(writer, "Next", &self.next)?;
+        write_simple(writer, "Command", self.command.0.as_ref())?;
+        write_simple(writer, "Referer", self.referer.0.as_ref())?;
+        write_simple(writer, "Arg", self.arg.0.as_ref())?;
+        write_simple(writer, "Next", self.next.0.as_ref())?;
         writer.write(XmlEvent::end_element())?;
         Ok(())
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["Kicked", "Command"] => {
-                self.command = characters.to_string();
+                self.command = characters.into();
             }
             ["Kicked", "Referer"] => {
-                self.referer = characters.to_string();
+                self.referer = characters.into();
             }
             ["Kicked", "Arg"] => {
-                self.arg = characters.to_string();
+                self.arg = characters.into();
             }
             ["Kicked", "Next"] => {
-                self.next = characters.to_string();
+                self.next = characters.into();
             }
             _ => {}
         }
@@ -65,12 +65,12 @@ impl Kicked {
 #[cfg(test)]
 impl Arbitrary for Kicked {
     fn arbitrary(g: &mut Gen) -> Self {
-        Kicked::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-        )
+        Self {
+            command: XmlSafeString::arbitrary(g),
+            referer: XmlSafeString::arbitrary(g),
+            arg: XmlSafeString::arbitrary(g),
+            next: XmlSafeString::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

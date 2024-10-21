@@ -39,7 +39,7 @@ impl Arbitrary for FaultStruct {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.code.clone(), self.string.clone())
+            (self.code, self.string.clone())
                 .shrink()
                 .map(|(c, s)| FaultStruct { code: c, string: s }),
         )
@@ -73,7 +73,7 @@ impl Arbitrary for FaultDetail {
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.code.clone(), self.string.clone())
+            (self.code, self.string.clone())
                 .shrink()
                 .map(|(c, s)| FaultDetail { code: c, string: s }),
         )

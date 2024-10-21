@@ -86,12 +86,12 @@ impl TransferComplete {
 #[cfg(test)]
 impl Arbitrary for TransferComplete {
     fn arbitrary(g: &mut Gen) -> Self {
-        TransferComplete::new(
-            &String::arbitrary(g),
-            FaultStruct::arbitrary(g),
-            Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
-            Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
-        )
+        Self {
+            command_key: XmlSafeString::arbitrary(g),
+            fault: FaultStruct::arbitrary(g),
+            start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(

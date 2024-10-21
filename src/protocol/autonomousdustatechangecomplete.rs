@@ -42,12 +42,20 @@ impl AutonomousDUStateChangeComplete {
         for r in &self.results {
             writer.write(XmlEvent::start_element("AutonOpResultStruct"))?;
 
-            write_simple(writer, "UUID", &r.uuid)?;
-            write_simple(writer, "DeploymentUnitRef", &r.deployment_unit_ref)?;
-            write_simple(writer, "Version", &r.version)?;
-            write_simple(writer, "CurrentState", &r.current_state)?;
-            write_simple(writer, "Resolved", &r.resolved)?;
-            write_simple(writer, "ExecutionUnitRefList", &r.execution_unit_ref_list)?;
+            write_simple(writer, "UUID", r.uuid.0.as_ref())?;
+            write_simple(
+                writer,
+                "DeploymentUnitRef",
+                r.deployment_unit_ref.0.as_ref(),
+            )?;
+            write_simple(writer, "Version", r.version.0.as_ref())?;
+            write_simple(writer, "CurrentState", r.current_state.0.as_ref())?;
+            write_simple(writer, "Resolved", r.resolved.0.as_ref())?;
+            write_simple(
+                writer,
+                "ExecutionUnitRefList",
+                r.execution_unit_ref_list.0.as_ref(),
+            )?;
             match r.start_time {
                 None => {}
                 Some(dt) => write_simple(writer, "StartTime", &dt.to_rfc3339())?,
@@ -57,7 +65,11 @@ impl AutonomousDUStateChangeComplete {
                 Some(dt) => write_simple(writer, "CompleteTime", &dt.to_rfc3339())?,
             }
             write_fault(writer, &r.fault)?;
-            write_simple(writer, "OperationPerformed", &r.operation_performed)?;
+            write_simple(
+                writer,
+                "OperationPerformed",
+                r.operation_performed.0.as_ref(),
+            )?;
 
             // AutonOpResultStruct
             writer.write(XmlEvent::end_element())?;
@@ -83,19 +95,19 @@ impl AutonomousDUStateChangeComplete {
             self.results.push(AutonOpResult::default());
         }
     }
-    pub fn characters(&mut self, path: &[&str], characters: &String) {
+    pub fn characters(&mut self, path: &[&str], characters: &str) {
         match *path {
             ["AutonomousDUStateChangeComplete", "Results", "AutonOpResultStruct", key] => {
                 let last = self.results.last_mut();
                 if let Some(e) = last {
                     match key {
-                        "UUID" => e.uuid = characters.to_string(),
-                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.to_string(),
-                        "Version" => e.version = characters.to_string(),
-                        "CurrentState" => e.current_state = characters.to_string(),
-                        "Resolved" => e.resolved = characters.to_string(),
+                        "UUID" => e.uuid = characters.into(),
+                        "DeploymentUnitRef" => e.deployment_unit_ref = characters.into(),
+                        "Version" => e.version = characters.into(),
+                        "CurrentState" => e.current_state = characters.into(),
+                        "Resolved" => e.resolved = characters.into(),
                         "ExecutionUnitRefList" => {
-                            e.execution_unit_ref_list = characters.to_string();
+                            e.execution_unit_ref_list = characters.into();
                         }
                         "StartTime" => {
                             if let Ok(dt) = characters.parse::<DateTime<Utc>>() {
@@ -107,7 +119,7 @@ impl AutonomousDUStateChangeComplete {
                                 e.complete_time = Some(dt);
                             }
                         }
-                        "OperationPerformed" => e.operation_performed = characters.to_string(),
+                        "OperationPerformed" => e.operation_performed = characters.into(),
                         _ => {}
                     }
                 }

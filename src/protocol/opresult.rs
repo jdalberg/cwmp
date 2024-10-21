@@ -4,16 +4,16 @@ use quickcheck::{Arbitrary, Gen};
 
 #[cfg(test)]
 use super::gen_utc_date;
-use super::FaultStruct;
+use super::{FaultStruct, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct OpResult {
-    pub uuid: String,
-    pub deployment_unit_ref: String,
-    pub version: String,
-    pub current_state: String,
+    pub uuid: XmlSafeString,
+    pub deployment_unit_ref: XmlSafeString,
+    pub version: XmlSafeString,
+    pub current_state: XmlSafeString,
     pub resolved: u32,
-    pub execution_unit_ref_list: String,
+    pub execution_unit_ref_list: XmlSafeString,
     pub start_time: Option<DateTime<Utc>>,
     pub complete_time: Option<DateTime<Utc>>,
     pub fault: FaultStruct,
@@ -23,23 +23,23 @@ impl OpResult {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        uuid: String,
-        deployment_unit_ref: String,
-        version: String,
-        current_state: String,
+        uuid: &str,
+        deployment_unit_ref: &str,
+        version: &str,
+        current_state: &str,
         resolved: u32,
-        execution_unit_ref_list: String,
+        execution_unit_ref_list: &str,
         start_time: DateTime<Utc>,
         complete_time: DateTime<Utc>,
         fault: FaultStruct,
     ) -> Self {
         OpResult {
-            uuid,
-            deployment_unit_ref,
-            version,
-            current_state,
+            uuid: uuid.into(),
+            deployment_unit_ref: deployment_unit_ref.into(),
+            version: version.into(),
+            current_state: current_state.into(),
             resolved,
-            execution_unit_ref_list,
+            execution_unit_ref_list: execution_unit_ref_list.into(),
             start_time: Some(start_time),
             complete_time: Some(complete_time),
             fault,
@@ -50,17 +50,17 @@ impl OpResult {
 #[cfg(test)]
 impl Arbitrary for OpResult {
     fn arbitrary(g: &mut Gen) -> Self {
-        OpResult::new(
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            String::arbitrary(g),
-            u32::arbitrary(g),
-            String::arbitrary(g),
-            gen_utc_date(2014, 11, 28, 12, 0, 9),
-            gen_utc_date(2014, 11, 29, 12, 0, 9),
-            FaultStruct::arbitrary(g),
-        )
+        Self {
+            uuid: XmlSafeString::arbitrary(g),
+            deployment_unit_ref: XmlSafeString::arbitrary(g),
+            version: XmlSafeString::arbitrary(g),
+            current_state: XmlSafeString::arbitrary(g),
+            resolved: u32::arbitrary(g),
+            execution_unit_ref_list: XmlSafeString::arbitrary(g),
+            start_time: Some(gen_utc_date(2014, 11, 28, 12, 0, 9)),
+            complete_time: Some(gen_utc_date(2014, 11, 29, 12, 0, 9)),
+            fault: FaultStruct::arbitrary(g),
+        }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
@@ -69,7 +69,7 @@ impl Arbitrary for OpResult {
                 self.deployment_unit_ref.clone(),
                 self.version.clone(),
                 self.current_state.clone(),
-                self.resolved.clone(),
+                self.resolved,
                 self.execution_unit_ref_list.clone(),
                 self.fault.clone(),
             )

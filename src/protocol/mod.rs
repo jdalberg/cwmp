@@ -5,13 +5,11 @@ use xml::writer::XmlEvent;
 #[cfg(test)]
 extern crate quickcheck;
 #[cfg(test)]
+use chrono::NaiveDate;
+#[cfg(test)]
 use chrono::{DateTime, Utc};
 #[cfg(test)]
-use chrono::{NaiveDate, NaiveDateTime};
-#[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
-#[cfg(test)]
-use rand::Rng;
 
 mod addobject;
 mod addobjectresponse;
@@ -176,6 +174,10 @@ pub use upload::Upload;
 pub use uploadresponse::UploadResponse;
 pub use usecwmpversion::UseCWMPVersion;
 
+#[cfg(test)]
+const VALID_CHARS: &[u8] =
+    b" !#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ^_abcdefghijklmnopqrstuvwxyz{|}~";
+
 fn bool2str(b: bool) -> &'static str {
     if b {
         "1"
@@ -229,11 +231,12 @@ fn write_fault<W: Write>(
 }
 
 #[cfg(test)]
+#[must_use]
 pub fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
     NaiveDate::from_ymd_opt(year, mon, day)
-        .unwrap_or(NaiveDate::default())
+        .unwrap_or_default()
         .and_hms_opt(hour, min, sec)
-        .unwrap_or(NaiveDateTime::default())
+        .unwrap_or_default()
         .and_utc()
 }
 
@@ -247,11 +250,13 @@ impl From<&str> for XmlSafeString {
 }
 
 impl XmlSafeString {
+    #[must_use]
     pub fn new() -> XmlSafeString {
         XmlSafeString(String::new())
     }
 }
 
+#[must_use]
 pub fn convert_to_xml_safe_strings(input: &[&str]) -> Vec<XmlSafeString> {
     input
         .iter()
@@ -260,30 +265,21 @@ pub fn convert_to_xml_safe_strings(input: &[&str]) -> Vec<XmlSafeString> {
 }
 
 #[cfg(test)]
-fn is_valid_xml_char(c: &char) -> bool {
-    match c {
-        '\u{0009}' | '\u{000A}' | '\u{000D}' => true, // Allow \t, \n, \r
-        '\u{0020}'..='\u{D7FF}' | '\u{E000}'..='\u{FFFD}' => true, // Valid ranges
-        _ => false,
-    }
-}
-
-#[cfg(test)]
 impl Arbitrary for XmlSafeString {
     fn arbitrary(g: &mut Gen) -> XmlSafeString {
-        let size = g.size(); // Control the size of the string
-        let mut rng = rand::thread_rng();
-
-        // Generate valid XML characters only
-        let s: String = (0..size)
+        // Generate a random string of valid XML-safe characters
+        let s: String = (0..g.size())
             .map(|_| {
-                let c = rng.gen_range(0x20u32..=0xD7FF); // Use inclusive range
-                std::char::from_u32(c).unwrap_or(' ')
+                *g.choose(VALID_CHARS).unwrap_or(&b' ') as char // safely choose a valid char
             })
-            .filter(is_valid_xml_char) // Exclude invalid XML chars
             .collect();
 
         XmlSafeString(s)
+    }
+
+    fn shrink(&self) -> Box<dyn Iterator<Item = XmlSafeString>> {
+        let shrunk = self.0.shrink().map(XmlSafeString);
+        Box::new(shrunk)
     }
 }
 

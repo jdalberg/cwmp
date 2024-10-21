@@ -46,14 +46,14 @@ impl Arbitrary for SetParameterAttributesStruct {
         Box::new(
             (
                 self.name.clone(),
-                self.notification_change.clone(),
-                self.notification.clone(),
-                self.access_list_change.clone(),
+                self.notification_change,
+                self.notification,
+                self.access_list_change,
                 self.access_list.clone(),
             )
                 .shrink()
                 .map(|(name, nc, n, alc, al)| SetParameterAttributesStruct {
-                    name: name,
+                    name,
                     notification_change: nc,
                     notification: n,
                     access_list_change: alc,

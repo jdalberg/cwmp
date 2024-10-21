@@ -7,9 +7,9 @@ use std::str;
 
 fn gen_utc_date(year: i32, mon: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTime<Utc> {
     NaiveDate::from_ymd_opt(year, mon, day)
-        .unwrap_or(NaiveDate::default())
+        .unwrap_or_default()
         .and_hms_opt(hour, min, sec)
-        .unwrap_or(NaiveDateTime::default())
+        .unwrap_or_default()
         .and_utc()
 }
 
@@ -26,12 +26,12 @@ fn parse_1() {
         include_bytes!("samples/inform_1.xml"),
         cwmp::protocol::Envelope::new(Some(cwmp::protocol::CwmpVersion::new(1,0)), 
             vec![
-                cwmp::protocol::HeaderElement::ID(cwmp::protocol::ID::new(true, String::from("100"))),
+                cwmp::protocol::HeaderElement::ID(cwmp::protocol::ID::new(true, "100")),
                 cwmp::protocol::HeaderElement::NoMoreRequests(cwmp::protocol::NoMoreRequests::new(true, 1)),
             ],
             vec![cwmp::protocol::BodyElement::Inform(cwmp::protocol::Inform::new(
-                cwmp::protocol::DeviceId::new(String::from("The Company"), String::from("AA1234"), String::from("IAD_001"), String::from("S99998888")),
-                vec![cwmp::protocol::EventStruct::new(String::from("2 PERIODIC"), String::from(""))],
+                cwmp::protocol::DeviceId::new("The Company", "AA1234",  "IAD_001", "S99998888"),
+                vec![cwmp::protocol::EventStruct::new("2 PERIODIC", "")],
                 1,
                 current_time,
                 0,
@@ -47,7 +47,7 @@ fn parse_1() {
                 ],
             ))],
        ),
-    )
+    );
 }
 
 fn test(input: &[u8], expected: cwmp::protocol::Envelope) {
@@ -55,8 +55,8 @@ fn test(input: &[u8], expected: cwmp::protocol::Envelope) {
         Ok(s) => match cwmp::parse(s) {
             Ok(envelope) => {
                 if envelope != expected {
-                    println!("{:?}", envelope);
-                    println!("{:?}", expected);
+                    println!("{envelope:?}");
+                    println!("{expected:?}");
                     panic!("No match")
                 }
             }
