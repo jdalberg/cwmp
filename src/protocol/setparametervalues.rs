@@ -18,7 +18,7 @@ impl SetParameterValues {
     #[must_use]
     pub fn new(parameter_key: Option<&str>, parameter_list: &[&ParameterValue]) -> Self {
         Self {
-            parameter_list: parameter_list.iter().cloned().cloned().collect(),
+            parameter_list: parameter_list.iter().copied().cloned().collect(),
             parameter_key: parameter_key.map(XmlSafeString::from),
         }
     }

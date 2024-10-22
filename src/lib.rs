@@ -90,27 +90,23 @@ mod tests {
     extern crate quickcheck;
 
     #[quickcheck]
-    fn gen_and_parse_addobject(ao: AddObject) -> bool {
-        let e: Envelope = Envelope::new(
-            Some(CwmpVersion::new(1,0)), 
-            vec![HeaderElement::ID(ID::new(true,"1234"))], 
-            vec![BodyElement::AddObject(ao)]);
+    fn gen_and_parse(e: Envelope) -> bool {
         match generate(&e) {
             Ok(xml) => {
                 match parse(&xml) {
                 Ok(r) => if r == e {
                     true
                 } else {
-                    println!("gen_and_parse_addobject NOT EQUAL: {r:?} != {e:?}");
+                    println!("gen_and_parse NOT EQUAL: {r:?} != {e:?}");
                     false
                 },
                 Err(e) => {
-                    println!("gen_and_parse_addobject ERROR DURING PARSE: {e:?}");
+                    println!("gen_and_parse ERROR DURING PARSE: {e:?}");
                     false
                 }}
             },
             Err(e) => {
-                println!("gen_and_parse_addobject ERROR DURING GENERATE: {e:?}");
+                println!("gen_and_parse ERROR DURING GENERATE: {e:?}");
                 false
             }
         }

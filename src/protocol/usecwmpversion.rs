@@ -29,7 +29,7 @@ impl UseCWMPVersion {
     ///
     /// # Errors
     ///
-    /// Any problem encountered while writing to writer will be returned in a GenerateError.
+    /// Any problem encountered while writing to writer will be returned in a `GenerateError`.
     ///
     pub fn generate<W: Write>(
         &self,
