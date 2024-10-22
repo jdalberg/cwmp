@@ -14,16 +14,11 @@ extern crate doc_comment;
 #[cfg(doctest)]
 doctest!("../README.md");
 
-// using xml-rs and serde did not seem viable due to the chaotic nature of
-// vendors
-// https://stackoverflow.com/questions/37970355/read-xml-file-into-struct
-
-
-/// parse a CWMP XML envelope and convert it to a rust struct
+/// Parses some XML supposedly being a CWMP Envelope and convert it to a rust struct
 /// 
 /// # Errors
 /// 
-/// Returns a `core::Error` if the envelope cannot be parsed from the XML
+/// Returns an error if the envelope cannot be parsed from the XML
 pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error>> {
     parse_bytes(xml.as_bytes())
 }
@@ -70,6 +65,9 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
     }
 }
 
+///
+/// Generate CWMP XML from a rust Evenlope struct
+/// 
 /// # Errors
 /// 
 /// Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
@@ -90,8 +88,6 @@ mod tests {
     use super::*;
     use protocol::Envelope;
     extern crate quickcheck;
-    
-
 
     #[quickcheck]
     fn gen_and_parse_addobject(ao: AddObject) -> bool {
