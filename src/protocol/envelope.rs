@@ -54,6 +54,13 @@ impl Envelope {
         self.body
     }
 
+    #[must_use]
+    pub fn is_inform(self) -> bool {
+        self.body
+            .iter()
+            .any(|v| matches!(v, BodyElement::Inform(_)))
+    }
+
     /// Generate XML for `Envelope`
     ///     
     /// # Errors

@@ -138,6 +138,7 @@ mod tests {
                     )
                 )
             ]);
+        assert!(e.clone().is_inform());
         match generate(&e) {
             Ok(xml) => match parse_bytes(xml.as_bytes()) {
                 Ok(r) => assert_eq!(r , e),
