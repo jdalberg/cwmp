@@ -57,7 +57,7 @@ impl Envelope {
     /// Generate XML for `Envelope`
     ///     
     /// # Errors
-    ///     Any errors encountered while writing to `writer` will be returned.
+    /// Any errors encountered while writing to `writer` will be returned.
     #[allow(clippy::too_many_lines)]
     pub fn generate(&self) -> Result<String, GenerateError> {
         let mut writer = EmitterConfig::new()

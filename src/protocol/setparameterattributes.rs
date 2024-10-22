@@ -40,7 +40,8 @@ impl SetParameterAttributes {
     /// Generate XML for `SetParameterAttributes`
     ///     
     /// # Errors
-    ///     Any errors encountered while writing to `writer` will be returned.
+    ///
+    /// Any errors encountered while writing to `writer` will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

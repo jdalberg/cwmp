@@ -9,7 +9,8 @@ impl ScheduleInformResponse {
     /// Generate XML for `ScheduleInformResponse`
     ///     
     /// # Errors
-    ///     Any errors encountered while writing to `writer` will be returned.
+    ///
+    /// Any errors encountered while writing to "writer" will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,

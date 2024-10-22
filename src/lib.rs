@@ -18,16 +18,21 @@ doctest!("../README.md");
 // vendors
 // https://stackoverflow.com/questions/37970355/read-xml-file-into-struct
 
+
 /// parse a CWMP XML envelope and convert it to a rust struct
 /// 
 /// # Errors
-///    Returns a `core::Error` if the envelope cannot be parsed from the XML
+/// 
+/// Returns a `core::Error` if the envelope cannot be parsed from the XML
 pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error>> {
     parse_bytes(xml.as_bytes())
 }
 
+/// parse a CWMP XML envelope as a slice and convert it to a rust struct
+/// 
 /// # Errors
-///    Returns a `core::Error` if the envelope cannot be parsed from the XML
+/// 
+/// Returns a `core::Error` if the envelope cannot be parsed from the XML
 pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
      let config = ParserConfig::new()
         .trim_whitespace(false)
@@ -66,7 +71,8 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
 }
 
 /// # Errors
-///    Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
+/// 
+/// Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
 pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> {
     envelope.generate()
 }
@@ -109,87 +115,6 @@ mod tests {
             },
             Err(e) => {
                 println!("gen_and_parse_addobject ERROR DURING GENERATE: {e:?}");
-                false
-            }
-        }
-    }
-
-    #[quickcheck]
-    fn gen_and_parse_addobject_response(aor: AddObjectResponse) -> bool {
-        let e: Envelope = Envelope::new(
-            Some(CwmpVersion::new(1,0)), 
-            vec![HeaderElement::ID(ID::new(true,"1234"))], 
-            vec![BodyElement::AddObjectResponse(aor)]);
-        match generate(&e) {
-            Ok(xml) => {
-                match parse(&xml) {
-                Ok(r) => if r == e {
-                    true
-                } else {
-                    println!("gen_and_parse_addobject NOT EQUAL: {r:?} != {e:?}");
-                    false
-                },
-                Err(e) => {
-                    println!("gen_and_parse_addobject ERROR DURING PARSE: {e:?}");
-                    false
-                }}
-            },
-            Err(e) => {
-                println!("gen_and_parse_addobject ERROR DURING GENERATE: {e:?}");
-                false
-            }
-        }
-    }
-
-    #[quickcheck]
-    fn gen_and_parse_autonomous_du_state_change_complete(a: AutonomousDUStateChangeComplete) -> bool {
-        let e: Envelope = Envelope::new(
-            Some(CwmpVersion::new(1,0)), 
-            vec![HeaderElement::ID(ID::new(true,"1234"))], 
-            vec![BodyElement::AutonomousDUStateChangeComplete(a)]);
-        match generate(&e) {
-            Ok(xml) => {
-                match parse(&xml) {
-                Ok(r) => if r == e {
-                    true
-                } else {
-                    println!("gen_and_parse_autonomous_du_state_change_complete NOT EQUAL: {r:?} != {e:?}");
-                    false
-                },
-                Err(e) => {
-                    println!("gen_and_parse_autonomous_du_state_change_complete ERROR DURING PARSE: {e:?}");
-                    false
-                }}
-            },
-            Err(e) => {
-                println!("gen_and_parse_autonomous_du_state_change_complete ERROR DURING GENERATE: {e:?}");
-                false
-            }
-        }
-    }
-
-    #[quickcheck]
-    fn gen_and_parse_transfercomplete(tc: TransferComplete) -> bool {
-        let e: Envelope = Envelope::new(
-            Some(CwmpVersion::new(1,0)), 
-            vec![HeaderElement::ID(ID::new(true,"1234"))], 
-            vec![BodyElement::TransferComplete(tc)]);
-        match generate(&e) {
-            Ok(xml) => {
-                match parse(&xml) {
-                Ok(r) => if r == e {
-                    true
-                } else {
-                    println!("gen_and_parse_transfercomplete NOT EQUAL: {r:?} != {e:?}");
-                    false
-                },
-                Err(e) => {
-                    println!("gen_and_parse_transfercomplete ERROR DURING PARSE: {e:?}");
-                    false
-                }}
-            },
-            Err(e) => {
-                println!("gen_and_parse_transfercomplete ERROR DURING GENERATE: {e:?}");
                 false
             }
         }

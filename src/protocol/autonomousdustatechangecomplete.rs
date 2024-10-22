@@ -20,7 +20,8 @@ impl AutonomousDUStateChangeComplete {
     /// Generate XML for `AutonomousDUStateChangeComplete`
     ///     
     /// # Errors
-    ///     Any errors encountered while writing to `writer` will be returned.
+    ///
+    /// Any errors encountered while writing to "writer" will be returned.
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
@@ -134,7 +135,7 @@ impl AutonomousDUStateChangeComplete {
                                 e.fault.set_code(parsed);
                             }
                         }
-                        "FaultString" => e.fault.set_string(&characters[..]),
+                        "FaultString" => e.fault.set_string(characters),
                         _ => {}
                     }
                 }

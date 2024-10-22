@@ -21,10 +21,16 @@ impl UseCWMPVersion {
         }
     }
 
-    /// Generate XML for `UseCWMPVersion`
+    /// Generate XML for the `UseCWMPVersion` message type
     ///     
+    /// # Arguments
+    ///
+    /// # Example
+    ///
     /// # Errors
-    ///     Any errors encountered while writing to `writer` will be returned.
+    ///
+    /// Any problem encountered while writing to writer will be returned in a GenerateError.
+    ///
     pub fn generate<W: Write>(
         &self,
         writer: &mut xml::EventWriter<W>,
