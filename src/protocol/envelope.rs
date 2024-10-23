@@ -55,7 +55,7 @@ impl Envelope {
     }
 
     #[must_use]
-    pub fn is_inform(self) -> bool {
+    pub fn is_inform(&self) -> bool {
         self.body
             .iter()
             .any(|v| matches!(v, BodyElement::Inform(_)))
