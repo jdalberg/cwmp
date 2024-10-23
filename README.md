@@ -1,14 +1,21 @@
-cwmp, an implementation of the CWMP protocol in Rust
+# cwmp, an implementation of the CWMP protocol in Rust
 ====================================================
 
 ![Build](https://github.com/jdalberg/cwmp/workflows/Build/badge.svg)
 
-Building and using
-------------------
+## Building and using
 *not on crates.io yet
 
-Parsing and Generating
-----------------------
+## Code coverage
+The tarpaulin report should be generated on every commit really, at least before every release.
+
+```
+cargo tarpaulin -t 240 --out html
+```
+
+That will generate the tarpaulin-report.html file in the base project folder, which should be pushed to git.
+
+## Parsing and Generating
 
 ```rust,no_run
 use cwmp::{generate, parse};
