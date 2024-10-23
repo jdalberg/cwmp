@@ -19,7 +19,7 @@ doctest!("../README.md");
 /// # Errors
 /// 
 /// Returns an error if the envelope cannot be parsed from the XML
-pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error>> {
+pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
     parse_bytes(xml.as_bytes())
 }
 
@@ -28,7 +28,7 @@ pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error>> {
 /// # Errors
 /// 
 /// Returns a `core::Error` if the envelope cannot be parsed from the XML
-pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error>> {
+pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
      let config = ParserConfig::new()
         .trim_whitespace(false)
         .whitespace_to_characters(true);
@@ -83,6 +83,8 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 #[cfg(test)]
 mod tests {
+    use std::fs::read_to_string;
+
     use crate::protocol::*;
 
     use super::*;
@@ -150,5 +152,11 @@ mod tests {
                 panic!("ERROR DURING GENERATE: {:?}", e);
             }
         }
+    }
+
+    #[test]
+    fn test_parse_fails() {
+        let sample = read_to_string("./tests/samples/bogus_inform_1.xml").unwrap();
+         assert!(parse(&sample).is_err());        
     }
 }
