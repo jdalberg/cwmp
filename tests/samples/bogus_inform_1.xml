@@ -1,0 +1,22 @@
+ <SOAP-ENV:Envelope
+    SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:cwmp="urn:dslforum-org:cwmp-1-0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <SOAP-ENV:Header>
+      <cwmp:ID SOAP-ENV:mustUnderstand="1">100</cwmp:ID>
+      <cwmp:NoMoreRequests SOAP-ENV:mustUnderstand="1">1</cwmp:NoMoreRequests>
+    </SOAP-ENV:Header>
+    <SOAP-ENV:Body>
+      <cwmp:Inform>
+        <DeviceId>
+          <Manufacturer>The Company</Manufacturer>
+          <OUI>AA1234</OUI>
+          <ProductClass>IAD_001</ProductClass>
+          <SerialNumber>S99998888</SerialNumber>
+        </DeviceId>
+        <Event SOAP-ENC:arrayType="cwmp:EventStruct[1]">
+          <EventStruct>
+            <EventCod
