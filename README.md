@@ -1,5 +1,4 @@
 # cwmp, an implementation of the CWMP protocol in Rust
-====================================================
 
 ![Build](https://github.com/jdalberg/cwmp/workflows/Build/badge.svg)
 
@@ -10,7 +9,7 @@
 The tarpaulin report should be generated on every commit really, at least before every release.
 
 ```bash
-cargo tarpaulin -t 240 --out html
+cargo tarpaulin -t 300 --out html
 ```
 
 That will generate the tarpaulin-report.html file in the base project folder, which should be pushed to git.
