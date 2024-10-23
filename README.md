@@ -9,7 +9,7 @@
 ## Code coverage
 The tarpaulin report should be generated on every commit really, at least before every release.
 
-```
+```bash
 cargo tarpaulin -t 240 --out html
 ```
 
