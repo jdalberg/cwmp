@@ -413,5 +413,5 @@ pub struct State {
     pub path: Vec<String>,
     pub last_text: String,
     pub envelope: Envelope,
-    pub error: Option<Box<dyn Error>>,
+    pub error: Option<Box<dyn Error + Send + Sync>>,
 }
