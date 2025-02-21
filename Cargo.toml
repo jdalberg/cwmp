@@ -1,8 +1,8 @@
 [package]
 name = "cwmp"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Jesper Dalberg"]
-edition = "2018"
+edition = "2021"
 license = "Unlicense"
 description = "Parse and generate CWMP messages"
 repository = "https://github.com/jdalberg/cwmp/"
@@ -11,16 +11,17 @@ keywords = ["cwmp", "tr-069", "acs"]
 categories = ["parsing"]
 
 [dependencies]
-xml-rs = "0.8"
-log = "0.4"
-chrono = "0.4"
-rand = "0.8"
+xml-rs = "^0.8"
+log = "^0.4"
+chrono = "^0.4"
+rand = "^0.9"
+thiserror = "^2"
 
 [dev-dependencies]
-doc-comment = "0.3"
-criterion = "0.3"
-quickcheck = "1"
-quickcheck_macros = "1"
+doc-comment = "^0.3"
+criterion = "^0.5"
+quickcheck = "^1"
+quickcheck_macros = "^1"
 
 [[bench]]
 name = "parse_add_object"
