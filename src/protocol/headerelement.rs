@@ -28,12 +28,12 @@ impl Arbitrary for HeaderElement {
             HeaderElement::SupportedCWMPVersions(SupportedCWMPVersions::arbitrary(g)),
             HeaderElement::UseCWMPVersion(UseCWMPVersion::arbitrary(g)),
         ];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let idxs = std::ops::Range {
             start: 0,
             end: vals.len() - 1,
         };
-        let random_index: usize = rng.gen_range(idxs);
+        let random_index: usize = rng.random_range(idxs);
         match vals.get(random_index) {
             Some(v) => v.clone(),
             None => HeaderElement::ID(ID::arbitrary(g)),
@@ -42,9 +42,7 @@ impl Arbitrary for HeaderElement {
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         match self {
             HeaderElement::ID(x) => Box::new(x.shrink().map(HeaderElement::ID)),
-            HeaderElement::HoldRequests(x) => {
-                Box::new(x.shrink().map(HeaderElement::HoldRequests))
-            }
+            HeaderElement::HoldRequests(x) => Box::new(x.shrink().map(HeaderElement::HoldRequests)),
             HeaderElement::SessionTimeout(x) => {
                 Box::new(x.shrink().map(HeaderElement::SessionTimeout))
             }

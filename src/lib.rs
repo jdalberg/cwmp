@@ -1,11 +1,11 @@
 extern crate xml;
 
-use std::error::Error;
 use xml::reader::{ParserConfig, XmlEvent};
 
 // import the protocol defs into global scope
 use protocol::{Envelope, State};
 pub mod protocol;
+pub mod error;
 
 #[cfg(doctest)]
 #[macro_use]
@@ -19,7 +19,7 @@ doctest!("../README.md");
 /// # Errors
 /// 
 /// Returns an error if the envelope cannot be parsed from the XML
-pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
+pub fn parse(xml: &str) -> Result<Envelope, error::Cwmp> {
     parse_bytes(xml.as_bytes())
 }
 
@@ -28,7 +28,7 @@ pub fn parse(xml: &str) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
 /// # Errors
 /// 
 /// Returns a `core::Error` if the envelope cannot be parsed from the XML
-pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error + Send + Sync>> {
+pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, error::Cwmp> {
      let config = ParserConfig::new()
         .trim_whitespace(false)
         .whitespace_to_characters(true);
@@ -53,16 +53,12 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error + Send + Sync>>
                 state.characters(s);
             }
             Err(e) => {
-                state.error = Some(Box::new(e));
-                break;
+                return Err(error::Cwmp::ParseError(e));
             }
             _ => {}
         }
     }
-    match state.error {
-        None => Ok(state.envelope),
-        Some(b) => Err(b),
-    }
+    Ok(state.envelope)
 }
 
 ///
@@ -71,10 +67,9 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, Box<dyn Error + Send + Sync>>
 /// # Errors
 /// 
 /// Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
-pub fn generate(envelope: &Envelope) -> Result<String, protocol::GenerateError> {
-    envelope.generate()
+pub fn generate(envelope: &Envelope) -> Result<String, error::Cwmp> {
+    envelope.generate().map_err(|e| error::Cwmp::GenerateError(e))
 }
-
 
 #[cfg(test)]
 extern crate quickcheck;

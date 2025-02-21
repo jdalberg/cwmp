@@ -144,12 +144,12 @@ impl Arbitrary for BodyElement {
             BodyElement::UploadResponse(UploadResponse::arbitrary(g)),
             BodyElement::Upload(Upload::arbitrary(g)),
         ];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let idxs = std::ops::Range {
             start: 0,
             end: vals.len() - 1,
         };
-        let random_index: usize = rng.gen_range(idxs);
+        let random_index: usize = rng.random_range(idxs);
         match vals.get(random_index) {
             Some(v) => v.clone(),
             None => BodyElement::AddObjectResponse(AddObjectResponse::arbitrary(g)),
@@ -160,35 +160,25 @@ impl Arbitrary for BodyElement {
             BodyElement::AddObjectResponse(x) => {
                 Box::new(x.shrink().map(BodyElement::AddObjectResponse))
             }
-            BodyElement::AddObject(x) => {
-                Box::new(x.shrink().map(BodyElement::AddObject))
-            }
+            BodyElement::AddObject(x) => Box::new(x.shrink().map(BodyElement::AddObject)),
             &BodyElement::AutonomousDUStateChangeCompleteResponse(_) => {
                 quickcheck::empty_shrinker()
             }
-            BodyElement::AutonomousDUStateChangeComplete(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::AutonomousDUStateChangeComplete),
-            ),
+            BodyElement::AutonomousDUStateChangeComplete(x) => {
+                Box::new(x.shrink().map(BodyElement::AutonomousDUStateChangeComplete))
+            }
             &BodyElement::AutonomousTransferCompleteResponse(_) => quickcheck::empty_shrinker(),
-            BodyElement::AutonomousTransferComplete(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::AutonomousTransferComplete),
-            ),
+            BodyElement::AutonomousTransferComplete(x) => {
+                Box::new(x.shrink().map(BodyElement::AutonomousTransferComplete))
+            }
             &BodyElement::CancelTransferResponse(_) => quickcheck::empty_shrinker(),
-            BodyElement::CancelTransfer(x) => {
-                Box::new(x.shrink().map(BodyElement::CancelTransfer))
-            }
+            BodyElement::CancelTransfer(x) => Box::new(x.shrink().map(BodyElement::CancelTransfer)),
             &BodyElement::ChangeDUStateResponse(_) => quickcheck::empty_shrinker(),
-            BodyElement::ChangeDUState(x) => {
-                Box::new(x.shrink().map(BodyElement::ChangeDUState))
-            }
+            BodyElement::ChangeDUState(x) => Box::new(x.shrink().map(BodyElement::ChangeDUState)),
             BodyElement::DeleteObjectResponse(x) => {
                 Box::new(x.shrink().map(BodyElement::DeleteObjectResponse))
             }
-            BodyElement::DeleteObject(x) => {
-                Box::new(x.shrink().map(BodyElement::DeleteObject))
-            }
+            BodyElement::DeleteObject(x) => Box::new(x.shrink().map(BodyElement::DeleteObject)),
             BodyElement::DownloadResponse(x) => {
                 Box::new(x.shrink().map(BodyElement::DownloadResponse))
             }
@@ -200,54 +190,43 @@ impl Arbitrary for BodyElement {
             &BodyElement::FactoryResetResponse(_) => quickcheck::empty_shrinker(),
             &BodyElement::FactoryReset(_) => quickcheck::empty_shrinker(),
             BodyElement::Fault(x) => Box::new(x.shrink().map(BodyElement::Fault)),
-            BodyElement::GetAllQueuedTransfersResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::GetAllQueuedTransfersResponse),
-            ),
+            BodyElement::GetAllQueuedTransfersResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::GetAllQueuedTransfersResponse))
+            }
             &BodyElement::GetAllQueuedTransfers(_) => quickcheck::empty_shrinker(),
             BodyElement::GetOptionsResponse(x) => {
                 Box::new(x.shrink().map(BodyElement::GetOptionsResponse))
             }
-            BodyElement::GetOptions(x) => {
-                Box::new(x.shrink().map(BodyElement::GetOptions))
+            BodyElement::GetOptions(x) => Box::new(x.shrink().map(BodyElement::GetOptions)),
+            BodyElement::GetParameterAttributesResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::GetParameterAttributesResponse))
             }
-            BodyElement::GetParameterAttributesResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::GetParameterAttributesResponse),
-            ),
             BodyElement::GetParameterAttributes(x) => {
                 Box::new(x.shrink().map(BodyElement::GetParameterAttributes))
             }
-            BodyElement::GetParameterNamesResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::GetParameterNamesResponse),
-            ),
+            BodyElement::GetParameterNamesResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::GetParameterNamesResponse))
+            }
             BodyElement::GetParameterNames(x) => {
                 Box::new(x.shrink().map(BodyElement::GetParameterNames))
             }
-            BodyElement::GetParameterValuesResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::GetParameterValuesResponse),
-            ),
+            BodyElement::GetParameterValuesResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::GetParameterValuesResponse))
+            }
             BodyElement::GetParameterValues(x) => {
                 Box::new(x.shrink().map(BodyElement::GetParameterValues))
             }
-            BodyElement::GetQueuedTransfersResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::GetQueuedTransfersResponse),
-            ),
+            BodyElement::GetQueuedTransfersResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::GetQueuedTransfersResponse))
+            }
             &BodyElement::GetQueuedTransfers(_) => quickcheck::empty_shrinker(),
             BodyElement::GetRPCMethodsResponse(x) => {
                 Box::new(x.shrink().map(BodyElement::GetRPCMethodsResponse))
             }
             &BodyElement::GetRPCMethods(_) => quickcheck::empty_shrinker(),
-            BodyElement::InformResponse(x) => {
-                Box::new(x.shrink().map(BodyElement::InformResponse))
-            }
+            BodyElement::InformResponse(x) => Box::new(x.shrink().map(BodyElement::InformResponse)),
             BodyElement::Inform(x) => Box::new(x.shrink().map(BodyElement::Inform)),
-            BodyElement::KickedResponse(x) => {
-                Box::new(x.shrink().map(BodyElement::KickedResponse))
-            }
+            BodyElement::KickedResponse(x) => Box::new(x.shrink().map(BodyElement::KickedResponse)),
             BodyElement::Kicked(x) => Box::new(x.shrink().map(BodyElement::Kicked)),
             &BodyElement::RebootResponse(_) => quickcheck::empty_shrinker(),
             BodyElement::Reboot(x) => Box::new(x.shrink().map(BodyElement::Reboot)),
@@ -260,31 +239,24 @@ impl Arbitrary for BodyElement {
                 Box::new(x.shrink().map(BodyElement::ScheduleDownload))
             }
             &BodyElement::ScheduleInformResponse(_) => quickcheck::empty_shrinker(),
-            BodyElement::ScheduleInform(x) => {
-                Box::new(x.shrink().map(BodyElement::ScheduleInform))
-            }
+            BodyElement::ScheduleInform(x) => Box::new(x.shrink().map(BodyElement::ScheduleInform)),
             &BodyElement::SetParameterAttributesResponse(_) => quickcheck::empty_shrinker(),
             BodyElement::SetParameterAttributes(x) => {
                 Box::new(x.shrink().map(BodyElement::SetParameterAttributes))
             }
-            BodyElement::SetParameterValuesResponse(x) => Box::new(
-                x.shrink()
-                    .map(BodyElement::SetParameterValuesResponse),
-            ),
+            BodyElement::SetParameterValuesResponse(x) => {
+                Box::new(x.shrink().map(BodyElement::SetParameterValuesResponse))
+            }
             BodyElement::SetParameterValues(x) => {
                 Box::new(x.shrink().map(BodyElement::SetParameterValues))
             }
             &BodyElement::SetVouchersResponse(_) => quickcheck::empty_shrinker(),
-            BodyElement::SetVouchers(x) => {
-                Box::new(x.shrink().map(BodyElement::SetVouchers))
-            }
+            BodyElement::SetVouchers(x) => Box::new(x.shrink().map(BodyElement::SetVouchers)),
             &BodyElement::TransferCompleteResponse(_) => quickcheck::empty_shrinker(),
             BodyElement::TransferComplete(x) => {
                 Box::new(x.shrink().map(BodyElement::TransferComplete))
             }
-            BodyElement::UploadResponse(x) => {
-                Box::new(x.shrink().map(BodyElement::UploadResponse))
-            }
+            BodyElement::UploadResponse(x) => Box::new(x.shrink().map(BodyElement::UploadResponse)),
             BodyElement::Upload(x) => Box::new(x.shrink().map(BodyElement::Upload)),
         }
     }
