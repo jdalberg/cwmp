@@ -8,7 +8,7 @@ use super::{cwmp_prefix, write_simple, GenerateError, XmlSafeString};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct DeleteObjectResponse {
-    status: XmlSafeString,
+    pub status: XmlSafeString,
 }
 
 impl DeleteObjectResponse {
