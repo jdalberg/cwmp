@@ -1,6 +1,6 @@
 [package]
 name = "cwmp"
-version = "0.2.7"
+version = "0.2.8"
 authors = ["Jesper Dalberg"]
 edition = "2021"
 license = "Unlicense"
