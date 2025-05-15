@@ -31,7 +31,15 @@ impl GetParameterValues {
         writer.write(XmlEvent::start_element(
             &cwmp_prefix(has_cwmp, "GetParameterValues")[..],
         ))?;
-        writer.write(XmlEvent::start_element("ParameterNames"))?;
+        writer.write(
+            XmlEvent::start_element("ParameterNames")
+                .attr(
+                    "soapenc:arrayType",
+                    &format!("xsd:string[{}]", self.parameternames.len()),
+                )
+                .attr("xmlns:soapenc", "http://schemas.xmlsoap.org/soap/encoding/")
+                .attr("xmlns:xsd", "http://www.w3.org/2001/XMLSchema"),
+        )?;
         for p in &self.parameternames {
             write_simple(writer, "string", p.0.as_ref())?;
         }
