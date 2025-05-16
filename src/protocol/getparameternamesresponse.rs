@@ -7,7 +7,7 @@ use xml::writer::XmlEvent;
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GetParameterNamesResponse {
-    parameter_list: Vec<ParameterInfoStruct>,
+    pub parameter_list: Vec<ParameterInfoStruct>,
 }
 
 impl GetParameterNamesResponse {
