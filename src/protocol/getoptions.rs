@@ -46,7 +46,7 @@ impl GetOptions {
 impl Arbitrary for GetOptions {
     fn arbitrary(g: &mut Gen) -> Self {
         Self {
-            option_name: XmlSafeString::arbitrary(g).into(),
+            option_name: XmlSafeString::arbitrary(g),
         }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {

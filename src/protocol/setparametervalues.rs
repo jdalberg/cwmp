@@ -113,7 +113,7 @@ impl Arbitrary for SetParameterValues {
     fn arbitrary(g: &mut Gen) -> Self {
         Self {
             parameter_list: Vec::<ParameterValue>::arbitrary(g),
-            parameter_key: Option::<XmlSafeString>::arbitrary(g).map(XmlSafeString::from),
+            parameter_key: Option::<XmlSafeString>::arbitrary(g),
         }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
