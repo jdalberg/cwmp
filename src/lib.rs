@@ -68,7 +68,7 @@ pub fn parse_bytes(xml: &[u8]) -> Result<Envelope, error::Cwmp> {
 /// 
 /// Returns a `protocol::GenerateError` if the envelope cannot be converted to XML
 pub fn generate(envelope: &Envelope) -> Result<String, error::Cwmp> {
-    envelope.generate().map_err(|e| error::Cwmp::GenerateError(e))
+    envelope.generate().map_err(error::Cwmp::GenerateError)
 }
 
 #[cfg(test)]

@@ -47,7 +47,7 @@ impl DeleteObjectResponse {
 impl Arbitrary for DeleteObjectResponse {
     fn arbitrary(g: &mut Gen) -> Self {
         Self {
-            status: XmlSafeString::arbitrary(g).into(),
+            status: XmlSafeString::arbitrary(g),
         }
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
